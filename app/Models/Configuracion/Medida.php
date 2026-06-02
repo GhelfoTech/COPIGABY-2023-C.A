@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models\Configuracion;
 
-class Medida
+use App\Models\Core\ConexionBD;
+
+class Medida extends ConexionBD
 {
     private int $codigo_medida;
     private string $nombre_medida;
 
     public function __construct(int $codigo_medida, string $nombre_medida)
     {
+        parent::__construct();
         $this->codigo_medida = $codigo_medida;
         $this->nombre_medida = $nombre_medida;
     }

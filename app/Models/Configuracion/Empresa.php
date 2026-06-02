@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Configuracion;
 
-class Empresa
+use App\Models\Core\ConexionBD;
+
+class Empresa extends ConexionBD
 {
     private string $rif;
     private string $nombre_empresa;
@@ -17,6 +19,7 @@ class Empresa
         string $direccion,
         string $telefono
     ) {
+        parent::__construct();
         $this->rif = $rif;
         $this->nombre_empresa = $nombre_empresa;
         $this->direccion = $direccion;

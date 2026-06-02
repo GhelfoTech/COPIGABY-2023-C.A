@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Seguridad;
 
-class Rol
+use App\Models\Core\ConexionBD;
+
+class Rol extends ConexionBD
 {
     private int $codigo_rol;
     private string $nombre_rol;
@@ -15,8 +17,13 @@ class Rol
         int $codigo_rol,
         string $nombre_rol,
         string $descripcion,
-        bool $estado = true
+        bool $estado = true,
+        string $host = 'localhost',
+        string $dbname = 'copigaby',
+        string $username = 'root',
+        string $password = ''
     ) {
+        parent::__construct($host, $dbname, $username, $password);
         $this->codigo_rol = $codigo_rol;
         $this->nombre_rol = $nombre_rol;
         $this->descripcion = $descripcion;

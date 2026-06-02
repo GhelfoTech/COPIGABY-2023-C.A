@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Ventas;
 
-class Pedido
+use App\Models\Core\ConexionBD;
+
+class Pedido extends ConexionBD
 {
     private string $codigo_venta;
     private string $fecha_venta;
@@ -19,6 +21,7 @@ class Pedido
         int $codigo_cliente,
         string $codigo_usuario
     ) {
+        parent::__construct();
         $this->codigo_venta = $codigo_venta;
         $this->fecha_venta = $fecha_venta;
         $this->total_venta = $total_venta;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Compras;
 
-class Proveedor
+use App\Models\Core\ConexionBD;
+
+class Proveedor extends ConexionBD
 {
     private int $codigo_proveedor;
     private string $proveedor;
@@ -25,6 +27,7 @@ class Proveedor
         string $direccion_proveedor,
         bool $estado = true
     ) {
+        parent::__construct();
         $this->codigo_proveedor = $codigo_proveedor;
         $this->proveedor = $proveedor;
         $this->razon_social = $razon_social;

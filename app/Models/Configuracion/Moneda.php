@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Configuracion;
 
-class Moneda
+use App\Models\Core\ConexionBD;
+
+class Moneda extends ConexionBD
 {
     private int $codigo_moneda;
     private string $nombre_moneda;
@@ -12,6 +14,7 @@ class Moneda
 
     public function __construct(int $codigo_moneda, string $nombre_moneda, float $tasa_cambio)
     {
+        parent::__construct();
         $this->codigo_moneda = $codigo_moneda;
         $this->nombre_moneda = $nombre_moneda;
         $this->tasa_cambio = $tasa_cambio;

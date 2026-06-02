@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Configuracion;
 
-class Iva
+use App\Models\Core\ConexionBD;
+
+class Iva extends ConexionBD
 {
     private int $id_iva;
     private float $porcentaje;
@@ -12,6 +14,7 @@ class Iva
 
     public function __construct(int $id_iva, float $porcentaje, bool $principal = false)
     {
+        parent::__construct();
         $this->id_iva = $id_iva;
         $this->porcentaje = $porcentaje;
         $this->principal = $principal;

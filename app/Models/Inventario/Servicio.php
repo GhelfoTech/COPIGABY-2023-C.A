@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Inventario;
 
-class Servicio
+use App\Models\Core\ConexionBD;
+
+class Servicio extends ConexionBD
 {
     private int $codigo_servicio;
     private string $nombre_servicio;
@@ -21,6 +23,7 @@ class Servicio
         int $codigo_categoria,
         bool $estado = true
     ) {
+        parent::__construct();
         $this->codigo_servicio = $codigo_servicio;
         $this->nombre_servicio = $nombre_servicio;
         $this->descripcion_servicio = $descripcion_servicio;

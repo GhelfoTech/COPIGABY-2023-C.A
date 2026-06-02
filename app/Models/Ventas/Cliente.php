@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Ventas;
 
-class Cliente
+use App\Models\Core\ConexionBD;
+
+class Cliente extends ConexionBD
 {
     private int $codigo_cliente;
     private string $cedula;
@@ -19,6 +21,7 @@ class Cliente
         string $direccion,
         string $telefono
     ) {
+        parent::__construct();
         $this->codigo_cliente = $codigo_cliente;
         $this->cedula = $cedula;
         $this->nombre = $nombre;

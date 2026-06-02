@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Compras;
 
-class Compra
+use App\Models\Core\ConexionBD;
+
+class Compra extends ConexionBD
 {
     private string $codigo_compra;
     private string $fecha_compra;
@@ -23,6 +25,7 @@ class Compra
         string $codigo_usuario,
         bool $estado = true
     ) {
+        parent::__construct();
         $this->codigo_compra = $codigo_compra;
         $this->fecha_compra = $fecha_compra;
         $this->numero_factura = $numero_factura;

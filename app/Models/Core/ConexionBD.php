@@ -6,77 +6,92 @@ namespace App\Models\Core;
 
 use PDO;
 
-class ConexionBD
+abstract class ConexionBD
 {
-    private string $host;
-    private string $dbname;
-    private string $username;
-    private string $password;
-    private ?PDO $conn = null;
+    protected string $host;
+    protected string $dbname;
+    protected string $username;
+    protected string $password;
+    protected ?PDO $conn = null;
 
-    public function __construct()
-    {
-        $this->host = '';
-        $this->dbname = '';
-        $this->username = '';
-        $this->password = '';
-    }
-
-    public function setHost(string $host): void
-    {
+    public function __construct(
+        string $host = 'localhost',
+        string $dbname = 'copigaby',
+        string $username = 'root',
+        string $password = ''
+    ) {
         $this->host = $host;
-    }
-
-    public function setDbname(string $dbname): void
-    {
         $this->dbname = $dbname;
-    }
-
-    public function setUsername(string $username): void
-    {
         $this->username = $username;
-    }
-
-    public function setPassword(string $password): void
-    {
         $this->password = $password;
     }
 
-    public function conectar(): void
+    protected function conectar(): PDO
     {
+        if ($this->conn === null) {
+            $dsn = sprintf(
+                'mysql:host=%s;dbname=%s;charset=utf8mb4',
+                $this->host,
+                $this->dbname
+            );
+
+            $this->conn = new PDO($dsn, $this->username, $this->password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+        }
+
+        return $this->conn;
     }
 
-    public function desconectar(): void
+    protected function desconectar(): void
     {
+        $this->conn = null;
     }
 
-    public function getHost(): string
+    protected function getHost(): string
     {
         return $this->host;
     }
 
-    public function getDbname(): string
+    protected function setHost(string $host): void
+    {
+        $this->host = $host;
+    }
+
+    protected function getDbname(): string
     {
         return $this->dbname;
     }
 
-    public function getUsername(): string
+    protected function setDbname(string $dbname): void
+    {
+        $this->dbname = $dbname;
+    }
+
+    protected function getUsername(): string
     {
         return $this->username;
     }
 
-    public function getPassword(): string
+    protected function setUsername(string $username): void
+    {
+        $this->username = $username;
+    }
+
+    protected function getPassword(): string
     {
         return $this->password;
     }
 
-    public function getConn(): ?PDO
+    protected function setPassword(string $password): void
     {
-        return $this->conn;
+        $this->password = $password;
     }
 
-    public function setConn(?PDO $conn): void
+    protected function getConn(): ?PDO
     {
-        $this->conn = $conn;
+        return $this->conn;
     }
 }

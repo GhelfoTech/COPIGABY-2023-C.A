@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Reportes;
 
-class Reporte
+use App\Models\Core\ConexionBD;
+
+class Reporte extends ConexionBD
 {
     private int $id_reporte;
     private string $tipo_reporte;
@@ -17,6 +19,7 @@ class Reporte
         string $fecha_generado,
         string $codigo_usuario
     ) {
+        parent::__construct();
         $this->id_reporte = $id_reporte;
         $this->tipo_reporte = $tipo_reporte;
         $this->fecha_generado = $fecha_generado;

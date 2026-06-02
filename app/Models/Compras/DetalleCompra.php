@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Compras;
 
-class DetalleCompra
+use App\Models\Core\ConexionBD;
+
+class DetalleCompra extends ConexionBD
 {
     private string $codigo_detalle_compra;
     private int $cantidad;
@@ -19,6 +21,7 @@ class DetalleCompra
         string $codigo_compra,
         int $codigo_producto
     ) {
+        parent::__construct();
         $this->codigo_detalle_compra = $codigo_detalle_compra;
         $this->cantidad = $cantidad;
         $this->costo_unitario = $costo_unitario;

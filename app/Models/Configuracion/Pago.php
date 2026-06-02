@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Configuracion;
 
-class Pago
+use App\Models\Core\ConexionBD;
+
+class Pago extends ConexionBD
 {
     private int $codigo_pago;
     private float $monto;
@@ -23,6 +25,7 @@ class Pago
         int $codigo_metodo,
         int $codigo_moneda
     ) {
+        parent::__construct();
         $this->codigo_pago = $codigo_pago;
         $this->monto = $monto;
         $this->fecha = $fecha;

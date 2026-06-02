@@ -4,27 +4,36 @@ declare(strict_types=1);
 
 namespace App\Models\Seguridad;
 
-class Usuario
+use App\Models\Core\ConexionBD;
+
+abstract class Usuario extends ConexionBD
 {
-    private string $codigo_usuario;
-    private string $nombre_usuario;
-    private string $contrasena_usuario;
-    private bool $estado;
-    private int $codigo_rol;
+    protected string $codigo_usuario;
+    protected string $nombre_usuario;
+    protected string $contrasena_usuario;
+    protected bool $estado;
+    protected int $codigo_rol;
 
     public function __construct(
         string $codigo_usuario,
         string $nombre_usuario,
         string $contrasena_usuario,
         int $codigo_rol,
-        bool $estado = true
+        bool $estado = true,
+        string $host = 'localhost',
+        string $dbname = 'copigaby',
+        string $username = 'root',
+        string $password = ''
     ) {
+        parent::__construct($host, $dbname, $username, $password);
         $this->codigo_usuario = $codigo_usuario;
         $this->nombre_usuario = $nombre_usuario;
         $this->contrasena_usuario = $contrasena_usuario;
         $this->codigo_rol = $codigo_rol;
         $this->estado = $estado;
     }
+
+    abstract public function obtenerTipoUsuario(): string;
 
     public function validarAcceso(string $password): bool
     {

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Inventario;
 
-class Categoria
+use App\Models\Core\ConexionBD;
+
+class Categoria extends ConexionBD
 {
     private int $codigo_categoria;
     private string $nombre_categoria;
@@ -15,6 +17,7 @@ class Categoria
         string $nombre_categoria,
         bool $estado = true
     ) {
+        parent::__construct();
         $this->codigo_categoria = $codigo_categoria;
         $this->nombre_categoria = $nombre_categoria;
         $this->estado = $estado;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Inventario;
 
-class Producto
+use App\Models\Core\ConexionBD;
+
+class Producto extends ConexionBD
 {
     private int $codigo_producto;
     private string $nombre_producto;
@@ -29,6 +31,7 @@ class Producto
         int $codigo_medida,
         bool $estado = true
     ) {
+        parent::__construct();
         $this->codigo_producto = $codigo_producto;
         $this->nombre_producto = $nombre_producto;
         $this->descripcion_producto = $descripcion_producto;

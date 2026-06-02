@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Ventas;
 
-class DetallePedido
+use App\Models\Core\ConexionBD;
+
+class DetallePedido extends ConexionBD
 {
     private int $cantidad;
     private float $precio_unitario;
@@ -21,6 +23,7 @@ class DetallePedido
         ?int $codigo_servicio = null,
         float $subtotal = 0.0
     ) {
+        parent::__construct();
         $this->cantidad = $cantidad;
         $this->precio_unitario = $precio_unitario;
         $this->codigo_venta = $codigo_venta;
