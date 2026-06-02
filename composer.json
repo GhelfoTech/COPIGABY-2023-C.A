@@ -1,0 +1,16 @@
+{
+    "name": "windows11/copygaby2023c.a",
+    "description": "CopiGaby 2023 C.A.",
+    "autoload": {
+        "psr-4": {
+            "Windows11\\Copygaby2023cA\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Victor Ghelfi",
+            "email": "ghelfivictor3@gmail.com"
+        }
+    ],
+    "require": {}
+}
