@@ -1,16 +1,11 @@
 {
-    "name": "windows11/copygaby2023c.a",
-    "description": "CopiGaby 2023 C.A.",
+    "name": "copigaby/sistema-gestion",
+    "description": "Sistema de información para CopiGaby 2023 C.A.",
+    "type": "project",
+    "require": {},
     "autoload": {
         "psr-4": {
-            "Windows11\\Copygaby2023cA\\": "src/"
+            "App\\": "app/"
         }
-    },
-    "authors": [
-        {
-            "name": "Victor Ghelfi",
-            "email": "ghelfivictor3@gmail.com"
-        }
-    ],
-    "require": {}
+    }
 }
