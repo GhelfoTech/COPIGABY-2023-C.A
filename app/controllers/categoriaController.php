@@ -18,7 +18,7 @@
         // Se verifica si el tipo de vista es 'list' y se llama al método correspondiente
         if ($_GET['type'] == 'list') {
             $categorias = $object->getAllCategories();
-            include 'app/views/categorias/index.php';
+            include 'app/views/categorias/viewCategoria.php';
         } 
 
         // Se verifica si el tipo de vista es 'register' y se llama al método correspondiente
@@ -41,10 +41,10 @@
                 die();
             }
             $categorias = $object->getAllCategories();
-            include 'app/views/categorias/index.php';
+            include 'app/views/categorias/viewCategoria.php';
         }
     } else {
         // Acción por defecto cuando se accede sin parámetro 'type'
         $categorias = $object->getAllCategories();
-        include 'app/views/categorias/index.php';
+        include 'app/views/categorias/viewCategoria.php';
     }

@@ -41,17 +41,17 @@
                 die();
             }
             $proveedores = $object->getAllProveedores();
-            include 'app/views/proveedores/index.php';
+            include 'app/views/proveedores/viewProveedor.php';
         }
         
         else {
             $proveedores = $object->getAllProveedores();
-            include 'app/views/proveedores/index.php';
+            include 'app/views/proveedores/viewProveedor.php';
         }
 
     } else {
         // Acción por defecto
         $proveedores = $object->getAllProveedores();
-        include 'app/views/proveedores/index.php';
+        include 'app/views/proveedores/viewProveedor.php';
     }
 ?>

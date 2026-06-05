@@ -41,16 +41,16 @@
                 die();
             }
             $ivas = $object->getAllIvas();
-            include 'app/views/iva/index.php';
+            include 'app/views/IVA/viewIVA.php';
         }
         
         else {
             $ivas = $object->getAllIvas();
-            include 'app/views/iva/index.php';
+            include 'app/views/IVA/viewIVA.php';
         }
 
     } else {
         // Acción por defecto
         $ivas = $object->getAllIvas();
-        include 'app/views/iva/index.php';
+        include 'app/views/IVA/viewIVA.php';
     }

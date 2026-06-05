@@ -7,52 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <div class="dropdown-parent open mt-2">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] rotate-90 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Usuario</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">IVA</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white text-[0.8rem] font-bold bg-white/5 transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -109,7 +70,6 @@
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalMedida" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
@@ -132,7 +92,6 @@
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditMedida" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -161,15 +120,8 @@
   </div>
 
   <script>
-    // Sidebar Toggle logic
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalMedida');
     const btnOpen = document.getElementById('btnOpenModal');
-
     const toggleModal = () => modal.classList.toggle('hidden');
     btnOpen.onclick = toggleModal;
 

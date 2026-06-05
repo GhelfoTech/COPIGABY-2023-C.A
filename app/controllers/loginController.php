@@ -67,5 +67,5 @@
                 $error = "Por favor, llene todos los campos.";
             }
         }
-        include 'app/views/login/login.php';
+        include 'app/views/login/viewLogin.php';
     }

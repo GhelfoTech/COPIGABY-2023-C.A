@@ -33,19 +33,19 @@
             }
             $compras = $object->getAllCompras();
             $proveedores = $object->getProviders();
-            include 'app/views/compras/index.php';
+            include 'app/views/compras/viewCompra.php';
         }
         
         else {
             $compras = $object->getAllCompras();
             $proveedores = $object->getProviders();
-            include 'app/views/compras/index.php';
+            include 'app/views/compras/viewCompra.php';
         }
 
     } else {
         // Acción por defecto
         $compras = $object->getAllCompras();
         $proveedores = $object->getProviders();
-        include 'app/views/compras/index.php';
+        include 'app/views/compras/viewCompra.php';
     }
 ?>

@@ -18,6 +18,6 @@
     ];
 
     // Cargamos la vista del dashboard
-    include 'app/views/dashboard/index.php';
+    include 'app/views/dashboard/viewDashboard.php';
 
 ?>

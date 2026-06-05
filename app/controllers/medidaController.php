@@ -41,17 +41,17 @@
                 die();
             }
             $medidas = $object->getAllMedidas();
-            include 'app/views/medida/index.php';
+            include 'app/views/medida/viewMedida.php';
         }
         
         else {
             $medidas = $object->getAllMedidas();
-            include 'app/views/medida/index.php';
+            include 'app/views/medida/viewMedida.php';
         }
 
     } else {
         // Acción por defecto
         $medidas = $object->getAllMedidas();
-        include 'app/views/medida/index.php';
+        include 'app/views/medida/viewMedida.php';
     }
 ?>

@@ -20,7 +20,7 @@
             $categorias = $object->getCategories();
             $ivas = $object->getIvas();
             $medidas = $object->getMedidas();
-            include 'app/views/productos/index.php';
+            include 'app/views/productos/viewProducto.php';
         } 
 
         // Procesar Registro
@@ -53,7 +53,7 @@
             $categorias = $object->getCategories();
             $ivas = $object->getIvas();
             $medidas = $object->getMedidas();
-            include 'app/views/productos/index.php';
+            include 'app/views/productos/viewProducto.php';
         }
 
     } else {
@@ -62,5 +62,5 @@
         $categorias = $object->getCategories();
         $ivas = $object->getIvas();
         $medidas = $object->getMedidas();
-        include 'app/views/productos/index.php';
+        include 'app/views/productos/viewProducto.php';
     }

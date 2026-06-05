@@ -1,0 +1,37 @@
+:root {
+  --navy: #1a2340;
+  --navy-light: #243050;
+  --navy-dark: #111827;
+  --orange: #f5a623;
+  --orange-dk: #d4891a;
+  --radius-custom: 14px;
+  --body-bg: #f0f2f7;
+  --body-text: #1f2937;
+}
+
+.bg-navy { background-color: var(--navy); }
+.bg-navy-light { background-color: var(--navy-light); }
+.bg-navy-dark { background-color: var(--navy-dark); }
+.bg-orange { background-color: var(--orange); }
+.bg-orange\/10 { background-color: rgba(245, 166, 35, 0.1); }
+.bg-navy-dark\/60 { background-color: rgba(17, 24, 39, 0.6); }
+
+.text-navy { color: var(--navy); }
+.text-navy-light { color: var(--navy-light); }
+.text-navy-dark { color: var(--navy-dark); }
+.text-orange { color: var(--orange); }
+.text-orange-dk { color: var(--orange-dk); }
+
+.border-orange { border-color: var(--orange); }
+.hover\:border-orange\/50:hover { border-color: rgba(245, 166, 35, 0.5); }
+.focus\:border-orange:focus { border-color: var(--orange); }
+.focus\:ring-orange\/20:focus { --tw-ring-color: rgba(245, 166, 35, 0.2); }
+
+.rounded-custom { border-radius: var(--radius-custom); }
+
+.from-orange { --tw-gradient-from: var(--orange); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245, 166, 35, 0)); }
+.to-orange-dk { --tw-gradient-to: var(--orange-dk); }
+
+.hover\:bg-navy:hover { background-color: var(--navy); }
+
+.accent-orange { accent-color: var(--orange); }

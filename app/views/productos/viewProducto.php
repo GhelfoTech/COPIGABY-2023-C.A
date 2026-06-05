@@ -7,108 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(245,166,35,0.1)]">
-          <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-        </div>
-        <div>
-          <div class="font-['Pacifico'] text-white text-[1.15rem] leading-tight">Copi<span class="text-orange">Gaby</span></div>
-          <div class="text-[0.65rem] font-bold tracking-[2px] uppercase text-white/35">Sistema 2025</div>
-        </div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-
-    <!-- Módulo: Pedido -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z"/></svg>
-        Pedido
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=pedidos" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Pedidos</a>
-        <a href="?url=cliente" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Cliente</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-      Compra
-    </a>
-
-    <!-- Módulo: Producto -->
-    <div class="dropdown-parent open">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-        Producto
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform rotate-90" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=producto" class="pl-12 py-2 text-white text-[0.8rem] font-bold transition-all bg-white/5">Productos</a>
-        <a href="?url=categoria" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Categoría</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-      Servicios
-    </a>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-      Proveedores
-    </a>
-
-    <!-- Módulo: Configuración -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Usuario</a>
-        <a href="?url=rol" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Rol</a>
-        <a href="?url=metodopago" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Método de Pago</a>
-        <a href="?url=moneda" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Moneda</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">IVA</a>
-        <a href="?url=empresa" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Empresa</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd"/></svg>
-      Reporte
-    </a>
-
-    <div class="mt-auto p-4 border-t border-white/10">
-      <a href="?url=login" class="flex items-center gap-[10px] text-white/45 font-bold text-[0.85rem] p-2 rounded-lg transition-all hover:text-red-300 hover:bg-red-500/10">
-        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        Cerrar Sesión
-      </a>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -187,7 +92,6 @@
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlay"></div>
@@ -252,7 +156,6 @@
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -323,18 +226,12 @@
   </div>
 
   <script>
-    // Sidebar Toggle
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalProduct');
     const btnOpen = document.getElementById('btnOpenModal');
     const closeBtns = document.querySelectorAll('.closeModal');
     const overlay = document.getElementById('overlay');
-
     const toggleModal = () => modal.classList.toggle('hidden');
+
     btnOpen.onclick = toggleModal;
     closeBtns.forEach(btn => btn.onclick = toggleModal);
     overlay.onclick = toggleModal;
@@ -350,7 +247,6 @@
         document.getElementById('edit_stock_minimo').value = data.stock_minimo;
         document.getElementById('edit_costo').value = data.costo;
         document.getElementById('edit_estado').checked = (data.estado == 1);
-        
         document.getElementById('modalEditProduct').classList.remove('hidden');
     }
 
