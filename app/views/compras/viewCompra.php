@@ -17,7 +17,7 @@
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Histórico de Compras</h2>
+      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestión de Compras</h2>
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">
@@ -58,7 +58,10 @@
                     <?= $c['estado'] ? 'Completada' : 'Anulada' ?>
                   </span>
                 </td>
-                <td class="px-6 py-4 text-center">
+                <td class="px-6 py-4 text-center flex justify-center gap-2">
+                   <button onclick="openEditModal(<?= $c['codigo_compra'] ?>, <?= $c['codigo_proveedor'] ?>, '<?= htmlspecialchars($c['numero_factura_proveedor'], ENT_QUOTES) ?>', '<?= $c['fecha_compra'] ?>', <?= $c['monto_total'] ?>, <?= $c['estado'] ?>)" class="text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Editar compra">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                   </button>
                    <?php if($c['estado']): ?>
                    <button onclick="confirmDelete(<?= $c['codigo_compra'] ?>)" class="text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Anular Compra">
                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>
@@ -111,11 +114,68 @@
     </div>
   </div>
 
+  <div id="modalEditCompra" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Editar Compra</h3>
+          <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=compra&type=update" method="POST" class="p-6 grid grid-cols-2 gap-4">
+          <input type="hidden" name="idcompra" id="edit_id">
+          <div class="col-span-2">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor</label>
+            <select name="codigo_proveedor" id="edit_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <?php foreach($proveedores as $p): ?>
+                <option value="<?= $p['codigo_proveedor'] ?>"><?= htmlspecialchars($p['razon_social']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Factura #</label>
+            <input type="text" name="numero_factura_proveedor" id="edit_factura" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" maxlength="10">
+          </div>
+          <div>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Fecha de Compra</label>
+            <input type="date" name="fecha_compra" id="edit_fecha" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto Total de Factura ($)</label>
+            <input type="number" step="0.01" name="monto_total" id="edit_total" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-lg">
+          </div>
+          <div class="col-span-2 flex items-center gap-3">
+            <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
+            <span class="text-sm font-bold text-gray-700">Compra Activa / Completada</span>
+          </div>
+          <div class="col-span-2 flex justify-end gap-3 mt-4">
+            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">CANCELAR</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">ACTUALIZAR</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script>
     const modal = document.getElementById('modalCompra');
     const btnOpen = document.getElementById('btnOpenModal');
     const toggleModal = () => modal.classList.toggle('hidden');
     btnOpen.onclick = toggleModal;
+
+    function openEditModal(id, proveedor, factura, fecha, total, estado) {
+      document.getElementById('edit_id').value = id;
+      document.getElementById('edit_proveedor').value = proveedor;
+      document.getElementById('edit_factura').value = factura;
+      document.getElementById('edit_fecha').value = fecha;
+      document.getElementById('edit_total').value = total;
+      document.getElementById('edit_estado').checked = (estado == 1);
+      document.getElementById('modalEditCompra').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('modalEditCompra').classList.add('hidden');
+    }
 
     function confirmDelete(id) {
       if(confirm('¿Desea anular este registro de compra? Esta acción no se puede deshacer.')) {

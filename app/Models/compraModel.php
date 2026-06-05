@@ -53,6 +53,31 @@ class compraModel extends ConectDB {
     }
 
     /**
+     * Actualiza los datos modificables de una compra.
+     */
+    public function updateCompra(int $id, array $datos) {
+        try {
+            $query = "UPDATE compra SET codigo_proveedor = ?, numero_factura_proveedor = ?,
+                      fecha_compra = ?, monto_total = ?, estado = ?
+                      WHERE codigo_compra = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->bindValue(1, (int) $datos['codigo_proveedor'], PDO::PARAM_INT);
+            $stmt->bindValue(2, $datos['numero_factura_proveedor']);
+            $stmt->bindValue(3, $datos['fecha_compra']);
+            $stmt->bindValue(4, $datos['monto_total']);
+            $stmt->bindValue(5, (int) $datos['estado'], PDO::PARAM_INT);
+            $stmt->bindValue(6, $id, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                return ["status" => "success", "message" => "Compra actualizada con éxito"];
+            }
+            return ["status" => "error", "message" => "No se pudo actualizar"];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
      * Anulación lógica de una compra.
      */
     public function deleteCompra($id) {
