@@ -4,7 +4,6 @@
 
     if (session_status() === PHP_SESSION_NONE) session_start();
 
-    // Seguridad: verificar sesión
     if (!isset($_SESSION['user_id'])) {
         header("Location: ?url=login");
         exit();
@@ -14,43 +13,43 @@
 
     if (isset($_GET['type'])) {
 
-        // Procesar Registro
-        if ($_GET['type'] == 'register') {
-            if (isset($_POST['porcentaje_iva'])) {
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['porcentaje_iva'])) {
                 $object->addIva($_POST['porcentaje_iva']);
                 header("Location: ?url=iva");
                 exit();
             }
+            header("Location: ?url=iva");
+            exit();
         }
 
-        // Procesar Actualización
-        elseif ($_GET['type'] == 'update') {
-            if (isset($_POST['codigo_IVA'])) {
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_IVA'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateIva($_POST['codigo_IVA'], $_POST['porcentaje_iva'], $estado);
+                $object->updateIva((int) $_POST['codigo_IVA'], $_POST['porcentaje_iva'], $estado);
                 header("Location: ?url=iva");
                 exit();
             }
+            header("Location: ?url=iva");
+            exit();
         }
 
-        // Acciones AJAX y Vista Principal
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteIva"])) {
-                $result = $object->deleteIva($_POST["codigo_IVA"]); 
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteIva'])) {
+                $result = $object->deleteIva((int) $_POST['codigo_IVA']);
+                header('Content-Type: application/json');
                 echo json_encode($result);
-                die();
+                exit();
             }
-            $ivas = $object->getAllIvas();
-            include 'app/views/IVA/viewIVA.php';
-        }
-        
-        else {
-            $ivas = $object->getAllIvas();
-            include 'app/views/IVA/viewIVA.php';
+            header("Location: ?url=iva");
+            exit();
         }
 
-    } else {
-        // Acción por defecto
-        $ivas = $object->getAllIvas();
-        include 'app/views/IVA/viewIVA.php';
+        else {
+            header("Location: ?url=iva");
+            exit();
+        }
     }
+
+    $ivas = $object->getAllIvas();
+    include 'app/views/IVA/viewIVA.php';

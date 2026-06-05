@@ -4,116 +4,178 @@ $pedidoOpen = in_array($currentUrl, ['pedido', 'cliente'], true);
 $productoOpen = in_array($currentUrl, ['producto', 'categoria'], true);
 $configOpen = in_array($currentUrl, ['usuario', 'rol', 'metodopago', 'moneda', 'iva', 'medida'], true);
 
-function navLinkClass(string $url, string $current): string {
-    $base = 'nav-link';
-    return $url === $current ? $base . ' nav-link-active' : $base;
-}
-
-function navSubLinkClass(string $url, string $current): string {
-    $base = 'nav-sublink block';
-    return $url === $current ? $base . ' nav-sublink-active' : $base;
+function navItemClass(string $url, string $current): string {
+    $base = 'group flex items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4';
+    if ($url === $current) {
+        return $base . ' bg-slate-800/80 text-white border-orange-500';
+    }
+    return $base . ' text-slate-400 border-transparent hover:bg-slate-800 hover:text-white';
 }
 
 function navToggleClass(bool $isOpen, bool $isActive): string {
-    $base = 'nav-toggle';
+    $base = 'dropdown-toggle group flex w-[calc(100%-1rem)] items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4 text-left';
     if ($isActive || $isOpen) {
-        return $base . ' nav-toggle-active';
+        return $base . ' bg-slate-800/80 text-white border-orange-500';
     }
-    return $base;
+    return $base . ' text-slate-400 border-transparent hover:bg-slate-800 hover:text-white';
+}
+
+function navSubClass(string $url, string $current): string {
+    $base = 'block pl-10 pr-4 py-2.5 text-sm font-medium transition-all duration-200 ease-in-out';
+    if ($url === $current) {
+        return $base . ' text-white bg-slate-800/60';
+    }
+    return $base . ' text-slate-500 hover:text-white hover:bg-slate-800/40';
+}
+
+function navIconClass(bool $active): string {
+    return 'w-5 h-5 shrink-0 transition-colors duration-200 ' . ($active ? 'text-orange-500' : 'text-slate-400 group-hover:text-slate-200');
 }
 ?>
-<aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-  <div class="p-[20px_20px_16px] border-b border-white/10">
-    <div class="flex items-center gap-[10px]">
-      <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(245,166,35,0.1)]">
-        <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" class="w-full h-full rounded-full object-cover">
+<aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl">
+  <header class="border-b border-white/10 px-5 py-6">
+    <div class="flex items-center gap-3">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-orange-500 bg-slate-800 shadow-[0_0_0_4px_rgba(245,166,35,0.12)]">
+        <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" class="h-full w-full rounded-full object-cover">
       </div>
       <div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem] leading-tight">Copi<span class="text-orange">Gaby</span></div>
-        <div class="text-[0.65rem] font-bold tracking-[2px] uppercase text-white/35">Sistema 2025</div>
+        <p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-500">Sistema</p>
+        <h1 class="text-base font-semibold leading-tight text-white">
+          Copi<span class="text-orange-500">Gaby</span>
+          <span class="text-orange-500">2023</span>
+        </h1>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
+  <p class="px-5 pb-2 pt-5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-600">Menú principal</p>
 
-  <a href="?url=dashboard" class="<?= navLinkClass('dashboard', $currentUrl) ?>">
-    <svg class="w-[18px] h-[18px] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-    Inicio
-  </a>
-
-  <div class="dropdown-parent<?= $pedidoOpen ? ' open' : '' ?>">
-    <button type="button" class="<?= navToggleClass($pedidoOpen, in_array($currentUrl, ['pedido', 'cliente'], true)) ?> dropdown-toggle">
-      <svg class="w-[18px] h-[18px] shrink-0<?= $pedidoOpen ? ' text-orange' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z"/></svg>
-      Pedido
-      <svg class="nav-arrow<?= $pedidoOpen ? ' rotate-90' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-    </button>
-    <div class="dropdown-menu flex flex-col bg-black/20">
-      <a href="?url=pedido" class="<?= navSubLinkClass('pedido', $currentUrl) ?>">Pedidos</a>
-      <a href="?url=cliente" class="<?= navSubLinkClass('cliente', $currentUrl) ?>">Clientes</a>
-    </div>
-  </div>
-
-  <a href="?url=compra" class="<?= navLinkClass('compra', $currentUrl) ?>">
-    <svg class="w-[18px] h-[18px] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-    Compras
-  </a>
-
-  <div class="dropdown-parent<?= $productoOpen ? ' open' : '' ?>">
-    <button type="button" class="<?= navToggleClass($productoOpen, in_array($currentUrl, ['producto', 'categoria'], true)) ?> dropdown-toggle">
-      <svg class="w-[18px] h-[18px] shrink-0<?= $productoOpen ? ' text-orange' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-      Producto
-      <svg class="nav-arrow<?= $productoOpen ? ' rotate-90' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-    </button>
-    <div class="dropdown-menu flex flex-col bg-black/20">
-      <a href="?url=producto" class="<?= navSubLinkClass('producto', $currentUrl) ?>">Productos</a>
-      <a href="?url=categoria" class="<?= navSubLinkClass('categoria', $currentUrl) ?>">Categoria</a>
-    </div>
-  </div>
-
-  <a href="?url=servicio" class="<?= navLinkClass('servicio', $currentUrl) ?>">
-    <svg class="w-[18px] h-[18px] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-    Servicios
-  </a>
-
-  <a href="?url=proveedor" class="<?= navLinkClass('proveedor', $currentUrl) ?>">
-    <svg class="w-[18px] h-[18px] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-    Proveedores
-  </a>
-
-  <div class="dropdown-parent<?= $configOpen ? ' open' : '' ?>">
-    <button type="button" class="<?= navToggleClass($configOpen, $configOpen) ?> dropdown-toggle">
-      <svg class="w-[18px] h-[18px] shrink-0<?= $configOpen ? ' text-orange' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-      Configuracion
-      <svg class="nav-arrow<?= $configOpen ? ' rotate-90' : '' ?>" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-    </button>
-    <div class="dropdown-menu flex flex-col bg-black/20">
-      <a href="?url=usuario" class="<?= navSubLinkClass('usuario', $currentUrl) ?>">Usuarios</a>
-      <a href="?url=rol" class="<?= navSubLinkClass('rol', $currentUrl) ?>">Rol</a>
-      <a href="?url=metodopago" class="<?= navSubLinkClass('metodopago', $currentUrl) ?>">Metodo de Pago</a>
-      <a href="?url=moneda" class="<?= navSubLinkClass('moneda', $currentUrl) ?>">Moneda</a>
-      <a href="?url=iva" class="<?= navSubLinkClass('iva', $currentUrl) ?>">IVA</a>
-      <a href="?url=medida" class="<?= navSubLinkClass('medida', $currentUrl) ?>">Unidad de Medida</a>
-    </div>
-  </div>
-
-  <a href="?url=reporte" class="<?= navLinkClass('reporte', $currentUrl) ?>">
-    <svg class="w-[18px] h-[18px] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd"/></svg>
-    Reporte
-  </a>
-
-  <div class="mt-auto p-4 border-t border-white/10">
-    <a href="?url=login" class="flex items-center gap-[10px] text-white/45 font-bold text-[0.85rem] p-2 rounded-lg transition-all hover:text-red-300 hover:bg-red-500/10">
-      <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-      Cerrar Sesión
+  <nav class="flex flex-1 flex-col pb-4">
+    <a href="?url=dashboard" class="<?= navItemClass('dashboard', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'dashboard') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      Inicio
     </a>
-  </div>
+
+    <div class="dropdown-parent<?= $pedidoOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($pedidoOpen, in_array($currentUrl, ['pedido', 'cliente'], true)) ?>">
+        <svg class="<?= navIconClass($pedidoOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span class="flex-1">Pedido</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=pedido" class="<?= navSubClass('pedido', $currentUrl) ?>">Pedidos</a>
+        <a href="?url=cliente" class="<?= navSubClass('cliente', $currentUrl) ?>">Clientes</a>
+      </div>
+    </div>
+
+    <a href="?url=compra" class="<?= navItemClass('compra', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'compra') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+      </svg>
+      Compras
+    </a>
+
+    <div class="dropdown-parent<?= $productoOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($productoOpen, in_array($currentUrl, ['producto', 'categoria'], true)) ?>">
+        <svg class="<?= navIconClass($productoOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        <span class="flex-1">Producto</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=producto" class="<?= navSubClass('producto', $currentUrl) ?>">Productos</a>
+        <a href="?url=categoria" class="<?= navSubClass('categoria', $currentUrl) ?>">Categoría</a>
+      </div>
+    </div>
+
+    <a href="?url=servicio" class="<?= navItemClass('servicio', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'servicio') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Servicios
+    </a>
+
+    <a href="?url=proveedor" class="<?= navItemClass('proveedor', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'proveedor') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      Proveedores
+    </a>
+
+    <div class="dropdown-parent<?= $configOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($configOpen, $configOpen) ?>">
+        <svg class="<?= navIconClass($configOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+        </svg>
+        <span class="flex-1">Configuración</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=usuario" class="<?= navSubClass('usuario', $currentUrl) ?>">Usuarios</a>
+        <a href="?url=rol" class="<?= navSubClass('rol', $currentUrl) ?>">Rol</a>
+        <a href="?url=metodopago" class="<?= navSubClass('metodopago', $currentUrl) ?>">Método de Pago</a>
+        <a href="?url=moneda" class="<?= navSubClass('moneda', $currentUrl) ?>">Moneda</a>
+        <a href="?url=iva" class="<?= navSubClass('iva', $currentUrl) ?>">IVA</a>
+        <a href="?url=medida" class="<?= navSubClass('medida', $currentUrl) ?>">Unidad de Medida</a>
+      </div>
+    </div>
+
+    <a href="?url=reporte" class="<?= navItemClass('reporte', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'reporte') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Reporte
+    </a>
+  </nav>
+
+  <footer class="mt-auto border-t border-white/10 p-4">
+    <a href="?url=login" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 ease-in-out hover:bg-red-500/10 hover:text-red-300">
+      <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Cerrar sesión
+    </a>
+  </footer>
 </aside>
 
 <script>
-document.querySelectorAll('.dropdown-toggle').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    btn.parentElement.classList.toggle('open');
+(function () {
+  document.querySelectorAll('.dropdown-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var parent = btn.closest('.dropdown-parent');
+      var willOpen = !parent.classList.contains('open');
+      document.querySelectorAll('.dropdown-parent').forEach(function (el) {
+        el.classList.remove('open');
+      });
+      if (willOpen) parent.classList.add('open');
+    });
   });
-});
+
+  document.querySelectorAll('form[method="POST"]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (form.dataset.submitting === '1') {
+        e.preventDefault();
+        return;
+      }
+      form.dataset.submitting = '1';
+      var btn = form.querySelector('button[type="submit"]');
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+    });
+  });
+})();
 </script>

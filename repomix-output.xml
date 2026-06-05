@@ -56,42 +56,25 @@ app/controllers/proveedorController.php
 app/controllers/userController.php
 app/Models/categoriaModel.php
 app/Models/compraModel.php
-app/Models/Compras/Compra.php
-app/Models/Compras/DetalleCompra.php
-app/Models/Compras/Proveedor.php
-app/Models/Configuracion/Empresa.php
-app/Models/Configuracion/Iva.php
-app/Models/Configuracion/Medida.php
-app/Models/Configuracion/MetodoPago.php
-app/Models/Configuracion/Moneda.php
-app/Models/Configuracion/Pago.php
-app/Models/Core/ConexionBD.php
-app/Models/Inventario/Categoria.php
-app/Models/Inventario/Producto.php
-app/Models/Inventario/Servicio.php
 app/Models/IVAModel.php
 app/Models/medidaModel.php
 app/Models/productoModel.php
 app/Models/proveedorModel.php
-app/Models/Reportes/Reporte.php
-app/Models/Seguridad/Empleado.php
-app/Models/Seguridad/Propietario.php
-app/Models/Seguridad/Rol.php
-app/Models/Seguridad/Usuario.php
 app/Models/userModel.php
-app/Models/Ventas/Cliente.php
-app/Models/Ventas/DetallePedido.php
-app/Models/Ventas/Pedido.php
-app/views/categorias/index.php
-app/views/compras/index.php
-app/views/dashboard/index.php
-app/views/IVA/index.php
-app/views/login/login.php
-app/views/medida/index.php
-app/views/productos/index.php
-app/views/proveedores/index.php
+app/views/categorias/viewCategoria.php
+app/views/compras/viewCompra.php
+app/views/dashboard/viewDashboard.php
+app/views/IVA/viewIVA.php
+app/views/layouts/viewMenuLateral.php
+app/views/login/viewLogin.php
+app/views/medida/viewMedida.php
+app/views/productos/viewProducto.php
+app/views/proveedores/viewProveedor.php
 assets/css/dashboard.css
+assets/css/login.css
+assets/css/theme.css
 assets/img/logo.jpeg
+assets/js/tailwind-config.js
 composer.json
 index.php
 </directory_structure>
@@ -1484,139 +1467,6 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 </file>
 
-<file path="app/controllers/categoriaController.php">
-<?php
-
-    use App\models\categoriaModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Verificamos que el usuario esté logueado
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new categoriaModel();
-    $error = ""; // Inicializamos la variable de error para la vista
-
-    if (isset($_GET['type'])) {
-
-        // Se verifica si el tipo de vista es 'list' y se llama al método correspondiente
-        if ($_GET['type'] == 'list') {
-            $categorias = $object->getAllCategories();
-            include 'app/views/categorias/index.php';
-        } 
-
-        // Se verifica si el tipo de vista es 'register' y se llama al método correspondiente
-        elseif ($_GET['type'] == 'register') {
-            if (isset($_POST['nombre_categoria'])) {
-                $result = $object->addCategory($_POST['nombre_categoria']);
-            }
-            include 'app/views/categorias/registerView.php';
-        }
-
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["getCategories"])) {
-                $result = $object->getAllCategories();
-                echo json_encode($result);
-                die();
-            }
-            if(isset($_POST["deleteCategory"])) {
-                $result = $object->deleteCategory($_POST["idcategoria"]); 
-                echo json_encode($result);
-                die();
-            }
-            $categorias = $object->getAllCategories();
-            include 'app/views/categorias/index.php';
-        }
-    } else {
-        // Acción por defecto cuando se accede sin parámetro 'type'
-        $categorias = $object->getAllCategories();
-        include 'app/views/categorias/index.php';
-    }
-</file>
-
-<file path="app/controllers/compraController.php">
-<?php
-
-    use App\models\compraModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new compraModel();
-
-    if (isset($_GET['type'])) {
-
-        // Registro de compra
-        if ($_GET['type'] == 'register') {
-            if (isset($_POST['numero_factura_proveedor'])) {
-                // Asignamos el usuario que está logueado como el comprador
-                $_POST['codigo_usuario'] = $_SESSION['user_id'];
-                $object->addCompra($_POST);
-                header("Location: ?url=compra");
-                exit();
-            }
-        }
-
-        // Acciones AJAX (Eliminar/Anular)
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteCompra"])) {
-                $result = $object->deleteCompra($_POST["idcompra"]); 
-                echo json_encode($result);
-                die();
-            }
-            $compras = $object->getAllCompras();
-            $proveedores = $object->getProviders();
-            include 'app/views/compras/index.php';
-        }
-        
-        else {
-            $compras = $object->getAllCompras();
-            $proveedores = $object->getProviders();
-            include 'app/views/compras/index.php';
-        }
-
-    } else {
-        // Acción por defecto
-        $compras = $object->getAllCompras();
-        $proveedores = $object->getProviders();
-        include 'app/views/compras/index.php';
-    }
-?>
-</file>
-
-<file path="app/controllers/dashboardController.php">
-<?php
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Verificamos que el usuario esté logueado antes de mostrar el dashboard
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    // Inicializamos la variable $stats con valores por defecto para evitar el warning.
-    // En el futuro, puedes crear un método en tu modelo para obtener estas cifras reales.
-    $stats = [
-        'productos_activos' => 0,
-        'servicios_activos' => 0,
-        'pedidos_mes'       => 0,
-        'ventas_mes'        => 0
-    ];
-
-    // Cargamos la vista del dashboard
-    include 'app/views/dashboard/index.php';
-
-?>
-</file>
-
 <file path="app/controllers/FrontControllers.php">
 <?php
 
@@ -1673,328 +1523,6 @@ COMMIT;
 
     }
 
-?>
-</file>
-
-<file path="app/controllers/IVAController.php">
-<?php
-
-    use App\models\ivaModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Seguridad: verificar sesión
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new ivaModel();
-
-    if (isset($_GET['type'])) {
-
-        // Procesar Registro
-        if ($_GET['type'] == 'register') {
-            if (isset($_POST['porcentaje_iva'])) {
-                $object->addIva($_POST['porcentaje_iva']);
-                header("Location: ?url=iva");
-                exit();
-            }
-        }
-
-        // Procesar Actualización
-        elseif ($_GET['type'] == 'update') {
-            if (isset($_POST['codigo_IVA'])) {
-                $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateIva($_POST['codigo_IVA'], $_POST['porcentaje_iva'], $estado);
-                header("Location: ?url=iva");
-                exit();
-            }
-        }
-
-        // Acciones AJAX y Vista Principal
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteIva"])) {
-                $result = $object->deleteIva($_POST["codigo_IVA"]); 
-                echo json_encode($result);
-                die();
-            }
-            $ivas = $object->getAllIvas();
-            include 'app/views/iva/index.php';
-        }
-        
-        else {
-            $ivas = $object->getAllIvas();
-            include 'app/views/iva/index.php';
-        }
-
-    } else {
-        // Acción por defecto
-        $ivas = $object->getAllIvas();
-        include 'app/views/iva/index.php';
-    }
-</file>
-
-<file path="app/controllers/loginController.php">
-<?php
-
-    use App\models\userModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    $object = new userModel();
-    $error = ""; // Inicializamos la variable de error para la vista
-
-    if (isset($_GET['type'])) {
-
-        // Se verifica si el tipo de vista es 'list' y se llama al método correspondiente
-        if ($_GET['type'] == 'list') {
-            $result = $object->getAllUsers();
-            include 'app/views/user/listView.php';
-        } 
-
-        // Se verifica si el tipo de vista es 'register' y se llama al método correspondiente
-        elseif ($_GET['type'] == 'register') {
-            // Se ajustan los campos según la tabla 'usuario' del SQL proporcionado
-            if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
-                $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
-                $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
-            }
-            include 'app/views/user/registerView.php';
-        }
-
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["getUsers"])) {
-                $result = $object->getAllUsers();
-                echo json_encode($result);
-                die();
-            }
-            if(isset($_POST["deleteUser"])) {
-                // idUser mapeado a codigo_usuario
-                $result = $object->deleteUser($_POST["idUser"]); 
-                echo json_encode($result);
-                die();
-            }
-            include 'app/views/user/userView.php';
-        }
-        
-        else {
-            echo "Error: Tipo de vista no válido.";
-        }
-
-    } else {
-        // Lógica de Autenticación (Login)
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $usuarioInput = $_POST['username'] ?? '';
-            $passwordInput = $_POST['password'] ?? '';
-
-            if (!empty($usuarioInput) && !empty($passwordInput)) {
-                $user = $object->login($usuarioInput, $passwordInput);
-                
-                if ($user) {
-                    $_SESSION['user_id']  = $user['codigo_usuario'];
-                    $_SESSION['username'] = $user['nombre_usuario'];
-                    $_SESSION['rol']      = $user['codigo_rol'];
-                    
-                    header("Location: ?url=dashboard");
-                    exit();
-                } else {
-                    $error = "Usuario o contraseña incorrectos.";
-                }
-            } else {
-                $error = "Por favor, llene todos los campos.";
-            }
-        }
-        include 'app/views/login/login.php';
-    }
-</file>
-
-<file path="app/controllers/medidaController.php">
-<?php
-
-    use App\models\medidaModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Seguridad: verificar sesión
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new medidaModel();
-
-    if (isset($_GET['type'])) {
-
-        // Procesar Registro
-        if ($_GET['type'] == 'register') {
-            if (isset($_POST['nombre'])) {
-                $object->addMedida($_POST['nombre']);
-                header("Location: ?url=medida");
-                exit();
-            }
-        }
-
-        // Procesar Actualización
-        elseif ($_GET['type'] == 'update') {
-            if (isset($_POST['codigo_media'])) {
-                $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMedida($_POST['codigo_media'], $_POST['nombre'], $estado);
-                header("Location: ?url=medida");
-                exit();
-            }
-        }
-
-        // Acciones AJAX y Vista Principal
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteMedida"])) {
-                $result = $object->deleteMedida($_POST["codigo_media"]); 
-                echo json_encode($result);
-                die();
-            }
-            $medidas = $object->getAllMedidas();
-            include 'app/views/medida/index.php';
-        }
-        
-        else {
-            $medidas = $object->getAllMedidas();
-            include 'app/views/medida/index.php';
-        }
-
-    } else {
-        // Acción por defecto
-        $medidas = $object->getAllMedidas();
-        include 'app/views/medida/index.php';
-    }
-?>
-</file>
-
-<file path="app/controllers/productoController.php">
-<?php
-
-    use App\models\productoModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Verificamos que el usuario esté logueado
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new productoModel();
-
-    if (isset($_GET['type'])) {
-
-        // Vista de lista
-        if ($_GET['type'] == 'list') {
-            $productos = $object->getAllProducts();
-            $categorias = $object->getCategories();
-            $ivas = $object->getIvas();
-            $medidas = $object->getMedidas();
-            include 'app/views/productos/index.php';
-        } 
-
-        // Procesar Registro
-        elseif ($_GET['type'] == 'register') {
-            if (isset($_POST['nombre_producto'])) {
-                $object->addProduct($_POST);
-                header("Location: ?url=producto");
-                exit();
-            }
-        }
-
-        // Procesar Actualización
-        elseif ($_GET['type'] == 'update') {
-            if (isset($_POST['idproducto'])) {
-                $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
-                $object->updateProduct($_POST['idproducto'], $_POST);
-                header("Location: ?url=producto");
-                exit();
-            }
-        }
-
-        // Acciones AJAX y Vista Principal
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteProduct"])) {
-                $result = $object->deleteProduct($_POST["idproducto"]); 
-                echo json_encode($result);
-                die();
-            }
-            $productos = $object->getAllProducts();
-            $categorias = $object->getCategories();
-            $ivas = $object->getIvas();
-            $medidas = $object->getMedidas();
-            include 'app/views/productos/index.php';
-        }
-
-    } else {
-        // Acción por defecto
-        $productos = $object->getAllProducts();
-        $categorias = $object->getCategories();
-        $ivas = $object->getIvas();
-        $medidas = $object->getMedidas();
-        include 'app/views/productos/index.php';
-    }
-</file>
-
-<file path="app/controllers/proveedorController.php">
-<?php
-
-    use App\models\proveedorModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Seguridad: verificar sesión
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new proveedorModel();
-
-    if (isset($_GET['type'])) {
-
-        // Procesar Registro
-        if ($_GET['type'] == 'register') {
-            if (isset($_POST['rif_proveedor'])) {
-                $object->addProveedor($_POST);
-                header("Location: ?url=proveedor");
-                exit();
-            }
-        }
-
-        // Procesar Actualización
-        elseif ($_GET['type'] == 'update') {
-            if (isset($_POST['codigo_proveedor'])) {
-                $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
-                $object->updateProveedor($_POST['codigo_proveedor'], $_POST);
-                header("Location: ?url=proveedor");
-                exit();
-            }
-        }
-
-        // Acciones AJAX y Vista Principal
-        elseif ($_GET['type'] == 'main') {
-            if(isset($_POST["deleteProveedor"])) {
-                $result = $object->deleteProveedor($_POST["idproveedor"]); 
-                echo json_encode($result);
-                die();
-            }
-            $proveedores = $object->getAllProveedores();
-            include 'app/views/proveedores/index.php';
-        }
-        
-        else {
-            $proveedores = $object->getAllProveedores();
-            include 'app/views/proveedores/index.php';
-        }
-
-    } else {
-        // Acción por defecto
-        $proveedores = $object->getAllProveedores();
-        include 'app/views/proveedores/index.php';
-    }
 ?>
 </file>
 
@@ -2586,86 +2114,6 @@ class proveedorModel extends ConectDB {
 }
 </file>
 
-<file path="app/Models/Seguridad/Empleado.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Seguridad;
-
-class Empleado extends Usuario
-{
-    public function __construct(
-        string $codigo_usuario,
-        string $nombre_usuario,
-        string $contrasena_usuario,
-        int $codigo_rol,
-        bool $estado = true,
-        string $host = 'localhost',
-        string $dbname = 'copigaby',
-        string $username = 'root',
-        string $password = ''
-    ) {
-        parent::__construct(
-            $codigo_usuario,
-            $nombre_usuario,
-            $contrasena_usuario,
-            $codigo_rol,
-            $estado,
-            $host,
-            $dbname,
-            $username,
-            $password
-        );
-    }
-
-    public function obtenerTipoUsuario(): string
-    {
-        return 'empleado';
-    }
-}
-</file>
-
-<file path="app/Models/Seguridad/Propietario.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Seguridad;
-
-class Propietario extends Usuario
-{
-    public function __construct(
-        string $codigo_usuario,
-        string $nombre_usuario,
-        string $contrasena_usuario,
-        int $codigo_rol,
-        bool $estado = true,
-        string $host = 'localhost',
-        string $dbname = 'copigaby',
-        string $username = 'root',
-        string $password = ''
-    ) {
-        parent::__construct(
-            $codigo_usuario,
-            $nombre_usuario,
-            $contrasena_usuario,
-            $codigo_rol,
-            $estado,
-            $host,
-            $dbname,
-            $username,
-            $password
-        );
-    }
-
-    public function obtenerTipoUsuario(): string
-    {
-        return 'propietario';
-    }
-}
-</file>
-
 <file path="app/Models/userModel.php">
 <?php
 
@@ -2789,7 +2237,7 @@ class userModel extends ConectDB {
 }
 </file>
 
-<file path="app/views/categorias/index.php">
+<file path="app/views/categorias/viewCategoria.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2799,105 +2247,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-
-    <!-- Módulo: Pedido -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z"/></svg>
-        Pedido
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=pedidos" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Pedidos</a>
-        <a href="?url=cliente" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Cliente</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-      Compra
-    </a>
-
-    <!-- Módulo: Producto -->
-    <div class="dropdown-parent open">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-        Producto
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform rotate-90" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=producto" class="pl-12 py-2 text-white text-[0.8rem] font-bold transition-all bg-white/5">Productos</a>
-        <a href="?url=categoria" class="pl-12 py-2 text-white text-[0.8rem] font-bold bg-white/5">Categoría</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-      Servicios
-    </a>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-      Proveedores
-    </a>
-
-    <!-- Módulo: Configuración -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Usuario</a>
-        <a href="?url=rol" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Rol</a>
-        <a href="?url=metodopago" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Método de Pago</a>
-        <a href="?url=moneda" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Moneda</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">IVA</a>
-        <a href="?url=empresa" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Empresa</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd"/></svg>
-      Reporte
-    </a>
-
-    <div class="mt-auto p-4 border-t border-white/10">
-      <a href="?url=login" class="flex items-center gap-[10px] text-white/45 font-bold text-[0.85rem] p-2 rounded-lg transition-all hover:text-red-300 hover:bg-red-500/10">
-        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        Cerrar Sesión
-      </a>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -2957,7 +2313,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- ═══ MODAL REGISTRO ═══ -->
   <div id="modalCategory" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlay"></div>
@@ -2980,7 +2335,6 @@ class userModel extends ConectDB {
     </div>
   </div>
 
-  <!-- ═══ MODAL EDICIÓN ═══ -->
   <div id="modalEditCategory" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -3009,17 +2363,10 @@ class userModel extends ConectDB {
   </div>
 
   <script>
-    // Sidebar Toggle
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalCategory');
     const btnOpen = document.getElementById('btnOpenModal');
     const closeBtns = document.querySelectorAll('.closeModal');
     const overlay = document.getElementById('overlay');
-
     const toggleModal = () => modal.classList.toggle('hidden');
 
     btnOpen.onclick = toggleModal;
@@ -3042,7 +2389,6 @@ class userModel extends ConectDB {
         const f = new FormData();
         f.append('deleteCategory', 'true');
         f.append('idcategoria', id);
-
         fetch('?url=categoria&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
@@ -3055,7 +2401,7 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/compras/index.php">
+<file path="app/views/compras/viewCompra.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3065,64 +2411,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(245,166,35,0.1)]">
-          <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-        </div>
-        <div>
-          <div class="font-['Pacifico'] text-white text-[1.15rem] leading-tight">Copi<span class="text-orange">Gaby</span></div>
-          <div class="text-[0.65rem] font-bold tracking-[2px] uppercase text-white/35">Sistema 2025</div>
-        </div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <a href="?url=compra" class="flex items-center gap-3 px-5 py-[11px] font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 text-white transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-      Compras
-    </a>
-
-    <a href="?url=producto" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-      Productos
-    </a>
-
-    <a href="?url=proveedor" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-      Proveedores
-    </a>
-
-    <div class="mt-auto p-4 border-t border-white/10">
-      <a href="?url=login" class="flex items-center gap-[10px] text-white/45 font-bold text-[0.85rem] p-2 rounded-lg transition-all hover:text-red-300 hover:bg-red-500/10">
-        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        Cerrar Sesión
-      </a>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -3182,7 +2477,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalCompra" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
@@ -3244,7 +2538,7 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/dashboard/index.php">
+<file path="app/views/dashboard/viewDashboard.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3254,49 +2548,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <a href="?url=compra" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-      Compra
-    </a>
-
-    <a href="?url=producto" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-      Productos
-    </a>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -3314,7 +2572,6 @@ class userModel extends ConectDB {
     <main class="p-8 flex-1 animate-fade-up">
       <h1 class="text-[1.6rem] font-[900] text-gray-800 mb-6">Panel Principal</h1>
 
-      <!-- Grid de Estadísticas Reales -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-custom border-t-4 border-orange shadow-sm">
           <div class="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Productos</div>
@@ -3345,7 +2602,7 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/IVA/index.php">
+<file path="app/views/IVA/viewIVA.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3355,52 +2612,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <!-- Botón volver al Dashboard -->
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <div class="dropdown-parent open mt-2">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] rotate-90 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=iva" class="pl-12 py-2 text-white text-[0.8rem] font-bold bg-white/5 transition-all">IVA</a>
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Usuario</a>
-      </div>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -3459,7 +2677,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalIva" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
@@ -3482,7 +2699,6 @@ class userModel extends ConectDB {
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditIva" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -3511,15 +2727,8 @@ class userModel extends ConectDB {
   </div>
 
   <script>
-    // Sidebar Toggle logic
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalIva');
     const btnOpen = document.getElementById('btnOpenModal');
-
     const toggleModal = () => modal.classList.toggle('hidden');
     btnOpen.onclick = toggleModal;
 
@@ -3551,7 +2760,191 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/login/login.php">
+<file path="app/views/layouts/viewMenuLateral.php">
+<?php
+$currentUrl = $_REQUEST['url'] ?? '';
+$pedidoOpen = in_array($currentUrl, ['pedido', 'cliente'], true);
+$productoOpen = in_array($currentUrl, ['producto', 'categoria'], true);
+$configOpen = in_array($currentUrl, ['usuario', 'rol', 'metodopago', 'moneda', 'iva', 'medida'], true);
+
+function navItemClass(string $url, string $current): string {
+    $base = 'group flex items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4';
+    if ($url === $current) {
+        return $base . ' bg-slate-800/80 text-white border-orange-500';
+    }
+    return $base . ' text-slate-400 border-transparent hover:bg-slate-800 hover:text-white';
+}
+
+function navToggleClass(bool $isOpen, bool $isActive): string {
+    $base = 'dropdown-toggle group flex w-[calc(100%-1rem)] items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4 text-left';
+    if ($isActive || $isOpen) {
+        return $base . ' bg-slate-800/80 text-white border-orange-500';
+    }
+    return $base . ' text-slate-400 border-transparent hover:bg-slate-800 hover:text-white';
+}
+
+function navSubClass(string $url, string $current): string {
+    $base = 'block pl-10 pr-4 py-2.5 text-sm font-medium transition-all duration-200 ease-in-out';
+    if ($url === $current) {
+        return $base . ' text-white bg-slate-800/60';
+    }
+    return $base . ' text-slate-500 hover:text-white hover:bg-slate-800/40';
+}
+
+function navIconClass(bool $active): string {
+    return 'w-5 h-5 shrink-0 transition-colors duration-200 ' . ($active ? 'text-orange-500' : 'text-slate-400 group-hover:text-slate-200');
+}
+?>
+<aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl">
+  <header class="border-b border-white/10 px-5 py-6">
+    <div class="flex items-center gap-3">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-orange-500 bg-slate-800 shadow-[0_0_0_4px_rgba(245,166,35,0.12)]">
+        <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" class="h-full w-full rounded-full object-cover">
+      </div>
+      <div>
+        <p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-500">Sistema</p>
+        <h1 class="text-base font-semibold leading-tight text-white">
+          Copi<span class="text-orange-500">Gaby</span>
+          <span class="text-orange-500">2023</span>
+        </h1>
+      </div>
+    </div>
+  </header>
+
+  <p class="px-5 pb-2 pt-5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-600">Menú principal</p>
+
+  <nav class="flex flex-1 flex-col pb-4">
+    <a href="?url=dashboard" class="<?= navItemClass('dashboard', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'dashboard') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      Inicio
+    </a>
+
+    <div class="dropdown-parent<?= $pedidoOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($pedidoOpen, in_array($currentUrl, ['pedido', 'cliente'], true)) ?>">
+        <svg class="<?= navIconClass($pedidoOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span class="flex-1">Pedido</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=pedido" class="<?= navSubClass('pedido', $currentUrl) ?>">Pedidos</a>
+        <a href="?url=cliente" class="<?= navSubClass('cliente', $currentUrl) ?>">Clientes</a>
+      </div>
+    </div>
+
+    <a href="?url=compra" class="<?= navItemClass('compra', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'compra') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+      </svg>
+      Compras
+    </a>
+
+    <div class="dropdown-parent<?= $productoOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($productoOpen, in_array($currentUrl, ['producto', 'categoria'], true)) ?>">
+        <svg class="<?= navIconClass($productoOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        <span class="flex-1">Producto</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=producto" class="<?= navSubClass('producto', $currentUrl) ?>">Productos</a>
+        <a href="?url=categoria" class="<?= navSubClass('categoria', $currentUrl) ?>">Categoría</a>
+      </div>
+    </div>
+
+    <a href="?url=servicio" class="<?= navItemClass('servicio', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'servicio') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      Servicios
+    </a>
+
+    <a href="?url=proveedor" class="<?= navItemClass('proveedor', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'proveedor') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      Proveedores
+    </a>
+
+    <div class="dropdown-parent<?= $configOpen ? ' open' : '' ?>">
+      <button type="button" class="<?= navToggleClass($configOpen, $configOpen) ?>">
+        <svg class="<?= navIconClass($configOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+        </svg>
+        <span class="flex-1">Configuración</span>
+        <svg class="nav-chevron ml-auto h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu flex flex-col bg-slate-950/50">
+        <a href="?url=usuario" class="<?= navSubClass('usuario', $currentUrl) ?>">Usuarios</a>
+        <a href="?url=rol" class="<?= navSubClass('rol', $currentUrl) ?>">Rol</a>
+        <a href="?url=metodopago" class="<?= navSubClass('metodopago', $currentUrl) ?>">Método de Pago</a>
+        <a href="?url=moneda" class="<?= navSubClass('moneda', $currentUrl) ?>">Moneda</a>
+        <a href="?url=iva" class="<?= navSubClass('iva', $currentUrl) ?>">IVA</a>
+        <a href="?url=medida" class="<?= navSubClass('medida', $currentUrl) ?>">Unidad de Medida</a>
+      </div>
+    </div>
+
+    <a href="?url=reporte" class="<?= navItemClass('reporte', $currentUrl) ?>">
+      <svg class="<?= navIconClass($currentUrl === 'reporte') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Reporte
+    </a>
+  </nav>
+
+  <footer class="mt-auto border-t border-white/10 p-4">
+    <a href="?url=login" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 ease-in-out hover:bg-red-500/10 hover:text-red-300">
+      <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Cerrar sesión
+    </a>
+  </footer>
+</aside>
+
+<script>
+(function () {
+  document.querySelectorAll('.dropdown-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var parent = btn.closest('.dropdown-parent');
+      var willOpen = !parent.classList.contains('open');
+      document.querySelectorAll('.dropdown-parent').forEach(function (el) {
+        el.classList.remove('open');
+      });
+      if (willOpen) parent.classList.add('open');
+    });
+  });
+
+  document.querySelectorAll('form[method="POST"]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (form.dataset.submitting === '1') {
+        e.preventDefault();
+        return;
+      }
+      form.dataset.submitting = '1';
+      var btn = form.querySelector('button[type="submit"]');
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+    });
+  });
+})();
+</script>
+</file>
+
+<file path="app/views/login/viewLogin.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3560,251 +2953,7 @@ class userModel extends ConectDB {
   <title>CopiGaby — Iniciar Sesión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --navy:      #1a2340;
-      --navy-dark: #111827;
-      --orange:    #f5a623;
-      --orange-dk: #d4891a;
-      --white:     #ffffff;
-      --gray-100:  #f3f4f6;
-      --gray-400:  #9ca3af;
-      --gray-600:  #4b5563;
-      --red:       #ef4444;
-      --radius:    14px;
-      --shadow:    0 20px 60px rgba(0,0,0,.35);
-    }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--navy-dark);
-      font-family: 'Nunito', sans-serif;
-      overflow-y: auto;
-    }
-
-    /* Fondo animado */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(245,166,35,.18) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26,35,64,.9) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* Círculos decorativos de fondo */
-    .bg-circles { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
-    .bg-circles span {
-      position: absolute;
-      border-radius: 50%;
-      border: 2px solid rgba(245,166,35,.12);
-      animation: float 8s ease-in-out infinite;
-    }
-    .bg-circles span:nth-child(1) { width:420px; height:420px; top:-120px; left:-120px; animation-delay:0s; }
-    .bg-circles span:nth-child(2) { width:280px; height:280px; bottom:-80px; right:-60px; animation-delay:2s; }
-    .bg-circles span:nth-child(3) { width:160px; height:160px; top:40%; right:8%; animation-delay:4s; }
-
-    @keyframes float {
-      0%,100% { transform: translateY(0) scale(1); }
-      50%      { transform: translateY(-18px) scale(1.04); }
-    }
-
-    /* Tarjeta principal */
-    .card {
-      position: relative; z-index: 10;
-      background: rgba(255,255,255,.04);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 24px;
-      padding: 48px 44px 44px;
-      width: 100%; max-width: 440px;
-      box-shadow: var(--shadow);
-      animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
-    }
-
-    @keyframes slideUp {
-      from { opacity:0; transform: translateY(32px); }
-      to   { opacity:1; transform: translateY(0); }
-    }
-
-    /* Logo */
-    .logo-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 32px;
-    }
-
-    .logo-badge {
-      width: 90px; height: 90px;
-      background: var(--navy);
-      border-radius: 50%;
-      border: 4px solid var(--orange);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 0 6px rgba(245,166,35,.18);
-    }
-
-    .logo-badge svg { width:44px; height:44px; }
-
-    .logo-name {
-      font-family: 'Pacifico', cursive;
-      font-size: 2rem;
-      color: var(--white);
-      letter-spacing: .5px;
-    }
-
-    .logo-name span { color: var(--orange); }
-
-    .logo-tagline {
-      font-size: .78rem;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--orange);
-      opacity: .85;
-    }
-
-    /* Título */
-    .card h2 {
-      color: var(--white);
-      font-size: 1.25rem;
-      font-weight: 800;
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    /* Error */
-    .alert-error {
-      background: rgba(239,68,68,.15);
-      border: 1px solid rgba(239,68,68,.4);
-      color: #fca5a5;
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: .875rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      display: flex; align-items: center; gap: 8px;
-    }
-
-    /* Formulario */
-    .field { margin-bottom: 18px; }
-
-    .field label {
-      display: block;
-      color: rgba(255,255,255,.7);
-      font-size: .8rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .input-wrap { position: relative; }
-
-    .input-wrap svg {
-      position: absolute; left: 14px; top: 50%;
-      transform: translateY(-50%);
-      width: 18px; height: 18px;
-      color: var(--gray-400);
-      pointer-events: none;
-    }
-
-    .input-wrap input {
-      width: 100%;
-      background: rgba(255,255,255,.07);
-      border: 1.5px solid rgba(255,255,255,.12);
-      border-radius: 10px;
-      padding: 13px 14px 13px 44px;
-      color: var(--white);
-      font-family: 'Nunito', sans-serif;
-      font-size: .95rem;
-      font-weight: 600;
-      outline: none;
-      transition: border-color .2s, background .2s;
-    }
-
-    .input-wrap input::placeholder { color: rgba(255,255,255,.3); font-weight: 400; }
-
-    .input-wrap input:focus {
-      border-color: var(--orange);
-      background: rgba(245,166,35,.08);
-    }
-
-    /* Botón */
-    .btn-login {
-      width: 100%;
-      margin-top: 8px;
-      padding: 15px;
-      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dk) 100%);
-      color: var(--navy-dark);
-      font-family: 'Nunito', sans-serif;
-      font-size: 1rem;
-      font-weight: 900;
-      letter-spacing: .5px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: transform .15s, box-shadow .15s, filter .15s;
-      box-shadow: 0 4px 20px rgba(245,166,35,.35);
-    }
-
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 28px rgba(245,166,35,.5);
-      filter: brightness(1.06);
-    }
-
-    .btn-login:active { transform: translateY(0); }
-
-    /* Footer */
-    .card-footer {
-      margin-top: 28px;
-      text-align: center;
-      color: rgba(255,255,255,.35);
-      font-size: .78rem;
-      font-weight: 600;
-      letter-spacing: .5px;
-    }
-
-    /* Credenciales demo */
-    .demo-hint {
-      margin-top: 20px;
-      background: rgba(245,166,35,.08);
-      border: 1px dashed rgba(245,166,35,.3);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: .75rem;
-      color: rgba(255,255,255,.5);
-      text-align: center;
-      line-height: 1.6;
-    }
-    .demo-hint strong { color: var(--orange); }
-
-    /* Responsividad */
-    @media (max-width: 480px) {
-      body {
-        align-items: flex-start;
-        padding: 40px 16px;
-      }
-      .card {
-        padding: 32px 24px;
-      }
-      .logo-badge {
-        width: 75px;
-        height: 75px;
-      }
-      .logo-name {
-        font-size: 1.7rem;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/login.css">
 </head>
 <body>
 
@@ -3813,11 +2962,9 @@ class userModel extends ConectDB {
   </div>
 
   <div class="card">
-
-    <!-- Logo -->
     <div class="logo-wrap">
       <div class="logo-badge">
-        <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+        <img src="assets/img/logo.jpeg" alt="Logo CopiGaby">
       </div>
       <div class="logo-name">Copi<span>Gaby</span></div>
       <div class="logo-tagline">¡Somos la diferencia!</div>
@@ -3833,19 +2980,11 @@ class userModel extends ConectDB {
     <?php endif; ?>
 
     <form method="POST" action="?url=login" autocomplete="off">
-
       <div class="field">
         <label for="username">Usuario</label>
         <div class="input-wrap">
           <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            placeholder="Tu nombre de usuario"
-            autocomplete="username"
-            required
-          />
+          <input type="text" id="username" name="username" placeholder="Tu nombre de usuario" autocomplete="username" required />
         </div>
       </div>
 
@@ -3853,19 +2992,11 @@ class userModel extends ConectDB {
         <label for="password">Contraseña</label>
         <div class="input-wrap">
           <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          />
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
         </div>
       </div>
 
       <button type="submit" class="btn-login">Ingresar al Sistema</button>
-
     </form>
 
     <div class="demo-hint">
@@ -3875,14 +3006,13 @@ class userModel extends ConectDB {
     <div class="card-footer">
       CopiGaby 2025 &nbsp;·&nbsp; RIF V-9622717-1
     </div>
-
   </div>
 
 </body>
 </html>
 </file>
 
-<file path="app/views/medida/index.php">
+<file path="app/views/medida/viewMedida.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3892,52 +3022,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <div class="dropdown-parent open mt-2">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] rotate-90 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Usuario</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">IVA</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white text-[0.8rem] font-bold bg-white/5 transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -3994,7 +3085,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalMedida" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
@@ -4017,7 +3107,6 @@ class userModel extends ConectDB {
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditMedida" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -4046,15 +3135,8 @@ class userModel extends ConectDB {
   </div>
 
   <script>
-    // Sidebar Toggle logic
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalMedida');
     const btnOpen = document.getElementById('btnOpenModal');
-
     const toggleModal = () => modal.classList.toggle('hidden');
     btnOpen.onclick = toggleModal;
 
@@ -4086,7 +3168,7 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/productos/index.php">
+<file path="app/views/productos/viewProducto.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -4096,108 +3178,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0 shadow-[0_0_0_4px_rgba(245,166,35,0.1)]">
-          <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-        </div>
-        <div>
-          <div class="font-['Pacifico'] text-white text-[1.15rem] leading-tight">Copi<span class="text-orange">Gaby</span></div>
-          <div class="text-[0.65rem] font-bold tracking-[2px] uppercase text-white/35">Sistema 2025</div>
-        </div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-
-    <!-- Módulo: Pedido -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z"/></svg>
-        Pedido
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=pedidos" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Pedidos</a>
-        <a href="?url=cliente" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Cliente</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clip-rule="evenodd"/></svg>
-      Compra
-    </a>
-
-    <!-- Módulo: Producto -->
-    <div class="dropdown-parent open">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 dropdown-toggle">
-        <svg class="w-[18px] h-[18px] text-orange" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-        Producto
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform rotate-90" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=producto" class="pl-12 py-2 text-white text-[0.8rem] font-bold transition-all bg-white/5">Productos</a>
-        <a href="?url=categoria" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Categoría</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-      Servicios
-    </a>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-      Proveedores
-    </a>
-
-    <!-- Módulo: Configuración -->
-    <div class="dropdown-parent">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50 group dropdown-toggle">
-        <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Usuario</a>
-        <a href="?url=rol" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Rol</a>
-        <a href="?url=metodopago" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Método de Pago</a>
-        <a href="?url=moneda" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Moneda</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">IVA</a>
-        <a href="?url=empresa" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Empresa</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white hover:bg-white/5 transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-
-    <a href="#" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent transition-all hover:bg-white/5 hover:text-white hover:border-orange/50">
-      <svg class="w-[18px] h-[18px] shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clip-rule="evenodd"/></svg>
-      Reporte
-    </a>
-
-    <div class="mt-auto p-4 border-t border-white/10">
-      <a href="?url=login" class="flex items-center gap-[10px] text-white/45 font-bold text-[0.85rem] p-2 rounded-lg transition-all hover:text-red-300 hover:bg-red-500/10">
-        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        Cerrar Sesión
-      </a>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -4276,7 +3263,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlay"></div>
@@ -4341,7 +3327,6 @@ class userModel extends ConectDB {
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -4412,18 +3397,12 @@ class userModel extends ConectDB {
   </div>
 
   <script>
-    // Sidebar Toggle
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
-    // Modal Logic
     const modal = document.getElementById('modalProduct');
     const btnOpen = document.getElementById('btnOpenModal');
     const closeBtns = document.querySelectorAll('.closeModal');
     const overlay = document.getElementById('overlay');
-
     const toggleModal = () => modal.classList.toggle('hidden');
+
     btnOpen.onclick = toggleModal;
     closeBtns.forEach(btn => btn.onclick = toggleModal);
     overlay.onclick = toggleModal;
@@ -4439,7 +3418,6 @@ class userModel extends ConectDB {
         document.getElementById('edit_stock_minimo').value = data.stock_minimo;
         document.getElementById('edit_costo').value = data.costo;
         document.getElementById('edit_estado').checked = (data.estado == 1);
-        
         document.getElementById('modalEditProduct').classList.remove('hidden');
     }
 
@@ -4464,7 +3442,7 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="app/views/proveedores/index.php">
+<file path="app/views/proveedores/viewProveedor.php">
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -4474,57 +3452,13 @@ class userModel extends ConectDB {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
-            orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
-          },
-          borderRadius: { 'custom': '14px' }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-  <aside class="fixed inset-y-0 left-0 w-[260px] bg-navy-dark flex flex-col z-[100] shrink-0 sidebar-scroll overflow-y-auto">
-    <div class="p-[20px_20px_16px] border-b border-white/10">
-      <div class="flex items-center gap-[10px]">
-        <div class="w-10 h-10 bg-navy rounded-full border-2 border-orange flex items-center justify-center shrink-0">
-          <img src="assets/img/logo.jpeg" alt="Logo" class="w-full h-full rounded-full object-cover">
-        </div>
-        <div class="font-['Pacifico'] text-white text-[1.15rem]">Copi<span class="text-orange">Gaby</span></div>
-      </div>
-    </div>
-    <div class="p-[22px_20px_8px] text-[0.65rem] font-extrabold tracking-[2px] uppercase text-white/30">Menú Principal</div>
-    
-    <a href="?url=dashboard" class="flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] hover:bg-white/5 transition-all">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-      Dashboard
-    </a>
-
-    <a href="?url=proveedor" class="flex items-center gap-3 px-5 py-[11px] font-bold text-[0.88rem] border-l-[3px] border-orange bg-orange/10 text-white">
-      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
-      Proveedores
-    </a>
-
-    <div class="dropdown-parent mt-2">
-      <button class="w-full flex items-center gap-3 px-5 py-[11px] text-white/60 font-bold text-[0.88rem] border-l-[3px] border-transparent hover:bg-white/5 hover:text-white transition-all dropdown-toggle">
-        <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        Configuración
-        <svg class="nav-arrow ml-auto w-[14px] transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-      </button>
-      <div class="dropdown-menu flex flex-col bg-black/20">
-        <a href="?url=usuario" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Usuario</a>
-        <a href="?url=iva" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">IVA</a>
-        <a href="?url=medida" class="pl-12 py-2 text-white/50 text-[0.8rem] font-bold hover:text-white transition-all">Unidad de Medida</a>
-      </div>
-    </div>
-  </aside>
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -4597,7 +3531,6 @@ class userModel extends ConectDB {
     </main>
   </div>
 
-  <!-- MODAL REGISTRO -->
   <div id="modalProveedor" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
@@ -4636,7 +3569,6 @@ class userModel extends ConectDB {
     </div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
   <div id="modalEditProveedor" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
@@ -4681,10 +3613,6 @@ class userModel extends ConectDB {
   </div>
 
   <script>
-    document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-      btn.addEventListener('click', () => btn.parentElement.classList.toggle('open'));
-    });
-
     const modal = document.getElementById('modalProveedor');
     const btnOpen = document.getElementById('btnOpenModal');
     const toggleModal = () => modal.classList.toggle('hidden');
@@ -4722,31 +3650,303 @@ class userModel extends ConectDB {
 </html>
 </file>
 
-<file path="assets/css/dashboard.css">
-/* Animaciones personalizadas */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+<file path="assets/css/login.css">
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1a2340;
+  --navy-dark: #111827;
+  --orange: #f5a623;
+  --orange-dk: #d4891a;
+  --white: #ffffff;
+  --gray-400: #9ca3af;
+  --radius: 14px;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--navy-dark);
+  font-family: 'Nunito', sans-serif;
+  overflow-y: auto;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(245, 166, 35, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26, 35, 64, 0.9) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.bg-circles { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+
+.bg-circles span {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 166, 35, 0.12);
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-circles span:nth-child(1) { width: 420px; height: 420px; top: -120px; left: -120px; animation-delay: 0s; }
+.bg-circles span:nth-child(2) { width: 280px; height: 280px; bottom: -80px; right: -60px; animation-delay: 2s; }
+.bg-circles span:nth-child(3) { width: 160px; height: 160px; top: 40%; right: 8%; animation-delay: 4s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.04); }
+}
+
+.card {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 48px 44px 44px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-up {
-  animation: fadeUp 0.4s ease both;
+.logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
 }
 
-/* Ajuste fino para el scrollbar de la sidebar */
-.sidebar-scroll::-webkit-scrollbar { width: 4px; }
-.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-/* Estilos para Menús Desplegables en Sidebar */
-.dropdown-menu {
-  max-height: 0;
+.logo-badge {
+  width: 90px;
+  height: 90px;
+  background: var(--navy);
+  border-radius: 50%;
+  border: 4px solid var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 6px rgba(245, 166, 35, 0.18);
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
 }
-.dropdown-parent.open .dropdown-menu { max-height: 1000px; transition: max-height 0.4s ease-in-out; }
-.dropdown-parent.open .nav-arrow { transform: rotate(90deg); }
+
+.logo-badge img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.logo-name {
+  font-family: 'Pacifico', cursive;
+  font-size: 2rem;
+  color: var(--white);
+  letter-spacing: 0.5px;
+}
+
+.logo-name span { color: var(--orange); }
+
+.logo-tagline {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange);
+  opacity: 0.85;
+}
+
+.card h2 {
+  color: var(--white);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field { margin-bottom: 18px; }
+
+.field label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.input-wrap { position: relative; }
+
+.input-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.input-wrap input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 13px 14px 13px 44px;
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.input-wrap input::placeholder { color: rgba(255, 255, 255, 0.3); font-weight: 400; }
+
+.input-wrap input:focus {
+  border-color: var(--orange);
+  background: rgba(245, 166, 35, 0.08);
+}
+
+.btn-login {
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dk) 100%);
+  color: var(--navy-dark);
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.35);
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(245, 166, 35, 0.5);
+  filter: brightness(1.06);
+}
+
+.btn-login:active { transform: translateY(0); }
+
+.card-footer {
+  margin-top: 28px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.demo-hint {
+  margin-top: 20px;
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px dashed rgba(245, 166, 35, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.demo-hint strong { color: var(--orange); }
+
+@media (max-width: 480px) {
+  body {
+    align-items: flex-start;
+    padding: 40px 16px;
+  }
+  .card { padding: 32px 24px; }
+  .logo-badge { width: 75px; height: 75px; }
+  .logo-name { font-size: 1.7rem; }
+}
+</file>
+
+<file path="assets/css/theme.css">
+:root {
+  --navy: #1a2340;
+  --navy-light: #243050;
+  --navy-dark: #111827;
+  --orange: #f5a623;
+  --orange-dk: #d4891a;
+  --radius-custom: 14px;
+  --body-bg: #f0f2f7;
+  --body-text: #1f2937;
+}
+
+.bg-navy { background-color: var(--navy); }
+.bg-navy-light { background-color: var(--navy-light); }
+.bg-navy-dark { background-color: var(--navy-dark); }
+.bg-orange { background-color: var(--orange); }
+.bg-orange\/10 { background-color: rgba(245, 166, 35, 0.1); }
+.bg-navy-dark\/60 { background-color: rgba(17, 24, 39, 0.6); }
+
+.text-navy { color: var(--navy); }
+.text-navy-light { color: var(--navy-light); }
+.text-navy-dark { color: var(--navy-dark); }
+.text-orange { color: var(--orange); }
+.text-orange-dk { color: var(--orange-dk); }
+
+.border-orange { border-color: var(--orange); }
+.hover\:border-orange\/50:hover { border-color: rgba(245, 166, 35, 0.5); }
+.focus\:border-orange:focus { border-color: var(--orange); }
+.focus\:ring-orange\/20:focus { --tw-ring-color: rgba(245, 166, 35, 0.2); }
+
+.rounded-custom { border-radius: var(--radius-custom); }
+
+.from-orange { --tw-gradient-from: var(--orange); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245, 166, 35, 0)); }
+.to-orange-dk { --tw-gradient-to: var(--orange-dk); }
+
+.hover\:bg-navy:hover { background-color: var(--navy); }
+
+.accent-orange { accent-color: var(--orange); }
+</file>
+
+<file path="assets/js/tailwind-config.js">
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy: { DEFAULT: '#1a2340', light: '#243050', dark: '#111827' },
+        orange: { DEFAULT: '#f5a623', dk: '#d4891a' },
+      },
+      borderRadius: { custom: '14px' }
+    }
+  }
+};
 </file>
 
 <file path="index.php">
@@ -4761,1657 +3961,501 @@ class userModel extends ConectDB {
 ?>
 </file>
 
-<file path="app/Models/Compras/Compra.php">
+<file path="app/controllers/categoriaController.php">
 <?php
 
-declare(strict_types=1);
+    use App\models\categoriaModel;
 
-namespace App\Models\Compras;
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-use App\Models\Core\ConexionBD;
-
-class Compra extends ConexionBD
-{
-    private string $codigo_compra;
-    private string $fecha_compra;
-    private string $numero_factura;
-    private float $monto_total;
-    private bool $estado;
-    private int $codigo_proveedor;
-    private string $codigo_usuario;
-
-    public function __construct(
-        string $codigo_compra,
-        string $fecha_compra,
-        string $numero_factura,
-        float $monto_total,
-        int $codigo_proveedor,
-        string $codigo_usuario,
-        bool $estado = true
-    ) {
-        parent::__construct();
-        $this->codigo_compra = $codigo_compra;
-        $this->fecha_compra = $fecha_compra;
-        $this->numero_factura = $numero_factura;
-        $this->monto_total = $monto_total;
-        $this->codigo_proveedor = $codigo_proveedor;
-        $this->codigo_usuario = $codigo_usuario;
-        $this->estado = $estado;
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
     }
 
-    public function calcularTotal(array $detalles): float
-    {
-        $total = 0.0;
+    $object = new categoriaModel();
 
-        foreach ($detalles as $detalle) {
-            if ($detalle instanceof DetalleCompra) {
-                $total += $detalle->getCantidad() * $detalle->getCostoUnitario();
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_categoria'])) {
+                $object->addCategory(trim($_POST['nombre_categoria']));
+                header("Location: ?url=categoria");
+                exit();
+            }
+            header("Location: ?url=categoria");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idcategoria'], $_POST['nombre_categoria'])) {
+                $estado = isset($_POST['estado']) ? 1 : 0;
+                $object->updateCategory(
+                    (int) $_POST['idcategoria'],
+                    trim($_POST['nombre_categoria']),
+                    $estado
+                );
+                header("Location: ?url=categoria");
+                exit();
+            }
+            header("Location: ?url=categoria");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['getCategories'])) {
+                $result = $object->getAllCategories();
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            if (isset($_POST['deleteCategory'])) {
+                $result = $object->deleteCategory((int) $_POST['idcategoria']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=categoria");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'list') {
+            header("Location: ?url=categoria");
+            exit();
+        }
+    }
+
+    $categorias = $object->getAllCategories();
+    include 'app/views/categorias/viewCategoria.php';
+</file>
+
+<file path="app/controllers/compraController.php">
+<?php
+
+    use App\models\compraModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new compraModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['numero_factura_proveedor'])) {
+                $_POST['codigo_usuario'] = $_SESSION['user_id'];
+                $object->addCompra($_POST);
+                header("Location: ?url=compra");
+                exit();
+            }
+            header("Location: ?url=compra");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteCompra'])) {
+                $result = $object->deleteCompra((int) $_POST['idcompra']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=compra");
+            exit();
+        }
+
+        else {
+            header("Location: ?url=compra");
+            exit();
+        }
+    }
+
+    $compras = $object->getAllCompras();
+    $proveedores = $object->getProviders();
+    include 'app/views/compras/viewCompra.php';
+</file>
+
+<file path="app/controllers/dashboardController.php">
+<?php
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    // Verificamos que el usuario esté logueado antes de mostrar el dashboard
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    // Inicializamos la variable $stats con valores por defecto para evitar el warning.
+    // En el futuro, puedes crear un método en tu modelo para obtener estas cifras reales.
+    $stats = [
+        'productos_activos' => 0,
+        'servicios_activos' => 0,
+        'pedidos_mes'       => 0,
+        'ventas_mes'        => 0
+    ];
+
+    // Cargamos la vista del dashboard
+    include 'app/views/dashboard/viewDashboard.php';
+
+?>
+</file>
+
+<file path="app/controllers/IVAController.php">
+<?php
+
+    use App\models\ivaModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new ivaModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['porcentaje_iva'])) {
+                $object->addIva($_POST['porcentaje_iva']);
+                header("Location: ?url=iva");
+                exit();
+            }
+            header("Location: ?url=iva");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_IVA'])) {
+                $estado = isset($_POST['estado']) ? 1 : 0;
+                $object->updateIva((int) $_POST['codigo_IVA'], $_POST['porcentaje_iva'], $estado);
+                header("Location: ?url=iva");
+                exit();
+            }
+            header("Location: ?url=iva");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteIva'])) {
+                $result = $object->deleteIva((int) $_POST['codigo_IVA']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=iva");
+            exit();
+        }
+
+        else {
+            header("Location: ?url=iva");
+            exit();
+        }
+    }
+
+    $ivas = $object->getAllIvas();
+    include 'app/views/IVA/viewIVA.php';
+</file>
+
+<file path="app/controllers/loginController.php">
+<?php
+
+    use App\models\userModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    $object = new userModel();
+    $error = ""; // Inicializamos la variable de error para la vista
+
+    if (isset($_GET['type'])) {
+
+        // Se verifica si el tipo de vista es 'list' y se llama al método correspondiente
+        if ($_GET['type'] == 'list') {
+            $result = $object->getAllUsers();
+            include 'app/views/user/listView.php';
+        } 
+
+        // Se verifica si el tipo de vista es 'register' y se llama al método correspondiente
+        elseif ($_GET['type'] == 'register') {
+            // Se ajustan los campos según la tabla 'usuario' del SQL proporcionado
+            if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
+                $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
+                $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
+            }
+            include 'app/views/user/registerView.php';
+        }
+
+        elseif ($_GET['type'] == 'main') {
+            if(isset($_POST["getUsers"])) {
+                $result = $object->getAllUsers();
+                echo json_encode($result);
+                die();
+            }
+            if(isset($_POST["deleteUser"])) {
+                // idUser mapeado a codigo_usuario
+                $result = $object->deleteUser($_POST["idUser"]); 
+                echo json_encode($result);
+                die();
+            }
+            include 'app/views/user/userView.php';
+        }
+        
+        else {
+            echo "Error: Tipo de vista no válido.";
+        }
+
+    } else {
+        // Lógica de Autenticación (Login)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $usuarioInput = $_POST['username'] ?? '';
+            $passwordInput = $_POST['password'] ?? '';
+
+            if (!empty($usuarioInput) && !empty($passwordInput)) {
+                $user = $object->login($usuarioInput, $passwordInput);
+                
+                if ($user) {
+                    $_SESSION['user_id']  = $user['codigo_usuario'];
+                    $_SESSION['username'] = $user['nombre_usuario'];
+                    $_SESSION['rol']      = $user['codigo_rol'];
+                    
+                    header("Location: ?url=dashboard");
+                    exit();
+                } else {
+                    $error = "Usuario o contraseña incorrectos.";
+                }
+            } else {
+                $error = "Por favor, llene todos los campos.";
             }
         }
-
-        $this->monto_total = $total;
-
-        return $total;
+        include 'app/views/login/viewLogin.php';
     }
-
-    public function getCodigoCompra(): string
-    {
-        return $this->codigo_compra;
-    }
-
-    public function setCodigoCompra(string $codigo_compra): void
-    {
-        $this->codigo_compra = $codigo_compra;
-    }
-
-    public function getFechaCompra(): string
-    {
-        return $this->fecha_compra;
-    }
-
-    public function setFechaCompra(string $fecha_compra): void
-    {
-        $this->fecha_compra = $fecha_compra;
-    }
-
-    public function getNumeroFactura(): string
-    {
-        return $this->numero_factura;
-    }
-
-    public function setNumeroFactura(string $numero_factura): void
-    {
-        $this->numero_factura = $numero_factura;
-    }
-
-    public function getMontoTotal(): float
-    {
-        return $this->monto_total;
-    }
-
-    public function setMontoTotal(float $monto_total): void
-    {
-        $this->monto_total = $monto_total;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-
-    public function getCodigoProveedor(): int
-    {
-        return $this->codigo_proveedor;
-    }
-
-    public function setCodigoProveedor(int $codigo_proveedor): void
-    {
-        $this->codigo_proveedor = $codigo_proveedor;
-    }
-
-    public function getCodigoUsuario(): string
-    {
-        return $this->codigo_usuario;
-    }
-
-    public function setCodigoUsuario(string $codigo_usuario): void
-    {
-        $this->codigo_usuario = $codigo_usuario;
-    }
-}
 </file>
 
-<file path="app/Models/Compras/DetalleCompra.php">
+<file path="app/controllers/medidaController.php">
 <?php
 
-declare(strict_types=1);
+    use App\models\medidaModel;
 
-namespace App\Models\Compras;
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-use App\Models\Core\ConexionBD;
-
-class DetalleCompra extends ConexionBD
-{
-    private string $codigo_detalle_compra;
-    private int $cantidad;
-    private float $costo_unitario;
-    private string $codigo_compra;
-    private int $codigo_producto;
-
-    public function __construct(
-        string $codigo_detalle_compra,
-        int $cantidad,
-        float $costo_unitario,
-        string $codigo_compra,
-        int $codigo_producto
-    ) {
-        parent::__construct();
-        $this->codigo_detalle_compra = $codigo_detalle_compra;
-        $this->cantidad = $cantidad;
-        $this->costo_unitario = $costo_unitario;
-        $this->codigo_compra = $codigo_compra;
-        $this->codigo_producto = $codigo_producto;
-    }
-
-    public function getCodigoDetalleCompra(): string
-    {
-        return $this->codigo_detalle_compra;
-    }
-
-    public function setCodigoDetalleCompra(string $codigo_detalle_compra): void
-    {
-        $this->codigo_detalle_compra = $codigo_detalle_compra;
-    }
-
-    public function getCantidad(): int
-    {
-        return $this->cantidad;
-    }
-
-    public function setCantidad(int $cantidad): void
-    {
-        $this->cantidad = $cantidad;
-    }
-
-    public function getCostoUnitario(): float
-    {
-        return $this->costo_unitario;
-    }
-
-    public function setCostoUnitario(float $costo_unitario): void
-    {
-        $this->costo_unitario = $costo_unitario;
-    }
-
-    public function getCodigoCompra(): string
-    {
-        return $this->codigo_compra;
-    }
-
-    public function setCodigoCompra(string $codigo_compra): void
-    {
-        $this->codigo_compra = $codigo_compra;
-    }
-
-    public function getCodigoProducto(): int
-    {
-        return $this->codigo_producto;
-    }
-
-    public function setCodigoProducto(int $codigo_producto): void
-    {
-        $this->codigo_producto = $codigo_producto;
-    }
-}
-</file>
-
-<file path="app/Models/Compras/Proveedor.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Compras;
-
-use App\Models\Core\ConexionBD;
-
-class Proveedor extends ConexionBD
-{
-    private int $codigo_proveedor;
-    private string $proveedor;
-    private string $razon_social;
-    private string $telefono_proveedor;
-    private string $correo_proveedor;
-    private string $tipo_rubro;
-    private string $direccion_proveedor;
-    private bool $estado;
-
-    public function __construct(
-        int $codigo_proveedor,
-        string $proveedor,
-        string $razon_social,
-        string $telefono_proveedor,
-        string $correo_proveedor,
-        string $tipo_rubro,
-        string $direccion_proveedor,
-        bool $estado = true
-    ) {
-        parent::__construct();
-        $this->codigo_proveedor = $codigo_proveedor;
-        $this->proveedor = $proveedor;
-        $this->razon_social = $razon_social;
-        $this->telefono_proveedor = $telefono_proveedor;
-        $this->correo_proveedor = $correo_proveedor;
-        $this->tipo_rubro = $tipo_rubro;
-        $this->direccion_proveedor = $direccion_proveedor;
-        $this->estado = $estado;
-    }
-
-    public function getCodigoProveedor(): int
-    {
-        return $this->codigo_proveedor;
-    }
-
-    public function setCodigoProveedor(int $codigo_proveedor): void
-    {
-        $this->codigo_proveedor = $codigo_proveedor;
-    }
-
-    public function getProveedor(): string
-    {
-        return $this->proveedor;
-    }
-
-    public function setProveedor(string $proveedor): void
-    {
-        $this->proveedor = $proveedor;
-    }
-
-    public function getRazonSocial(): string
-    {
-        return $this->razon_social;
-    }
-
-    public function setRazonSocial(string $razon_social): void
-    {
-        $this->razon_social = $razon_social;
-    }
-
-    public function getTelefonoProveedor(): string
-    {
-        return $this->telefono_proveedor;
-    }
-
-    public function setTelefonoProveedor(string $telefono_proveedor): void
-    {
-        $this->telefono_proveedor = $telefono_proveedor;
-    }
-
-    public function getCorreoProveedor(): string
-    {
-        return $this->correo_proveedor;
-    }
-
-    public function setCorreoProveedor(string $correo_proveedor): void
-    {
-        $this->correo_proveedor = $correo_proveedor;
-    }
-
-    public function getTipoRubro(): string
-    {
-        return $this->tipo_rubro;
-    }
-
-    public function setTipoRubro(string $tipo_rubro): void
-    {
-        $this->tipo_rubro = $tipo_rubro;
-    }
-
-    public function getDireccionProveedor(): string
-    {
-        return $this->direccion_proveedor;
-    }
-
-    public function setDireccionProveedor(string $direccion_proveedor): void
-    {
-        $this->direccion_proveedor = $direccion_proveedor;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/Empresa.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class Empresa extends ConexionBD
-{
-    private string $rif;
-    private string $nombre_empresa;
-    private string $direccion;
-    private string $telefono;
-
-    public function __construct(
-        string $rif,
-        string $nombre_empresa,
-        string $direccion,
-        string $telefono
-    ) {
-        parent::__construct();
-        $this->rif = $rif;
-        $this->nombre_empresa = $nombre_empresa;
-        $this->direccion = $direccion;
-        $this->telefono = $telefono;
-    }
-
-    public function getRif(): string
-    {
-        return $this->rif;
-    }
-
-    public function setRif(string $rif): void
-    {
-        $this->rif = $rif;
-    }
-
-    public function getNombreEmpresa(): string
-    {
-        return $this->nombre_empresa;
-    }
-
-    public function setNombreEmpresa(string $nombre_empresa): void
-    {
-        $this->nombre_empresa = $nombre_empresa;
-    }
-
-    public function getDireccion(): string
-    {
-        return $this->direccion;
-    }
-
-    public function setDireccion(string $direccion): void
-    {
-        $this->direccion = $direccion;
-    }
-
-    public function getTelefono(): string
-    {
-        return $this->telefono;
-    }
-
-    public function setTelefono(string $telefono): void
-    {
-        $this->telefono = $telefono;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/Iva.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class Iva extends ConexionBD
-{
-    private int $id_iva;
-    private float $porcentaje;
-    private bool $principal;
-
-    public function __construct(int $id_iva, float $porcentaje, bool $principal = false)
-    {
-        parent::__construct();
-        $this->id_iva = $id_iva;
-        $this->porcentaje = $porcentaje;
-        $this->principal = $principal;
-    }
-
-    public function getIdIva(): int
-    {
-        return $this->id_iva;
-    }
-
-    public function setIdIva(int $id_iva): void
-    {
-        $this->id_iva = $id_iva;
-    }
-
-    public function getPorcentaje(): float
-    {
-        return $this->porcentaje;
-    }
-
-    public function setPorcentaje(float $porcentaje): void
-    {
-        $this->porcentaje = $porcentaje;
-    }
-
-    public function getPrincipal(): bool
-    {
-        return $this->principal;
-    }
-
-    public function setPrincipal(bool $principal): void
-    {
-        $this->principal = $principal;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/Medida.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class Medida extends ConexionBD
-{
-    private int $codigo_medida;
-    private string $nombre_medida;
-
-    public function __construct(int $codigo_medida, string $nombre_medida)
-    {
-        parent::__construct();
-        $this->codigo_medida = $codigo_medida;
-        $this->nombre_medida = $nombre_medida;
-    }
-
-    public function getCodigoMedida(): int
-    {
-        return $this->codigo_medida;
-    }
-
-    public function setCodigoMedida(int $codigo_medida): void
-    {
-        $this->codigo_medida = $codigo_medida;
-    }
-
-    public function getNombreMedida(): string
-    {
-        return $this->nombre_medida;
-    }
-
-    public function setNombreMedida(string $nombre_medida): void
-    {
-        $this->nombre_medida = $nombre_medida;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/MetodoPago.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class MetodoPago extends ConexionBD
-{
-    private int $codigo_metodo;
-    private string $nombre_metodo;
-
-    public function __construct(int $codigo_metodo, string $nombre_metodo)
-    {
-        parent::__construct();
-        $this->codigo_metodo = $codigo_metodo;
-        $this->nombre_metodo = $nombre_metodo;
-    }
-
-    public function getCodigoMetodo(): int
-    {
-        return $this->codigo_metodo;
-    }
-
-    public function setCodigoMetodo(int $codigo_metodo): void
-    {
-        $this->codigo_metodo = $codigo_metodo;
-    }
-
-    public function getNombreMetodo(): string
-    {
-        return $this->nombre_metodo;
-    }
-
-    public function setNombreMetodo(string $nombre_metodo): void
-    {
-        $this->nombre_metodo = $nombre_metodo;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/Moneda.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class Moneda extends ConexionBD
-{
-    private int $codigo_moneda;
-    private string $nombre_moneda;
-    private float $tasa_cambio;
-
-    public function __construct(int $codigo_moneda, string $nombre_moneda, float $tasa_cambio)
-    {
-        parent::__construct();
-        $this->codigo_moneda = $codigo_moneda;
-        $this->nombre_moneda = $nombre_moneda;
-        $this->tasa_cambio = $tasa_cambio;
-    }
-
-    public function getCodigoMoneda(): int
-    {
-        return $this->codigo_moneda;
-    }
-
-    public function setCodigoMoneda(int $codigo_moneda): void
-    {
-        $this->codigo_moneda = $codigo_moneda;
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
     }
 
-    public function getNombreMoneda(): string
-    {
-        return $this->nombre_moneda;
-    }
-
-    public function setNombreMoneda(string $nombre_moneda): void
-    {
-        $this->nombre_moneda = $nombre_moneda;
-    }
-
-    public function getTasaCambio(): float
-    {
-        return $this->tasa_cambio;
-    }
-
-    public function setTasaCambio(float $tasa_cambio): void
-    {
-        $this->tasa_cambio = $tasa_cambio;
-    }
-}
-</file>
-
-<file path="app/Models/Configuracion/Pago.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Configuracion;
-
-use App\Models\Core\ConexionBD;
-
-class Pago extends ConexionBD
-{
-    private int $codigo_pago;
-    private float $monto;
-    private string $fecha;
-    private string $numero_referencia;
-    private string $codigo_venta;
-    private int $codigo_metodo;
-    private int $codigo_moneda;
-
-    public function __construct(
-        int $codigo_pago,
-        float $monto,
-        string $fecha,
-        string $numero_referencia,
-        string $codigo_venta,
-        int $codigo_metodo,
-        int $codigo_moneda
-    ) {
-        parent::__construct();
-        $this->codigo_pago = $codigo_pago;
-        $this->monto = $monto;
-        $this->fecha = $fecha;
-        $this->numero_referencia = $numero_referencia;
-        $this->codigo_venta = $codigo_venta;
-        $this->codigo_metodo = $codigo_metodo;
-        $this->codigo_moneda = $codigo_moneda;
-    }
-
-    public function getCodigoPago(): int
-    {
-        return $this->codigo_pago;
-    }
-
-    public function setCodigoPago(int $codigo_pago): void
-    {
-        $this->codigo_pago = $codigo_pago;
-    }
-
-    public function getMonto(): float
-    {
-        return $this->monto;
-    }
-
-    public function setMonto(float $monto): void
-    {
-        $this->monto = $monto;
-    }
-
-    public function getFecha(): string
-    {
-        return $this->fecha;
-    }
-
-    public function setFecha(string $fecha): void
-    {
-        $this->fecha = $fecha;
-    }
-
-    public function getNumeroReferencia(): string
-    {
-        return $this->numero_referencia;
-    }
-
-    public function setNumeroReferencia(string $numero_referencia): void
-    {
-        $this->numero_referencia = $numero_referencia;
-    }
-
-    public function getCodigoVenta(): string
-    {
-        return $this->codigo_venta;
-    }
-
-    public function setCodigoVenta(string $codigo_venta): void
-    {
-        $this->codigo_venta = $codigo_venta;
-    }
-
-    public function getCodigoMetodo(): int
-    {
-        return $this->codigo_metodo;
-    }
-
-    public function setCodigoMetodo(int $codigo_metodo): void
-    {
-        $this->codigo_metodo = $codigo_metodo;
-    }
-
-    public function getCodigoMoneda(): int
-    {
-        return $this->codigo_moneda;
-    }
-
-    public function setCodigoMoneda(int $codigo_moneda): void
-    {
-        $this->codigo_moneda = $codigo_moneda;
-    }
-}
-</file>
-
-<file path="app/Models/Core/ConexionBD.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Core;
-
-use PDO;
-
-abstract class ConexionBD
-{
-    protected string $host;
-    protected string $dbname;
-    protected string $username;
-    protected string $password;
-    protected ?PDO $conn = null;
-
-    public function __construct(
-        string $host = 'localhost',
-        string $dbname = 'copigaby',
-        string $username = 'root',
-        string $password = ''
-    ) {
-        $this->host = $host;
-        $this->dbname = $dbname;
-        $this->username = $username;
-        $this->password = $password;
-    }
+    $object = new medidaModel();
 
-    protected function conectar(): PDO
-    {
-        if ($this->conn === null) {
-            $dsn = sprintf(
-                'mysql:host=%s;dbname=%s;charset=utf8mb4',
-                $this->host,
-                $this->dbname
-            );
+    if (isset($_GET['type'])) {
 
-            $this->conn = new PDO($dsn, $this->username, $this->password, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ]);
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
+                $object->addMedida($_POST['nombre']);
+                header("Location: ?url=medida");
+                exit();
+            }
+            header("Location: ?url=medida");
+            exit();
         }
 
-        return $this->conn;
-    }
-
-    protected function desconectar(): void
-    {
-        $this->conn = null;
-    }
-
-    protected function getHost(): string
-    {
-        return $this->host;
-    }
-
-    protected function setHost(string $host): void
-    {
-        $this->host = $host;
-    }
-
-    protected function getDbname(): string
-    {
-        return $this->dbname;
-    }
-
-    protected function setDbname(string $dbname): void
-    {
-        $this->dbname = $dbname;
-    }
-
-    protected function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    protected function setUsername(string $username): void
-    {
-        $this->username = $username;
-    }
-
-    protected function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    protected function setPassword(string $password): void
-    {
-        $this->password = $password;
-    }
-
-    protected function getConn(): ?PDO
-    {
-        return $this->conn;
-    }
-}
-</file>
-
-<file path="app/Models/Inventario/Categoria.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Inventario;
-
-use App\Models\Core\ConexionBD;
-
-class Categoria extends ConexionBD
-{
-    private int $codigo_categoria;
-    private string $nombre_categoria;
-    private bool $estado;
-
-    public function __construct(
-        int $codigo_categoria,
-        string $nombre_categoria,
-        bool $estado = true
-    ) {
-        parent::__construct();
-        $this->codigo_categoria = $codigo_categoria;
-        $this->nombre_categoria = $nombre_categoria;
-        $this->estado = $estado;
-    }
-
-    public function getCodigoCategoria(): int
-    {
-        return $this->codigo_categoria;
-    }
-
-    public function setCodigoCategoria(int $codigo_categoria): void
-    {
-        $this->codigo_categoria = $codigo_categoria;
-    }
-
-    public function getNombreCategoria(): string
-    {
-        return $this->nombre_categoria;
-    }
-
-    public function setNombreCategoria(string $nombre_categoria): void
-    {
-        $this->nombre_categoria = $nombre_categoria;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-}
-</file>
-
-<file path="app/Models/Inventario/Producto.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Inventario;
-
-use App\Models\Core\ConexionBD;
-
-class Producto extends ConexionBD
-{
-    private int $codigo_producto;
-    private string $nombre_producto;
-    private string $descripcion_producto;
-    private int $stock_actual;
-    private int $stock_minimo;
-    private float $precio_costo;
-    private float $precio_venta;
-    private bool $estado;
-    private int $codigo_categoria;
-    private int $codigo_medida;
-
-    public function __construct(
-        int $codigo_producto,
-        string $nombre_producto,
-        string $descripcion_producto,
-        int $stock_actual,
-        int $stock_minimo,
-        float $precio_costo,
-        float $precio_venta,
-        int $codigo_categoria,
-        int $codigo_medida,
-        bool $estado = true
-    ) {
-        parent::__construct();
-        $this->codigo_producto = $codigo_producto;
-        $this->nombre_producto = $nombre_producto;
-        $this->descripcion_producto = $descripcion_producto;
-        $this->stock_actual = $stock_actual;
-        $this->stock_minimo = $stock_minimo;
-        $this->precio_costo = $precio_costo;
-        $this->precio_venta = $precio_venta;
-        $this->codigo_categoria = $codigo_categoria;
-        $this->codigo_medida = $codigo_medida;
-        $this->estado = $estado;
-    }
-
-    public function validarStock(int $cantidad): bool
-    {
-        return $this->estado && $cantidad > 0 && $this->stock_actual >= $cantidad;
-    }
-
-    public function descontarStock(int $cantidad): bool
-    {
-        if (!$this->validarStock($cantidad)) {
-            return false;
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_media'])) {
+                $estado = isset($_POST['estado']) ? 1 : 0;
+                $object->updateMedida((int) $_POST['codigo_media'], $_POST['nombre'], $estado);
+                header("Location: ?url=medida");
+                exit();
+            }
+            header("Location: ?url=medida");
+            exit();
         }
 
-        $this->stock_actual -= $cantidad;
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteMedida'])) {
+                $result = $object->deleteMedida((int) $_POST['codigo_media']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=medida");
+            exit();
+        }
 
-        return true;
-    }
-
-    public function agregarStock(int $cantidad): void
-    {
-        if ($cantidad > 0) {
-            $this->stock_actual += $cantidad;
+        else {
+            header("Location: ?url=medida");
+            exit();
         }
     }
 
-    public function getCodigoProducto(): int
-    {
-        return $this->codigo_producto;
-    }
-
-    public function setCodigoProducto(int $codigo_producto): void
-    {
-        $this->codigo_producto = $codigo_producto;
-    }
-
-    public function getNombreProducto(): string
-    {
-        return $this->nombre_producto;
-    }
-
-    public function setNombreProducto(string $nombre_producto): void
-    {
-        $this->nombre_producto = $nombre_producto;
-    }
-
-    public function getDescripcionProducto(): string
-    {
-        return $this->descripcion_producto;
-    }
-
-    public function setDescripcionProducto(string $descripcion_producto): void
-    {
-        $this->descripcion_producto = $descripcion_producto;
-    }
-
-    public function getStockActual(): int
-    {
-        return $this->stock_actual;
-    }
-
-    public function setStockActual(int $stock_actual): void
-    {
-        $this->stock_actual = $stock_actual;
-    }
-
-    public function getStockMinimo(): int
-    {
-        return $this->stock_minimo;
-    }
-
-    public function setStockMinimo(int $stock_minimo): void
-    {
-        $this->stock_minimo = $stock_minimo;
-    }
-
-    public function getPrecioCosto(): float
-    {
-        return $this->precio_costo;
-    }
-
-    public function setPrecioCosto(float $precio_costo): void
-    {
-        $this->precio_costo = $precio_costo;
-    }
-
-    public function getPrecioVenta(): float
-    {
-        return $this->precio_venta;
-    }
-
-    public function setPrecioVenta(float $precio_venta): void
-    {
-        $this->precio_venta = $precio_venta;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-
-    public function getCodigoCategoria(): int
-    {
-        return $this->codigo_categoria;
-    }
-
-    public function setCodigoCategoria(int $codigo_categoria): void
-    {
-        $this->codigo_categoria = $codigo_categoria;
-    }
-
-    public function getCodigoMedida(): int
-    {
-        return $this->codigo_medida;
-    }
-
-    public function setCodigoMedida(int $codigo_medida): void
-    {
-        $this->codigo_medida = $codigo_medida;
-    }
-}
+    $medidas = $object->getAllMedidas();
+    include 'app/views/medida/viewMedida.php';
 </file>
 
-<file path="app/Models/Inventario/Servicio.php">
+<file path="app/controllers/productoController.php">
 <?php
 
-declare(strict_types=1);
+    use App\models\productoModel;
 
-namespace App\Models\Inventario;
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-use App\Models\Core\ConexionBD;
-
-class Servicio extends ConexionBD
-{
-    private int $codigo_servicio;
-    private string $nombre_servicio;
-    private string $descripcion_servicio;
-    private float $precio_venta;
-    private bool $estado;
-    private int $codigo_categoria;
-
-    public function __construct(
-        int $codigo_servicio,
-        string $nombre_servicio,
-        string $descripcion_servicio,
-        float $precio_venta,
-        int $codigo_categoria,
-        bool $estado = true
-    ) {
-        parent::__construct();
-        $this->codigo_servicio = $codigo_servicio;
-        $this->nombre_servicio = $nombre_servicio;
-        $this->descripcion_servicio = $descripcion_servicio;
-        $this->precio_venta = $precio_venta;
-        $this->codigo_categoria = $codigo_categoria;
-        $this->estado = $estado;
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
     }
 
-    public function getCodigoServicio(): int
-    {
-        return $this->codigo_servicio;
-    }
+    $object = new productoModel();
 
-    public function setCodigoServicio(int $codigo_servicio): void
-    {
-        $this->codigo_servicio = $codigo_servicio;
-    }
+    if (isset($_GET['type'])) {
 
-    public function getNombreServicio(): string
-    {
-        return $this->nombre_servicio;
-    }
-
-    public function setNombreServicio(string $nombre_servicio): void
-    {
-        $this->nombre_servicio = $nombre_servicio;
-    }
-
-    public function getDescripcionServicio(): string
-    {
-        return $this->descripcion_servicio;
-    }
-
-    public function setDescripcionServicio(string $descripcion_servicio): void
-    {
-        $this->descripcion_servicio = $descripcion_servicio;
-    }
-
-    public function getPrecioVenta(): float
-    {
-        return $this->precio_venta;
-    }
-
-    public function setPrecioVenta(float $precio_venta): void
-    {
-        $this->precio_venta = $precio_venta;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-
-    public function getCodigoCategoria(): int
-    {
-        return $this->codigo_categoria;
-    }
-
-    public function setCodigoCategoria(int $codigo_categoria): void
-    {
-        $this->codigo_categoria = $codigo_categoria;
-    }
-}
-</file>
-
-<file path="app/Models/Reportes/Reporte.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Reportes;
-
-use App\Models\Core\ConexionBD;
-
-class Reporte extends ConexionBD
-{
-    private int $id_reporte;
-    private string $tipo_reporte;
-    private string $fecha_generado;
-    private string $codigo_usuario;
-
-    public function __construct(
-        int $id_reporte,
-        string $tipo_reporte,
-        string $fecha_generado,
-        string $codigo_usuario
-    ) {
-        parent::__construct();
-        $this->id_reporte = $id_reporte;
-        $this->tipo_reporte = $tipo_reporte;
-        $this->fecha_generado = $fecha_generado;
-        $this->codigo_usuario = $codigo_usuario;
-    }
-
-    public function getIdReporte(): int
-    {
-        return $this->id_reporte;
-    }
-
-    public function setIdReporte(int $id_reporte): void
-    {
-        $this->id_reporte = $id_reporte;
-    }
-
-    public function getTipoReporte(): string
-    {
-        return $this->tipo_reporte;
-    }
-
-    public function setTipoReporte(string $tipo_reporte): void
-    {
-        $this->tipo_reporte = $tipo_reporte;
-    }
-
-    public function getFechaGenerado(): string
-    {
-        return $this->fecha_generado;
-    }
-
-    public function setFechaGenerado(string $fecha_generado): void
-    {
-        $this->fecha_generado = $fecha_generado;
-    }
-
-    public function getCodigoUsuario(): string
-    {
-        return $this->codigo_usuario;
-    }
-
-    public function setCodigoUsuario(string $codigo_usuario): void
-    {
-        $this->codigo_usuario = $codigo_usuario;
-    }
-}
-</file>
-
-<file path="app/Models/Seguridad/Rol.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Seguridad;
-
-use App\Models\Core\ConexionBD;
-
-class Rol extends ConexionBD
-{
-    private int $codigo_rol;
-    private string $nombre_rol;
-    private string $descripcion;
-    private bool $estado;
-
-    public function __construct(
-        int $codigo_rol,
-        string $nombre_rol,
-        string $descripcion,
-        bool $estado = true,
-        string $host = 'localhost',
-        string $dbname = 'copigaby',
-        string $username = 'root',
-        string $password = ''
-    ) {
-        parent::__construct($host, $dbname, $username, $password);
-        $this->codigo_rol = $codigo_rol;
-        $this->nombre_rol = $nombre_rol;
-        $this->descripcion = $descripcion;
-        $this->estado = $estado;
-    }
-
-    public function getCodigoRol(): int
-    {
-        return $this->codigo_rol;
-    }
-
-    public function setCodigoRol(int $codigo_rol): void
-    {
-        $this->codigo_rol = $codigo_rol;
-    }
-
-    public function getNombreRol(): string
-    {
-        return $this->nombre_rol;
-    }
-
-    public function setNombreRol(string $nombre_rol): void
-    {
-        $this->nombre_rol = $nombre_rol;
-    }
-
-    public function getDescripcion(): string
-    {
-        return $this->descripcion;
-    }
-
-    public function setDescripcion(string $descripcion): void
-    {
-        $this->descripcion = $descripcion;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-}
-</file>
-
-<file path="app/Models/Seguridad/Usuario.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Seguridad;
-
-use App\Models\Core\ConexionBD;
-
-abstract class Usuario extends ConexionBD
-{
-    protected string $codigo_usuario;
-    protected string $nombre_usuario;
-    protected string $contrasena_usuario;
-    protected bool $estado;
-    protected int $codigo_rol;
-
-    public function __construct(
-        string $codigo_usuario,
-        string $nombre_usuario,
-        string $contrasena_usuario,
-        int $codigo_rol,
-        bool $estado = true,
-        string $host = 'localhost',
-        string $dbname = 'copigaby',
-        string $username = 'root',
-        string $password = ''
-    ) {
-        parent::__construct($host, $dbname, $username, $password);
-        $this->codigo_usuario = $codigo_usuario;
-        $this->nombre_usuario = $nombre_usuario;
-        $this->contrasena_usuario = $contrasena_usuario;
-        $this->codigo_rol = $codigo_rol;
-        $this->estado = $estado;
-    }
-
-    abstract public function obtenerTipoUsuario(): string;
-
-    public function validarAcceso(string $password): bool
-    {
-        if (!$this->estado) {
-            return false;
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_producto'])) {
+                $object->addProduct($_POST);
+                header("Location: ?url=producto");
+                exit();
+            }
+            header("Location: ?url=producto");
+            exit();
         }
 
-        return password_verify($password, $this->contrasena_usuario)
-            || hash_equals($this->contrasena_usuario, $password);
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idproducto'])) {
+                $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
+                $object->updateProduct((int) $_POST['idproducto'], $_POST);
+                header("Location: ?url=producto");
+                exit();
+            }
+            header("Location: ?url=producto");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteProduct'])) {
+                $result = $object->deleteProduct((int) $_POST['idproducto']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=producto");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'list') {
+            header("Location: ?url=producto");
+            exit();
+        }
     }
 
-    public function getCodigoUsuario(): string
-    {
-        return $this->codigo_usuario;
-    }
-
-    public function setCodigoUsuario(string $codigo_usuario): void
-    {
-        $this->codigo_usuario = $codigo_usuario;
-    }
-
-    public function getNombreUsuario(): string
-    {
-        return $this->nombre_usuario;
-    }
-
-    public function setNombreUsuario(string $nombre_usuario): void
-    {
-        $this->nombre_usuario = $nombre_usuario;
-    }
-
-    public function getContrasenaUsuario(): string
-    {
-        return $this->contrasena_usuario;
-    }
-
-    public function setContrasenaUsuario(string $contrasena_usuario): void
-    {
-        $this->contrasena_usuario = $contrasena_usuario;
-    }
-
-    public function getEstado(): bool
-    {
-        return $this->estado;
-    }
-
-    public function setEstado(bool $estado): void
-    {
-        $this->estado = $estado;
-    }
-
-    public function getCodigoRol(): int
-    {
-        return $this->codigo_rol;
-    }
-
-    public function setCodigoRol(int $codigo_rol): void
-    {
-        $this->codigo_rol = $codigo_rol;
-    }
-}
+    $productos = $object->getAllProducts();
+    $categorias = $object->getCategories();
+    $ivas = $object->getIvas();
+    $medidas = $object->getMedidas();
+    include 'app/views/productos/viewProducto.php';
 </file>
 
-<file path="app/Models/Ventas/Cliente.php">
+<file path="app/controllers/proveedorController.php">
 <?php
 
-declare(strict_types=1);
+    use App\models\proveedorModel;
 
-namespace App\Models\Ventas;
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-use App\Models\Core\ConexionBD;
-
-class Cliente extends ConexionBD
-{
-    private int $codigo_cliente;
-    private string $cedula;
-    private string $nombre;
-    private string $direccion;
-    private string $telefono;
-
-    public function __construct(
-        int $codigo_cliente,
-        string $cedula,
-        string $nombre,
-        string $direccion,
-        string $telefono
-    ) {
-        parent::__construct();
-        $this->codigo_cliente = $codigo_cliente;
-        $this->cedula = $cedula;
-        $this->nombre = $nombre;
-        $this->direccion = $direccion;
-        $this->telefono = $telefono;
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
     }
 
-    public function getCodigoCliente(): int
-    {
-        return $this->codigo_cliente;
+    $object = new proveedorModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rif_proveedor'])) {
+                $object->addProveedor($_POST);
+                header("Location: ?url=proveedor");
+                exit();
+            }
+            header("Location: ?url=proveedor");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_proveedor'])) {
+                $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
+                $object->updateProveedor((int) $_POST['codigo_proveedor'], $_POST);
+                header("Location: ?url=proveedor");
+                exit();
+            }
+            header("Location: ?url=proveedor");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteProveedor'])) {
+                $result = $object->deleteProveedor((int) $_POST['idproveedor']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=proveedor");
+            exit();
+        }
+
+        else {
+            header("Location: ?url=proveedor");
+            exit();
+        }
     }
 
-    public function setCodigoCliente(int $codigo_cliente): void
-    {
-        $this->codigo_cliente = $codigo_cliente;
-    }
-
-    public function getCedula(): string
-    {
-        return $this->cedula;
-    }
-
-    public function setCedula(string $cedula): void
-    {
-        $this->cedula = $cedula;
-    }
-
-    public function getNombre(): string
-    {
-        return $this->nombre;
-    }
-
-    public function setNombre(string $nombre): void
-    {
-        $this->nombre = $nombre;
-    }
-
-    public function getDireccion(): string
-    {
-        return $this->direccion;
-    }
-
-    public function setDireccion(string $direccion): void
-    {
-        $this->direccion = $direccion;
-    }
-
-    public function getTelefono(): string
-    {
-        return $this->telefono;
-    }
-
-    public function setTelefono(string $telefono): void
-    {
-        $this->telefono = $telefono;
-    }
-}
+    $proveedores = $object->getAllProveedores();
+    include 'app/views/proveedores/viewProveedor.php';
 </file>
 
-<file path="app/Models/Ventas/DetallePedido.php">
-<?php
-
-declare(strict_types=1);
-
-namespace App\Models\Ventas;
-
-use App\Models\Core\ConexionBD;
-
-class DetallePedido extends ConexionBD
-{
-    private int $cantidad;
-    private float $precio_unitario;
-    private float $subtotal;
-    private string $codigo_venta;
-    private ?int $codigo_producto;
-    private ?int $codigo_servicio;
-
-    public function __construct(
-        int $cantidad,
-        float $precio_unitario,
-        string $codigo_venta,
-        ?int $codigo_producto = null,
-        ?int $codigo_servicio = null,
-        float $subtotal = 0.0
-    ) {
-        parent::__construct();
-        $this->cantidad = $cantidad;
-        $this->precio_unitario = $precio_unitario;
-        $this->codigo_venta = $codigo_venta;
-        $this->codigo_producto = $codigo_producto;
-        $this->codigo_servicio = $codigo_servicio;
-        $this->subtotal = $subtotal;
-    }
-
-    public function calcularSubtotal(): float
-    {
-        $this->subtotal = $this->cantidad * $this->precio_unitario;
-
-        return $this->subtotal;
-    }
-
-    public function getCantidad(): int
-    {
-        return $this->cantidad;
-    }
-
-    public function setCantidad(int $cantidad): void
-    {
-        $this->cantidad = $cantidad;
-    }
-
-    public function getPrecioUnitario(): float
-    {
-        return $this->precio_unitario;
-    }
-
-    public function setPrecioUnitario(float $precio_unitario): void
-    {
-        $this->precio_unitario = $precio_unitario;
-    }
-
-    public function getSubtotal(): float
-    {
-        return $this->subtotal;
-    }
-
-    public function setSubtotal(float $subtotal): void
-    {
-        $this->subtotal = $subtotal;
-    }
-
-    public function getCodigoVenta(): string
-    {
-        return $this->codigo_venta;
-    }
-
-    public function setCodigoVenta(string $codigo_venta): void
-    {
-        $this->codigo_venta = $codigo_venta;
-    }
-
-    public function getCodigoProducto(): ?int
-    {
-        return $this->codigo_producto;
-    }
-
-    public function setCodigoProducto(?int $codigo_producto): void
-    {
-        $this->codigo_producto = $codigo_producto;
-    }
-
-    public function getCodigoServicio(): ?int
-    {
-        return $this->codigo_servicio;
-    }
-
-    public function setCodigoServicio(?int $codigo_servicio): void
-    {
-        $this->codigo_servicio = $codigo_servicio;
-    }
+<file path="assets/css/dashboard.css">
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-</file>
 
-<file path="app/Models/Ventas/Pedido.php">
-<?php
+.animate-fade-up {
+  animation: fadeUp 0.4s ease both;
+}
 
-declare(strict_types=1);
+/* Alineación del contenido principal con sidebar w-64 (16rem) */
+.ml-\[260px\] {
+  margin-left: 16rem;
+}
 
-namespace App\Models\Ventas;
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-use App\Models\Core\ConexionBD;
+.dropdown-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  opacity: 0;
+}
 
-class Pedido extends ConexionBD
-{
-    private string $codigo_venta;
-    private string $fecha_venta;
-    private float $total_venta;
-    private int $codigo_cliente;
-    private string $codigo_usuario;
+.dropdown-parent.open .dropdown-menu {
+  max-height: 500px;
+  opacity: 1;
+  transition: max-height 0.4s ease-in-out, opacity 0.25s ease;
+}
 
-    public function __construct(
-        string $codigo_venta,
-        string $fecha_venta,
-        float $total_venta,
-        int $codigo_cliente,
-        string $codigo_usuario
-    ) {
-        parent::__construct();
-        $this->codigo_venta = $codigo_venta;
-        $this->fecha_venta = $fecha_venta;
-        $this->total_venta = $total_venta;
-        $this->codigo_cliente = $codigo_cliente;
-        $this->codigo_usuario = $codigo_usuario;
-    }
+.dropdown-parent.open .nav-chevron {
+  transform: rotate(180deg);
+}
 
-    public function getCodigoVenta(): string
-    {
-        return $this->codigo_venta;
-    }
-
-    public function setCodigoVenta(string $codigo_venta): void
-    {
-        $this->codigo_venta = $codigo_venta;
-    }
-
-    public function getFechaVenta(): string
-    {
-        return $this->fecha_venta;
-    }
-
-    public function setFechaVenta(string $fecha_venta): void
-    {
-        $this->fecha_venta = $fecha_venta;
-    }
-
-    public function getTotalVenta(): float
-    {
-        return $this->total_venta;
-    }
-
-    public function setTotalVenta(float $total_venta): void
-    {
-        $this->total_venta = $total_venta;
-    }
-
-    public function getCodigoCliente(): int
-    {
-        return $this->codigo_cliente;
-    }
-
-    public function setCodigoCliente(int $codigo_cliente): void
-    {
-        $this->codigo_cliente = $codigo_cliente;
-    }
-
-    public function getCodigoUsuario(): string
-    {
-        return $this->codigo_usuario;
-    }
-
-    public function setCodigoUsuario(string $codigo_usuario): void
-    {
-        $this->codigo_usuario = $codigo_usuario;
-    }
+.dropdown-toggle {
+  cursor: pointer;
+  background: transparent;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
 }
 </file>
 
