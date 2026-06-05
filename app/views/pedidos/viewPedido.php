@@ -21,6 +21,11 @@
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">
+      <?php if (!empty($pedidoFlash)): ?>
+      <div id="pedidoFlash" class="mb-6 px-5 py-4 rounded-xl border font-bold text-sm <?= ($pedidoFlash['status'] ?? '') === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700' ?>">
+        <?= htmlspecialchars($pedidoFlash['message'] ?? 'Operación completada.') ?>
+      </div>
+      <?php endif; ?>
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-[900] text-gray-800">Lista de Pedidos</h1>
@@ -164,15 +169,23 @@
     const closeBtns = document.querySelectorAll('.closeModalPedido');
     const overlayPedido = document.getElementById('overlayPedido');
     const itemsBody = document.getElementById('itemsBody');
-    const emptyRow = document.getElementById('emptyRow');
     const totalGeneral = document.getElementById('totalGeneral');
     const formPedido = document.getElementById('formPedido');
+    const btnSubmitPedido = document.getElementById('btnSubmitPedido');
+    const itemsJsonInput = document.getElementById('itemsJson');
     let itemCounter = 0;
 
-    const toggleModal = () => modalPedido.classList.toggle('hidden');
-    btnOpen.onclick = toggleModal;
-    closeBtns.forEach(btn => btn.onclick = toggleModal);
-    overlayPedido.onclick = toggleModal;
+    const toggleModal = (forceClose = false) => {
+      if (forceClose) {
+        modalPedido.classList.add('hidden');
+        return;
+      }
+      modalPedido.classList.toggle('hidden');
+    };
+
+    btnOpen.onclick = () => toggleModal();
+    closeBtns.forEach(btn => btn.onclick = () => toggleModal(true));
+    overlayPedido.onclick = () => toggleModal(true);
 
     function buildOptions(tipo) {
       const list = tipo === 'producto' ? productos : servicios;
@@ -196,8 +209,17 @@
       totalGeneral.textContent = '$' + total.toFixed(2);
     }
 
+    function normalizeCantidad(input) {
+      let value = parseInt(input.value, 10);
+      if (isNaN(value) || value < 1) {
+        value = 1;
+      }
+      input.value = String(value);
+      return value;
+    }
+
     function updateRowSubtotal(row) {
-      const cantidad = parseFloat(row.querySelector('.item-cantidad').value) || 0;
+      const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
       const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
       const subtotal = cantidad * precio;
       row.querySelector('.item-subtotal').textContent = '$' + subtotal.toFixed(2);
@@ -219,17 +241,29 @@
       const selectItem = row.querySelector('.item-select');
       const option = selectItem.options[selectItem.selectedIndex];
       const precio = option ? option.getAttribute('data-precio') : '';
-      row.querySelector('.item-precio').value = precio || '';
+      row.querySelector('.item-precio').value = precio !== null && precio !== '' ? precio : '';
       updateRowSubtotal(row);
     }
 
-    function addItemRow() {
-      if (emptyRow) emptyRow.remove();
+    function removeItemRow(tr) {
+      tr.remove();
+      if (!itemsBody.querySelector('tr[data-item]')) {
+        itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
+        totalGeneral.textContent = '$0.00';
+      } else {
+        recalcTotal();
+      }
+    }
 
-      itemCounter++;
-      const rowId = 'item-' + itemCounter;
+    function addItemRow() {
+      const emptyRow = document.getElementById('emptyRow');
+      if (emptyRow) {
+        emptyRow.remove();
+      }
+
+      itemCounter += 1;
       const tr = document.createElement('tr');
-      tr.id = rowId;
+      tr.id = 'item-' + itemCounter;
       tr.dataset.item = '1';
       tr.dataset.subtotal = '0';
       tr.innerHTML = `
@@ -243,10 +277,10 @@
           <select class="item-select w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none" required></select>
         </td>
         <td class="px-4 py-3">
-          <input type="number" step="0.01" min="0.01" value="1" class="item-cantidad w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
+          <input type="number" step="1" min="1" value="1" class="item-cantidad w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
         </td>
         <td class="px-4 py-3">
-          <input type="number" step="0.01" min="0" class="item-precio w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
+          <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
         </td>
         <td class="px-4 py-3 text-right font-black text-navy-dark item-subtotal">$0.00</td>
         <td class="px-4 py-3 text-center">
@@ -258,85 +292,132 @@
 
       itemsBody.appendChild(tr);
 
-      const tipoSelect = tr.querySelector('.item-tipo');
       const selectItem = tr.querySelector('.item-select');
       selectItem.innerHTML = buildOptions('producto');
 
-      tipoSelect.addEventListener('change', () => onTipoChange(tr));
+      tr.querySelector('.item-tipo').addEventListener('change', () => onTipoChange(tr));
       selectItem.addEventListener('change', () => onItemSelect(tr));
       tr.querySelector('.item-cantidad').addEventListener('input', () => updateRowSubtotal(tr));
-      tr.querySelector('.item-precio').addEventListener('input', () => updateRowSubtotal(tr));
-      tr.querySelector('.btn-remove').addEventListener('click', () => {
-        tr.remove();
-        if (!itemsBody.querySelector('tr[data-item]')) {
-          itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
-          totalGeneral.textContent = '$0.00';
-        } else {
-          recalcTotal();
-        }
-      });
+      tr.querySelector('.item-cantidad').addEventListener('change', () => updateRowSubtotal(tr));
+      tr.querySelector('.btn-remove').addEventListener('click', () => removeItemRow(tr));
     }
 
-    document.getElementById('btnAddItem').onclick = addItemRow;
-
-    formPedido.addEventListener('submit', function(e) {
+    function collectItemsFromRows() {
       const rows = itemsBody.querySelectorAll('tr[data-item]');
       if (rows.length === 0) {
-        e.preventDefault();
-        alert('Debe agregar al menos un ítem al pedido.');
-        return;
+        return { ok: false, message: 'Debe agregar al menos un ítem al pedido.', items: [] };
       }
 
       const items = [];
-      let valid = true;
 
-      rows.forEach(row => {
+      for (const row of rows) {
         const tipo = row.querySelector('.item-tipo').value;
         const selectItem = row.querySelector('.item-select');
         const id = selectItem.value;
-        const cantidad = parseFloat(row.querySelector('.item-cantidad').value);
+        const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
         const precio = parseFloat(row.querySelector('.item-precio').value);
 
-        if (!id || !cantidad || cantidad <= 0 || isNaN(precio) || precio < 0) {
-          valid = false;
-          return;
+        if (!id) {
+          return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
+        }
+        if (isNaN(precio) || precio < 0) {
+          return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
         }
 
         const item = { tipo, cantidad, precio_venta: precio };
+
         if (tipo === 'producto') {
           item.codigo_producto = parseInt(id, 10);
-          const stock = parseFloat(selectItem.options[selectItem.selectedIndex].getAttribute('data-stock') || 0);
+          const option = selectItem.options[selectItem.selectedIndex];
+          const stock = parseInt(option.getAttribute('data-stock') || '0', 10);
           if (cantidad > stock) {
-            valid = false;
-            alert('Stock insuficiente para: ' + selectItem.options[selectItem.selectedIndex].text);
+            return {
+              ok: false,
+              message: 'Stock insuficiente para: ' + option.text,
+              items: [],
+            };
           }
         } else {
           item.codigo_servicio = parseInt(id, 10);
         }
-        items.push(item);
-      });
 
-      if (!valid) {
-        e.preventDefault();
-        if (items.length === 0) alert('Complete todos los ítems del pedido.');
+        items.push(item);
+      }
+
+      return { ok: true, message: '', items };
+    }
+
+    async function submitPedido(e) {
+      e.preventDefault();
+
+      const cliente = document.getElementById('selectCliente').value;
+      if (!cliente) {
+        alert('Seleccione un cliente.');
         return;
       }
 
-      document.getElementById('itemsJson').value = JSON.stringify(items);
-    });
+      const collected = collectItemsFromRows();
+      if (!collected.ok) {
+        alert(collected.message);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('ajax', '1');
+      formData.append('codigo_cliente', cliente);
+      formData.append('tasa_aplicada', document.getElementById('tasaAplicada').value);
+      formData.append('items', JSON.stringify(collected.items));
+      itemsJsonInput.value = JSON.stringify(collected.items);
+
+      const originalLabel = btnSubmitPedido.textContent;
+      btnSubmitPedido.disabled = true;
+      btnSubmitPedido.textContent = 'Guardando...';
+
+      try {
+        const response = await fetch('?url=pedido&type=register', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          toggleModal(true);
+          location.reload();
+          return;
+        }
+
+        alert(data.message || 'No se pudo registrar el pedido.');
+      } catch (err) {
+        console.error('Error al registrar pedido:', err);
+        alert('Error de comunicación con el servidor. Revise la consola o el log de PHP.');
+      } finally {
+        btnSubmitPedido.disabled = false;
+        btnSubmitPedido.textContent = originalLabel;
+      }
+    }
+
+    document.getElementById('btnAddItem').onclick = addItemRow;
+    formPedido.addEventListener('submit', submitPedido);
 
     function confirmDelete(id) {
-      if (confirm('¿Desea anular este pedido?')) {
-        const f = new FormData();
-        f.append('deletePedido', 'true');
-        f.append('idpedido', id);
-        fetch('?url=pedido&type=main', { method: 'POST', body: f })
-          .then(r => r.json())
-          .then(d => {
-            if (d.status === 'success') location.reload();
-            else alert('No se pudo procesar la anulación');
-          });
+      if (!confirm('¿Desea anular este pedido?')) {
+        return;
       }
+      const f = new FormData();
+      f.append('deletePedido', 'true');
+      f.append('idpedido', String(id));
+      fetch('?url=pedido&type=main', { method: 'POST', body: f })
+        .then(r => r.json())
+        .then(d => {
+          if (d.status === 'success') {
+            location.reload();
+          } else {
+            alert(d.message || 'No se pudo procesar la anulación');
+          }
+        })
+        .catch(() => alert('Error de comunicación al anular el pedido.'));
     }
   </script>
 </body>

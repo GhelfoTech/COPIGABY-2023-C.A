@@ -15,6 +15,18 @@ class pedidoModel extends ConectDB {
     }
 
     /**
+     * Registra errores PDO en el log del servidor (no silencioso).
+     */
+    private function logPdoError(string $context, PDOException $e): void {
+        error_log(sprintf(
+            '[pedidoModel::%s] %s | SQLSTATE=%s',
+            $context,
+            $e->getMessage(),
+            $e->getCode()
+        ));
+    }
+
+    /**
      * Obtiene todos los pedidos con nombres de cliente y usuario.
      */
     public function getAllPedidos() {
@@ -34,6 +46,7 @@ class pedidoModel extends ConectDB {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
+            $this->logPdoError('getAllPedidos', $e);
             return [];
         }
     }
@@ -43,86 +56,115 @@ class pedidoModel extends ConectDB {
      */
     public function addPedido(array $datos, array $items) {
         if (empty($items)) {
-            return ["status" => "error", "message" => "El pedido debe incluir al menos un ítem"];
+            return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
+        }
+
+        $codigoUsuario = (int) ($datos['codigo_usuario'] ?? 0);
+        $codigoCliente = (int) ($datos['codigo_cliente'] ?? 0);
+        if ($codigoUsuario <= 0 || $codigoCliente <= 0) {
+            return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
         }
 
         try {
             $this->conex->beginTransaction();
 
-            $queryPedido = "INSERT INTO pedido (codigo_cliente, codigo_usuario, fecha_pedido, tasa_aplicada, estado)
-                            VALUES (?, ?, NOW(), ?, 1)";
-            $stmtPedido = $this->conex->prepare($queryPedido);
-            $stmtPedido->bindValue(1, (int) $datos['codigo_cliente'], PDO::PARAM_INT);
-            $stmtPedido->bindValue(2, (int) $datos['codigo_usuario'], PDO::PARAM_INT);
-            $stmtPedido->bindValue(3, $datos['tasa_aplicada']);
-            $stmtPedido->execute();
+            $stmtPedido = $this->conex->prepare(
+                'INSERT INTO pedido (codigo_cliente, codigo_usuario, fecha_pedido, tasa_aplicada, estado)
+                 VALUES (?, ?, NOW(), ?, 1)'
+            );
+            $stmtPedido->execute([
+                $codigoCliente,
+                $codigoUsuario,
+                (float) ($datos['tasa_aplicada'] ?? 1.0),
+            ]);
 
             $codigoPedido = (int) $this->conex->lastInsertId();
+            if ($codigoPedido <= 0) {
+                throw new PDOException('No se pudo obtener el código del pedido insertado');
+            }
 
-            $queryDetalle = "INSERT INTO detalle_pedido (codigo_pedido, codigo_producto, codigo_servicio, cantidad, precio_venta, subtotal)
-                             VALUES (?, ?, ?, ?, ?, ?)";
-            $stmtDetalle = $this->conex->prepare($queryDetalle);
+            $stmtDetalle = $this->conex->prepare(
+                'INSERT INTO detalle_pedido (codigo_pedido, codigo_producto, codigo_servicio, cantidad, precio_venta, subtotal)
+                 VALUES (?, ?, ?, ?, ?, ?)'
+            );
 
-            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual - ?
-                           WHERE codigo_producto = ? AND stock_actual >= ?";
-            $stmtStock = $this->conex->prepare($queryStock);
+            $stmtStock = $this->conex->prepare(
+                'UPDATE producto_insumo SET stock_actual = stock_actual - ?
+                 WHERE codigo_producto = ? AND stock_actual >= ?'
+            );
 
-            $placeholderProducto = $this->getPlaceholderProducto();
-            $placeholderServicio = $this->getPlaceholderServicio();
-
-            foreach ($items as $item) {
-                $tipo = $item['tipo'] ?? '';
-                $cantidad = (float) ($item['cantidad'] ?? 0);
+            foreach ($items as $index => $item) {
+                $linea = (int) $index + 1;
+                $tipo = (string) ($item['tipo'] ?? '');
+                $cantidad = (int) ($item['cantidad'] ?? 0);
                 $precioVenta = (float) ($item['precio_venta'] ?? 0);
-                $subtotal = round($cantidad * $precioVenta, 2);
 
-                if ($cantidad <= 0 || $precioVenta < 0) {
-                    throw new PDOException('Cantidad o precio inválido en uno de los ítems');
+                if ($cantidad < 1) {
+                    throw new PDOException("Cantidad inválida en la línea {$linea}");
                 }
+                if ($precioVenta < 0) {
+                    throw new PDOException("Precio inválido en la línea {$linea}");
+                }
+
+                $subtotal = round($cantidad * $precioVenta, 2);
 
                 if ($tipo === 'producto') {
                     $codigoProducto = (int) ($item['codigo_producto'] ?? 0);
-                    $codigoServicio = $placeholderServicio;
+                    $codigoServicio = null;
 
                     if ($codigoProducto <= 0) {
-                        throw new PDOException('Producto no válido');
+                        throw new PDOException("Producto no válido en la línea {$linea}");
                     }
 
-                    $stmtStock->bindValue(1, $cantidad);
-                    $stmtStock->bindValue(2, $codigoProducto, PDO::PARAM_INT);
-                    $stmtStock->bindValue(3, $cantidad);
-                    $stmtStock->execute();
-
+                    $stmtStock->execute([$cantidad, $codigoProducto, $cantidad]);
                     if ($stmtStock->rowCount() === 0) {
-                        throw new PDOException('Stock insuficiente para el producto seleccionado');
+                        throw new PDOException("Stock insuficiente para el producto en la línea {$linea}");
                     }
                 } elseif ($tipo === 'servicio') {
                     $codigoServicio = (int) ($item['codigo_servicio'] ?? 0);
-                    $codigoProducto = $placeholderProducto;
+                    $codigoProducto = null;
 
                     if ($codigoServicio <= 0) {
-                        throw new PDOException('Servicio no válido');
+                        throw new PDOException("Servicio no válido en la línea {$linea}");
                     }
                 } else {
-                    throw new PDOException('Tipo de ítem no reconocido');
+                    throw new PDOException("Tipo de ítem no reconocido en la línea {$linea}");
                 }
 
                 $stmtDetalle->bindValue(1, $codigoPedido, PDO::PARAM_INT);
-                $stmtDetalle->bindValue(2, $codigoProducto, PDO::PARAM_INT);
-                $stmtDetalle->bindValue(3, $codigoServicio, PDO::PARAM_INT);
-                $stmtDetalle->bindValue(4, $cantidad);
+                $stmtDetalle->bindValue(
+                    2,
+                    $codigoProducto,
+                    $codigoProducto === null ? PDO::PARAM_NULL : PDO::PARAM_INT
+                );
+                $stmtDetalle->bindValue(
+                    3,
+                    $codigoServicio,
+                    $codigoServicio === null ? PDO::PARAM_NULL : PDO::PARAM_INT
+                );
+                $stmtDetalle->bindValue(4, $cantidad, PDO::PARAM_INT);
                 $stmtDetalle->bindValue(5, $precioVenta);
                 $stmtDetalle->bindValue(6, $subtotal);
                 $stmtDetalle->execute();
             }
 
             $this->conex->commit();
-            return ["status" => "success", "message" => "Pedido registrado exitosamente", "codigo_pedido" => $codigoPedido];
+
+            return [
+                'status'        => 'success',
+                'message'       => 'Pedido registrado exitosamente',
+                'codigo_pedido' => $codigoPedido,
+            ];
         } catch (PDOException $e) {
             if ($this->conex->inTransaction()) {
                 $this->conex->rollBack();
             }
-            return ["status" => "error", "message" => $e->getMessage()];
+            $this->logPdoError('addPedido', $e);
+
+            return [
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ];
         }
     }
 
@@ -131,11 +173,12 @@ class pedidoModel extends ConectDB {
      */
     public function deletePedido(int $id) {
         try {
-            $stmt = $this->conex->prepare("UPDATE pedido SET estado = 0 WHERE codigo_pedido = ?");
+            $stmt = $this->conex->prepare('UPDATE pedido SET estado = 0 WHERE codigo_pedido = ?');
             $stmt->bindValue(1, $id, PDO::PARAM_INT);
-            return ["status" => $stmt->execute() ? "success" : "error"];
+            return ['status' => $stmt->execute() ? 'success' : 'error'];
         } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
+            $this->logPdoError('deletePedido', $e);
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -144,10 +187,11 @@ class pedidoModel extends ConectDB {
      */
     public function getClientesActivos() {
         try {
-            $stmt = $this->conex->prepare("SELECT codigo_cliente, cedula, nombre FROM cliente ORDER BY nombre ASC");
+            $stmt = $this->conex->prepare('SELECT codigo_cliente, cedula, nombre FROM cliente ORDER BY nombre ASC');
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
+            $this->logPdoError('getClientesActivos', $e);
             return [];
         }
     }
@@ -158,12 +202,13 @@ class pedidoModel extends ConectDB {
     public function getProductosActivos() {
         try {
             $stmt = $this->conex->prepare(
-                "SELECT codigo_producto, nombre_producto, costo, stock_actual
-                 FROM producto_insumo WHERE estado = 1 ORDER BY nombre_producto ASC"
+                'SELECT codigo_producto, nombre_producto, costo, stock_actual
+                 FROM producto_insumo WHERE estado = 1 ORDER BY nombre_producto ASC'
             );
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
+            $this->logPdoError('getProductosActivos', $e);
             return [];
         }
     }
@@ -174,12 +219,13 @@ class pedidoModel extends ConectDB {
     public function getServiciosActivos() {
         try {
             $stmt = $this->conex->prepare(
-                "SELECT codigo_servicio, nombre_servicio, precio
-                 FROM servicio WHERE estado = 1 ORDER BY nombre_servicio ASC"
+                'SELECT codigo_servicio, nombre_servicio, precio
+                 FROM servicio WHERE estado = 1 ORDER BY nombre_servicio ASC'
             );
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
+            $this->logPdoError('getServiciosActivos', $e);
             return [];
         }
     }
@@ -190,31 +236,15 @@ class pedidoModel extends ConectDB {
     public function getTasaActual() {
         try {
             $stmt = $this->conex->prepare(
-                "SELECT tasa_cambio FROM moneda WHERE estado = 1 ORDER BY codigo_moneda DESC LIMIT 1"
+                'SELECT tasa_cambio FROM moneda WHERE estado = 1 ORDER BY codigo_moneda DESC LIMIT 1'
             );
             $stmt->execute();
             $tasa = $stmt->fetchColumn();
             return $tasa !== false ? (float) $tasa : 1.0;
         } catch (PDOException $e) {
+            $this->logPdoError('getTasaActual', $e);
             return 1.0;
         }
     }
 
-    /**
-     * Referencia mínima requerida por FK cuando el ítem es un servicio.
-     */
-    private function getPlaceholderProducto(): int {
-        $stmt = $this->conex->query("SELECT codigo_producto FROM producto_insumo ORDER BY codigo_producto ASC LIMIT 1");
-        $id = $stmt ? $stmt->fetchColumn() : false;
-        return $id !== false ? (int) $id : 1;
-    }
-
-    /**
-     * Referencia mínima requerida por FK cuando el ítem es un producto.
-     */
-    private function getPlaceholderServicio(): int {
-        $stmt = $this->conex->query("SELECT codigo_servicio FROM servicio ORDER BY codigo_servicio ASC LIMIT 1");
-        $id = $stmt ? $stmt->fetchColumn() : false;
-        return $id !== false ? (int) $id : 1;
-    }
 }
