@@ -169,6 +169,58 @@ class pedidoModel extends ConectDB {
     }
 
     /**
+     * Actualiza los datos modificables del encabezado del pedido.
+     */
+    public function updatePedido(int $id, array $datos) {
+        $codigoCliente = (int) ($datos['codigo_cliente'] ?? 0);
+        $tasaAplicada = (float) ($datos['tasa_aplicada'] ?? 0);
+        $estado = (int) ($datos['estado'] ?? 0);
+
+        if ($id <= 0 || $codigoCliente <= 0) {
+            return ['status' => 'error', 'message' => 'Pedido o cliente no válido'];
+        }
+        if ($tasaAplicada <= 0) {
+            return ['status' => 'error', 'message' => 'La tasa aplicada debe ser mayor a cero'];
+        }
+
+        $estado = $estado ? 1 : 0;
+
+        try {
+            $this->conex->beginTransaction();
+
+            $stmt = $this->conex->prepare(
+                'UPDATE pedido SET codigo_cliente = ?, tasa_aplicada = ?, estado = ?
+                 WHERE codigo_pedido = ?'
+            );
+            $stmt->bindValue(1, $codigoCliente, PDO::PARAM_INT);
+            $stmt->bindValue(2, $tasaAplicada);
+            $stmt->bindValue(3, $estado, PDO::PARAM_INT);
+            $stmt->bindValue(4, $id, PDO::PARAM_INT);
+
+            if (!$stmt->execute()) {
+                throw new PDOException('No se pudo actualizar el pedido');
+            }
+
+            $this->conex->commit();
+
+            return [
+                'status'  => 'success',
+                'message' => 'Pedido actualizado con éxito',
+            ];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            $this->logPdoError('updatePedido', $e);
+
+            return [
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Anulación lógica del pedido.
      */
     public function deletePedido(int $id) {

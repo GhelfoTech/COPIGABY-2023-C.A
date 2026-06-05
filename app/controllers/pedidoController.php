@@ -94,6 +94,23 @@
             exit();
         }
 
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'])) {
+                $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
+                    'codigo_cliente' => (int) $_POST['codigo_cliente'],
+                    'tasa_aplicada'  => isset($_POST['tasa_aplicada']) && $_POST['tasa_aplicada'] !== ''
+                        ? (float) $_POST['tasa_aplicada']
+                        : 0,
+                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 0,
+                ]);
+                $_SESSION['pedido_flash'] = $result;
+                header('Location: ?url=pedido');
+                exit();
+            }
+            header('Location: ?url=pedido');
+            exit();
+        }
+
         if ($_GET['type'] === 'main') {
             if (isset($_POST['deletePedido'])) {
                 $result = $object->deletePedido((int) $_POST['idpedido']);

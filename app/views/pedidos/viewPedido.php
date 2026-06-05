@@ -71,11 +71,16 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <?php if ($ped['estado']): ?>
-                  <button onclick="confirmDelete(<?= $ped['codigo_pedido'] ?>)" class="text-red-400 hover:text-red-600 p-2 transition-colors" title="Anular pedido">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  </button>
-                  <?php endif; ?>
+                  <div class="flex justify-center gap-2">
+                    <button onclick="openEditPedidoModal(<?= $ped['codigo_pedido'] ?>, <?= $ped['codigo_cliente'] ?>, <?= $ped['tasa_aplicada'] ?>, <?= $ped['estado'] ?>)" class="text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Editar pedido">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <?php if ($ped['estado']): ?>
+                    <button onclick="confirmDelete(<?= $ped['codigo_pedido'] ?>)" class="text-red-400 hover:text-red-600 p-2 transition-colors" title="Anular pedido">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                    <?php endif; ?>
+                  </div>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -154,6 +159,49 @@
           <div class="flex justify-end gap-3">
             <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModalPedido">Cancelar</button>
             <button type="submit" id="btnSubmitPedido" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Registrar Pedido</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEditPedido" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlayEditPedido"></div>
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
+          <h3 class="text-xl font-black text-navy-dark tracking-tight">Editar Pedido</h3>
+          <button type="button" class="text-gray-400 hover:text-navy-dark" onclick="closeEditPedidoModal()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form action="?url=pedido&type=update" method="POST" class="p-6 text-left">
+          <input type="hidden" name="codigo_pedido" id="edit_codigo_pedido">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</label>
+              <select name="codigo_cliente" id="edit_codigo_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+                <option value="">— Seleccione un cliente —</option>
+                <?php foreach ($clientes as $cli): ?>
+                  <option value="<?= $cli['codigo_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula']) ?>)</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa Aplicada (Bs/$)</label>
+              <input type="number" step="0.01" min="0.01" name="tasa_aplicada" id="edit_tasa_aplicada" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Estado</label>
+              <select name="estado" id="edit_estado" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+                <option value="1">Activo</option>
+                <option value="0">Anulado</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" onclick="closeEditPedidoModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Actualizar Pedido</button>
           </div>
         </form>
       </div>
@@ -400,6 +448,23 @@
 
     document.getElementById('btnAddItem').onclick = addItemRow;
     formPedido.addEventListener('submit', submitPedido);
+
+    const modalEditPedido = document.getElementById('modalEditPedido');
+    const overlayEditPedido = document.getElementById('overlayEditPedido');
+
+    function openEditPedidoModal(id, clienteId, tasa, estado) {
+      document.getElementById('edit_codigo_pedido').value = id;
+      document.getElementById('edit_codigo_cliente').value = clienteId;
+      document.getElementById('edit_tasa_aplicada').value = tasa;
+      document.getElementById('edit_estado').value = String(estado);
+      modalEditPedido.classList.remove('hidden');
+    }
+
+    function closeEditPedidoModal() {
+      modalEditPedido.classList.add('hidden');
+    }
+
+    overlayEditPedido.onclick = closeEditPedidoModal;
 
     function confirmDelete(id) {
       if (!confirm('¿Desea anular este pedido?')) {
