@@ -15,8 +15,9 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['numero_factura_proveedor'])) {
-                $_POST['codigo_usuario'] = $_SESSION['user_id'];
-                $object->addCompra($_POST);
+                $_POST['cedula_usuario'] = $_SESSION['user_id'];
+                $items = json_decode($_POST['items'], true);
+                $object->addCompra($_POST, $items);
                 header("Location: ?url=compra");
                 exit();
             }
@@ -52,6 +53,16 @@
             exit();
         }
 
+        elseif ($_GET['type'] === 'details') {
+            if (isset($_GET['id'])) {
+                $header = $object->getCompraById((int)$_GET['id']);
+                $items = $object->getItemsByCompra((int)$_GET['id']);
+                header('Content-Type: application/json');
+                echo json_encode(['header' => $header, 'items' => $items]);
+                exit();
+            }
+        }
+
         else {
             header("Location: ?url=compra");
             exit();
@@ -60,4 +71,5 @@
 
     $compras = $object->getAllCompras();
     $proveedores = $object->getProviders();
+    $productos = $object->getProducts();
     include 'app/views/compras/viewCompra.php';

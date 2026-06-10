@@ -21,8 +21,8 @@ class compraModel extends ConectDB {
         try {
             $query = "SELECT c.*, p.razon_social AS nombre_proveedor, u.nombre_usuario 
                       FROM compra c
-                      INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor
-                      INNER JOIN usuario u ON c.codigo_usuario = u.codigo_usuario
+                      INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor 
+                      INNER JOIN usuario u ON c.cedula_usuario = u.cedula_usuario
                       ORDER BY c.codigo_compra DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
@@ -33,22 +33,60 @@ class compraModel extends ConectDB {
     }
 
     /**
-     * Registra el encabezado de una nueva compra.
+     * Registra una compra completa con sus detalles y actualiza stock.
      */
-    public function addCompra($datos) {
+    public function addCompra($datos, $items) {
         try {
-            $query = "INSERT INTO compra (codigo_proveedor, codigo_usuario, numero_factura_proveedor, fecha_compra, monto_total, estado) 
+            $this->conex->beginTransaction();
+
+            // 1. Insertar Cabecera
+            $query = "INSERT INTO compra (codigo_proveedor, cedula_usuario, numero_factura_proveedor, fecha_compra, monto_total, estado) 
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $stmt->execute([
                 $datos['codigo_proveedor'],
-                $datos['codigo_usuario'],
+                $datos['cedula_usuario'],
                 $datos['numero_factura_proveedor'],
                 $datos['fecha_compra'],
                 $datos['monto_total']
             ]);
+
+            $codigoCompra = $this->conex->lastInsertId();
+
+            // 2. Insertar Detalles y Actualizar Stock
+            $queryDetalle = "INSERT INTO detalle_compra (codigo_compra, codigo_producto, cantidad, costo_unitario, subtotal) 
+                             VALUES (?, ?, ?, ?, ?)";
+            $stmtDetalle = $this->conex->prepare($queryDetalle);
+
+            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual + ?, costo = ? 
+                           WHERE codigo_producto = ?";
+            $stmtStock = $this->conex->prepare($queryStock);
+
+            foreach ($items as $item) {
+                $subtotal = $item['cantidad'] * $item['costo'];
+                
+                // Guardar detalle
+                $stmtDetalle->execute([
+                    $codigoCompra,
+                    $item['codigo_producto'],
+                    $item['cantidad'],
+                    $item['costo'],
+                    $subtotal
+                ]);
+
+                // Actualizar inventario (Sumar stock y actualizar costo al más reciente)
+                $stmtStock->execute([
+                    $item['cantidad'],
+                    $item['costo'],
+                    $item['codigo_producto']
+                ]);
+            }
+
+            $this->conex->commit();
+            return ["status" => "success"];
         } catch (PDOException $e) {
-            return false;
+            if ($this->conex->inTransaction()) $this->conex->rollBack();
+            return ["status" => "error", "message" => $e->getMessage()];
         }
     }
 
@@ -96,6 +134,48 @@ class compraModel extends ConectDB {
         try {
             $stmt = $this->conex->prepare("SELECT codigo_proveedor, razon_social FROM proveedor WHERE estado = 1");
             $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { return []; }
+    }
+
+    /**
+     * Obtiene productos para el selector de la compra.
+     */
+    public function getProducts() {
+        try {
+            $stmt = $this->conex->prepare("SELECT codigo_producto, nombre_producto, costo FROM producto_insumo WHERE estado = 1");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { return []; }
+    }
+
+    /**
+     * Obtiene la cabecera detallada de una compra específica.
+     */
+    public function getCompraById($id) {
+        try {
+            $query = "SELECT c.*, p.razon_social, p.rif_proveedor, p.telefono, p.direccion, u.nombre_usuario 
+                      FROM compra c
+                      INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor
+                      INNER JOIN usuario u ON c.cedula_usuario = u.cedula_usuario
+                      WHERE c.codigo_compra = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { return null; }
+    }
+
+    /**
+     * Obtiene los productos (puente) de una compra específica.
+     */
+    public function getItemsByCompra($id) {
+        try {
+            $query = "SELECT dc.*, p.nombre_producto 
+                      FROM detalle_compra dc
+                      INNER JOIN producto_insumo p ON dc.codigo_producto = p.codigo_producto
+                      WHERE dc.codigo_compra = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([$id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) { return []; }
     }

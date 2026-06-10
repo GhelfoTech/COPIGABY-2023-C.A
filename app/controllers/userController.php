@@ -4,13 +4,17 @@
 
     if (session_status() === PHP_SESSION_NONE) session_start();
 
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
     $object = new userModel();
     $error = ""; // Inicializamos la variable de error para la vista
 
     if (isset($_GET['type'])) {
 
         if ($_GET['type'] == 'register') {
-            // Se ajustan los campos según la tabla 'usuario' del SQL proporcionado
             if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
                 $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
                 $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
@@ -37,8 +41,7 @@
 
         elseif ($_GET['type'] == 'main') {
             if(isset($_POST["deleteUser"])) {
-                // idUser mapeado a codigo_usuario
-                $result = $object->deleteUser($_POST["idUser"]); 
+                $result = $object->deleteUser($_POST["cedula_usuario"]); 
                 echo json_encode($result);
                 die();
             }

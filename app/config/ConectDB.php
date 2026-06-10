@@ -21,7 +21,7 @@
             try {
 
                 // Crear una nueva conexión PDO
-                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby", "root", "");
+                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby_2", "root", "");
                 
                 // Establecer el modo de error de PDO a excepción
                 $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
