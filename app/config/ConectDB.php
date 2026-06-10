@@ -16,18 +16,14 @@
 
         // metodo para conectar a la base de datos
         protected function getConnection(): PDO {
-
-            // Manejo de excepciones para la conexión a la base de datos
+            if ($this->conex !== null) {
+                return $this->conex;
+            }
             try {
-
-                // Crear una nueva conexión PDO
-                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby_2", "root", "");
-                
-                // Establecer el modo de error de PDO a excepción
+                // Agregamos charset=utf8 para evitar errores de comparación de caracteres
+                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby_2;charset=utf8", "root", "");
                 $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
             } catch (PDOException $e) {
-
                 // Si hay un error, se lanza una excepción y se muestra un mensaje de error
                 die('ERROR DE CONEXIÓN: No se ha podido conectar con la base de datos. ' . $e->getMessage());
             }

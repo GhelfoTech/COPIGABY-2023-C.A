@@ -75,7 +75,7 @@
 
             $datos = [
                 'codigo_cliente' => $codigoCliente,
-                'codigo_usuario' => (int) $_SESSION['user_id'],
+                'codigo_usuario' => (int) $_SESSION['user_id'], // Pasar codigo_usuario
                 'tasa_aplicada'  => isset($_POST['tasa_aplicada']) && $_POST['tasa_aplicada'] !== ''
                     ? (float) $_POST['tasa_aplicada']
                     : $object->getTasaActual(),

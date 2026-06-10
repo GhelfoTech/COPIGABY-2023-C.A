@@ -47,15 +47,16 @@
     } else {
         // Lógica de Autenticación (Login)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $usuarioInput = $_POST['username'] ?? '';
-            $passwordInput = $_POST['password'] ?? '';
+            $usuarioInput = trim($_POST['username'] ?? ''); // Limpiamos espacios
+            $passwordInput = trim($_POST['password'] ?? '');
 
             if (!empty($usuarioInput) && !empty($passwordInput)) {
                 $user = $object->login($usuarioInput, $passwordInput);
                 
                 if ($user) {
-                    $_SESSION['user_id']  = $user['codigo_usuario'];
-                    $_SESSION['username'] = $user['nombre_usuario'];
+                    // Guardamos los datos esenciales en la sesión
+                    $_SESSION['user_id']  = (string)$user['cedula_usuario'];
+                    $_SESSION['username'] = $user['nombre_usuario']; // nombre_usuario
                     $_SESSION['rol']      = $user['codigo_rol'];
                     
                     header("Location: ?url=dashboard");

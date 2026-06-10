@@ -25,8 +25,8 @@
 
         elseif ($_GET['type'] == 'update') {
             if (isset($_POST['idUser']) && isset($_POST['nombre_usuario'])) {
-                $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateUser(
+                $estado = isset($_POST['estado']) && $_POST['estado'] == 'on' ? 1 : 0; // Los checkboxes envían 'on' si están marcados
+                $object->updateUser( // idUser ahora es codigo_usuario
                     $_POST['idUser'], 
                     $_POST['cedula'], 
                     $_POST['nombre_usuario'], 
@@ -41,7 +41,7 @@
 
         elseif ($_GET['type'] == 'main') {
             if(isset($_POST["deleteUser"])) {
-                $result = $object->deleteUser($_POST["cedula_usuario"]); 
+                $result = $object->deleteUser((int)$_POST["idUser"]); // idUser es codigo_usuario
                 echo json_encode($result);
                 die();
             }

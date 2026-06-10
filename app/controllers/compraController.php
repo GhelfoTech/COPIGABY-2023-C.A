@@ -15,7 +15,7 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['numero_factura_proveedor'])) {
-                $_POST['cedula_usuario'] = $_SESSION['user_id'];
+                $_POST['codigo_usuario'] = $_SESSION['user_id']; // $_SESSION['user_id'] ahora contiene codigo_usuario
                 $items = json_decode($_POST['items'], true);
                 $object->addCompra($_POST, $items);
                 header("Location: ?url=compra");

@@ -59,7 +59,7 @@ class pedidoModel extends ConectDB {
             return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
         }
 
-        $codigoUsuario = (int) ($datos['codigo_usuario'] ?? 0);
+        $codigoUsuario = (int) ($datos['codigo_usuario'] ?? 0); // Esperamos codigo_usuario
         $codigoCliente = (int) ($datos['codigo_cliente'] ?? 0);
         if ($codigoUsuario <= 0 || $codigoCliente <= 0) {
             return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
@@ -74,7 +74,7 @@ class pedidoModel extends ConectDB {
             );
             $stmtPedido->execute([
                 $codigoCliente,
-                $codigoUsuario,
+                $codigoUsuario, // Usar codigo_usuario aquí
                 (float) ($datos['tasa_aplicada'] ?? 1.0),
             ]);
 
