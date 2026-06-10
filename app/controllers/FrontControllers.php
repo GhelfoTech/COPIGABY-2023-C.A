@@ -9,7 +9,7 @@
         private $url;
 
         public function __construct() {
-
+           //ver si funcionan los comit
             // Si existe y no está vacía una request con el nombre de url
 
             if (isset($_REQUEST["url"])) {
