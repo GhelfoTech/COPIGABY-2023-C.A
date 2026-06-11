@@ -21,8 +21,8 @@ class compraModel extends ConectDB {
         try {
             $query = "SELECT c.*, p.razon_social AS nombre_proveedor, u.nombre_usuario 
                       FROM compra c
-                      INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor 
-                      INNER JOIN usuario u ON c.codigo_usuario = u.codigo_usuario
+                      INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor
+                      INNER JOIN usuario u ON c.cedula_usuario = u.cedula_usuario
                       ORDER BY c.codigo_compra DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
@@ -39,10 +39,10 @@ class compraModel extends ConectDB {
         try {
             $this->conex->beginTransaction();
 
-            // 1. Insertar Cabecera
+            // 1. Insertar Cabecera usando cedula_usuario
             $query = "INSERT INTO compra (codigo_proveedor, cedula_usuario, numero_factura_proveedor, fecha_compra, monto_total, estado) 
                       VALUES (?, ?, ?, ?, ?, 1)";
-            $stmt = $this->conex->prepare($query); // La columna es `codigo_usuario` en DB, no `cedula_usuario`
+            $stmt = $this->conex->prepare($query);
             $stmt->execute([
                 $datos['codigo_proveedor'],
                 $datos['cedula_usuario'],
@@ -157,7 +157,7 @@ class compraModel extends ConectDB {
             $query = "SELECT c.*, p.razon_social, p.rif_proveedor, p.telefono, p.direccion, u.nombre_usuario 
                       FROM compra c
                       INNER JOIN proveedor p ON c.codigo_proveedor = p.codigo_proveedor
-                      INNER JOIN usuario u ON c.codigo_usuario = u.codigo_usuario
+                      INNER JOIN usuario u ON c.cedula_usuario = u.cedula_usuario
                       WHERE c.codigo_compra = ?";
             $stmt = $this->conex->prepare($query);
             $stmt->execute([$id]);

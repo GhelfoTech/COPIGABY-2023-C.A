@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-06-2026 a las 23:45:17
+-- Tiempo de generación: 10-06-2026 a las 04:35:34
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -117,8 +117,7 @@ INSERT INTO `compra` (`codigo_compra`, `codigo_proveedor`, `cedula_usuario`, `nu
 (510, 987654, 222222222, '00510', '2026-05-01', 222.00, 1),
 (512, 317317661, 2121212121, '00512', '2026-03-04', 43563.00, 1),
 (513, 987654, 2121212121, '00513', '2026-04-16', 789.00, 1),
-(514, 987654, 2121212121, '00514', '2026-05-28', 3400.00, 1),
-(515, 987654, 323232323, '', '2026-06-10', 4706.21, 1);
+(514, 987654, 2121212121, '00514', '2026-05-28', 3400.00, 1);
 
 -- --------------------------------------------------------
 
@@ -148,9 +147,7 @@ INSERT INTO `detalle_compra` (`codigo_detalle_compra`, `codigo_compra`, `codigo_
 (5976, 512, 759765, 5.00, 2500.00, 12500.00),
 (8845, 512, 759199, 8.00, 2600.00, 12000.00),
 (66775, 510, 759199, 3.00, 2500.00, 7500.00),
-(87653, 512, 759765, 12.00, 2600.00, 12600.00),
-(87654, 515, 759160, 8.00, 562.00, 4496.00),
-(87655, 515, 759199, 7.00, 30.03, 210.21);
+(87653, 512, 759765, 12.00, 2600.00, 12600.00);
 
 -- --------------------------------------------------------
 
@@ -347,8 +344,8 @@ CREATE TABLE `producto_insumo` (
 --
 
 INSERT INTO `producto_insumo` (`codigo_producto`, `nombre_producto`, `codigo_categoria`, `codigo_IVA`, `codigo_medida`, `descripcion`, `stock_actual`, `stock_minimo`, `costo`, `estado`) VALUES
-(759160, 'BLOCK', 101, 1, 22, 'TTTTT', 33, 2, 562.00, 1),
-(759199, 'HOJAS CARTA', 101, 1, 22, 'XXXXXXXXXXXXXXXXX', 32, 2, 30.03, 1),
+(759160, 'BLOCK', 101, 1, 22, 'TTTTT', 25, 2, 562.00, 1),
+(759199, 'HOJAS CARTA', 101, 1, 22, 'XXXXXXXXXXXXXXXXX', 25, 2, 30.00, 1),
 (759765, 'HOJAS OFICIO', 101, 1, 22, 'XXXXXXXXXXXXXXXXXXXXXXXXXXX', 22, 2, 40.00, 1);
 
 -- --------------------------------------------------------
@@ -429,8 +426,7 @@ CREATE TABLE `servicio` (
 INSERT INTO `servicio` (`codigo_servicio`, `nombre_servicio`, `descripcion`, `precio`, `tipo_servicio`, `estado`) VALUES
 (7, 'IMPRESION ', 'XXXXXXXXXXXXXXXXXX', 40.00, 'IMPESION', 1),
 (8, 'PLASTIFICACION', 'XXXXXXXXXX', 2500.00, 'GRANDE', 1),
-(9, 'Copia', 'Blanco y negro/Color', 30.00, 'COPIA', 1),
-(10, 'Empastado', 'xxxxxxxxxxxxxxxxx', 1.52, 'Empastado', 1);
+(9, 'Copia', 'Blanco y negro/Color', 30.00, 'COPIA', 1);
 
 -- --------------------------------------------------------
 
@@ -496,7 +492,7 @@ CREATE TABLE `usuario` (
 
 INSERT INTO `usuario` (`cedula_usuario`, `telefono`, `nombre_usuario`, `codigo_rol`, `password`, `estado`) VALUES
 (222222222, '04245555555', 'empleado', 2, '123', 1),
-(323232323, '04245555555', 'admin', 1, '1234567', 1),
+(323232323, '04245555555', 'admin', 1, '123', 1),
 (2121212121, '04245555555', 'ADMIN1', 1, '123A', 1);
 
 --
@@ -677,13 +673,13 @@ ALTER TABLE `categoria`
 -- AUTO_INCREMENT de la tabla `compra`
 --
 ALTER TABLE `compra`
-  MODIFY `codigo_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=516;
+  MODIFY `codigo_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=515;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_compra`
 --
 ALTER TABLE `detalle_compra`
-  MODIFY `codigo_detalle_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87656;
+  MODIFY `codigo_detalle_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87654;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pago`
@@ -767,7 +763,7 @@ ALTER TABLE `rol`
 -- AUTO_INCREMENT de la tabla `servicio`
 --
 ALTER TABLE `servicio`
-  MODIFY `codigo_servicio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `codigo_servicio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_material`
