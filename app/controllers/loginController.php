@@ -68,5 +68,6 @@
                 $error = "Por favor, llene todos los campos.";
             }
         }
+        $rifEmpresa = $object->getEmpresaRIF();
         include 'app/views/login/viewLogin.php';
     }

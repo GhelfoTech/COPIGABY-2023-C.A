@@ -122,4 +122,18 @@ class userModel extends ConectDB {
             return false;
         }
     }
+
+    /**
+     * Obtiene el RIF de la empresa desde la base de datos.
+     */
+    public function getEmpresaRIF() {
+        try {
+            $query = "SELECT rif FROM empresa LIMIT 1";
+            $stmt = $this->getConnection()->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
 }

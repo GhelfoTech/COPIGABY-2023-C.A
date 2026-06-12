@@ -35,7 +35,7 @@ function navIconClass(bool $active): string {
 <aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl">
   <header class="border-b border-white/10 px-5 py-6">
     <div class="flex items-center gap-3">
-      <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-orange-500 bg-slate-800 shadow-[0_0_0_4px_rgba(245,166,35,0.12)]">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full">
         <img src="assets/img/logo.jpeg" alt="Logo CopiGaby" class="h-full w-full rounded-full object-cover">
       </div>
       <div>

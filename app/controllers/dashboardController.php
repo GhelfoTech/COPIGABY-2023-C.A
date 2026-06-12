@@ -1,5 +1,7 @@
 <?php
 
+    use App\models\dashboardModel;
+
     if (session_status() === PHP_SESSION_NONE) session_start();
 
     // Verificamos que el usuario esté logueado antes de mostrar el dashboard
@@ -7,14 +9,15 @@
         header("Location: ?url=login");
         exit();
     }
-
-    // Inicializamos la variable $stats con valores por defecto para evitar el warning.
-    // En el futuro, puedes crear un método en tu modelo para obtener estas cifras reales.
+    
+    $dashboardModel = new dashboardModel();
     $stats = [
-        'productos_activos' => 0,
-        'servicios_activos' => 0,
-        'pedidos_mes'       => 0,
-        'ventas_mes'        => 0
+        'productos_activos' => $dashboardModel->getTotalProductosActivos(),
+        'servicios_activos' => $dashboardModel->getTotalServiciosActivos(),
+        'clientes_activos'  => $dashboardModel->getTotalClientesActivos(),
+        'usuarios_activos'  => $dashboardModel->getTotalUsuariosActivos(),
+        'pedidos_mes'       => $dashboardModel->getPedidosMesActual(),
+        'ventas_mes'        => $dashboardModel->getVentasMesActual()
     ];
 
     // Cargamos la vista del dashboard
