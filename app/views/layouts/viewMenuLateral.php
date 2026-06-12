@@ -1,8 +1,8 @@
 <?php
 $currentUrl = $_REQUEST['url'] ?? '';
 $pedidoOpen = in_array($currentUrl, ['pedido', 'cliente'], true);
-$productoOpen = in_array($currentUrl, ['producto', 'categoria'], true);
-$configOpen = in_array($currentUrl, ['usuario', 'rol', 'metodopago', 'moneda', 'iva', 'medida'], true);
+$productoOpen = in_array($currentUrl, ['producto', 'categoria'], true); // Corregido: 'usuario' a 'user'
+$configOpen = in_array($currentUrl, ['user', 'rol', 'metodopago', 'moneda', 'iva', 'medida'], true);
 
 function navItemClass(string $url, string $current): string {
     $base = 'group flex items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4';
@@ -123,7 +123,7 @@ function navIconClass(bool $active): string {
         </svg>
       </button>
       <div class="dropdown-menu flex flex-col bg-slate-950/50">
-        <a href="?url=usuario" class="<?= navSubClass('usuario', $currentUrl) ?>">Usuarios</a>
+        <a href="?url=user" class="<?= navSubClass('user', $currentUrl) ?>">Usuarios</a>
         <a href="?url=rol" class="<?= navSubClass('rol', $currentUrl) ?>">Rol</a>
         <a href="?url=metodopago" class="<?= navSubClass('metodopago', $currentUrl) ?>">Método de Pago</a>
         <a href="?url=moneda" class="<?= navSubClass('moneda', $currentUrl) ?>">Moneda</a>

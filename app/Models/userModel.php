@@ -13,7 +13,7 @@ class userModel extends ConectDB {
      */
     public function getAllUsers() {
         try {
-            $query = "SELECT u.cedula_usuario, u.telefono, u.nombre_usuario, u.estado, r.nombre_rol 
+            $query = "SELECT u.cedula_usuario, u.telefono, u.nombre_usuario, u.estado, u.codigo_rol, r.nombre_rol 
                       FROM usuario u 
                       INNER JOIN rol r ON u.codigo_rol = r.codigo_rol";
             $stmt = $this->getConnection()->prepare($query);
@@ -25,25 +25,11 @@ class userModel extends ConectDB {
     }
 
     /**
-     * Obtiene los roles para los selectores.
-     */
-    public function getRoles() {
-        try {
-            $stmt = $this->getConnection()->prepare("SELECT * FROM rol");
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { return []; }
-    }
-
-    /**
      * Registra un nuevo usuario en el sistema.
      * @param int $rol Por defecto se asigna el rol con código 2 (usualmente Operador/Vendedor).
      */
     public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol = 2) {
         try {
-            // Encriptamos la contraseña (limpiando espacios) antes de guardarla
-            $hashedPassword = password_hash(trim($password), PASSWORD_DEFAULT);
-
             $query = "INSERT INTO usuario (cedula_usuario, telefono, nombre_usuario, codigo_rol, password, estado) 
                       VALUES (:cedula, :telefono, :nombre, :rol, :pass, 1)";
             $stmt = $this->getConnection()->prepare($query);
@@ -51,7 +37,7 @@ class userModel extends ConectDB {
             $stmt->bindParam(':telefono', $telefono);
             $stmt->bindParam(':nombre', trim($nombre_usuario)); // Limpiamos espacios
             $stmt->bindParam(':rol', $rol);
-            $stmt->bindParam(':pass', $hashedPassword);
+            $stmt->bindParam(':pass', $password);
             
             if ($stmt->execute()) {
                 return ["status" => "success", "message" => "Usuario registrado con éxito."];
@@ -122,10 +108,8 @@ class userModel extends ConectDB {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && (int)$user['estado'] === 1) { // Verifica existencia y estado activo
-                $dbPassword = trim($user['password']); // Limpia la contraseña de la DB
-
                 // Comprueba si la contraseña coincide (hashed o texto plano)
-                if (password_verify($password, $user['password']) || $password === $dbPassword) {
+                if ($password === $user['password']) {
                     // Si coincide, elimina la contraseña del array por seguridad y retorna el usuario
                     unset($user['password']);
                     return $user;

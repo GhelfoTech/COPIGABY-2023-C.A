@@ -1,15 +1,17 @@
 <?php
 
     use App\models\userModel;
+    use App\models\rolModel;
 
     if (session_status() === PHP_SESSION_NONE) session_start();
-
+    
     if (!isset($_SESSION['user_id'])) {
         header("Location: ?url=login");
         exit();
     }
 
     $object = new userModel();
+    $rolModel = new rolModel();
     $error = ""; // Inicializamos la variable de error para la vista
 
     if (isset($_GET['type'])) {
@@ -25,7 +27,7 @@
 
         elseif ($_GET['type'] == 'update') {
             if (isset($_POST['idUser']) && isset($_POST['nombre_usuario'])) {
-                $estado = isset($_POST['estado']) && $_POST['estado'] == 'on' ? 1 : 0; // Los checkboxes envían 'on' si están marcados
+                $estado = isset($_POST['estado']) && $_POST['estado'] == 'on' ? 1 : 0; 
                 $object->updateUser( // idUser ahora es codigo_usuario
                     $_POST['idUser'], 
                     $_POST['cedula'], 
@@ -45,19 +47,10 @@
                 echo json_encode($result);
                 die();
             }
-            $usuarios = $object->getAllUsers();
-            $roles = $object->getRoles();
-            include 'app/views/user/index.php';
         }
-        
-        else {
-            $usuarios = $object->getAllUsers();
-            $roles = $object->getRoles();
-            include 'app/views/user/index.php';
-        }
-
-    } else {
-        $usuarios = $object->getAllUsers();
-        $roles = $object->getRoles();
-        include 'app/views/user/index.php';
     }
+
+    // Carga de datos común para la vista (se ejecuta si no hubo redirección o die)
+    $usuarios = $object->getAllUsers();
+    $roles = $rolModel->getAllRoles();
+    include 'app/views/usuario/viewUser.php';
