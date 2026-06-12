@@ -46,7 +46,7 @@
               <th class="px-6 py-4">Atendido por</th>
               <th class="px-6 py-4">Fecha</th>
               <th class="px-6 py-4 text-right">Total</th>
-              <th class="px-6 py-4 text-center">Tasa</th>
+              <th class="px-6 py-4 text-center">Tasa (Bs)</th>
               <th class="px-6 py-4 text-center">Estado</th>
               <th class="px-6 py-4 text-center">Acciones</th>
             </tr>
@@ -63,8 +63,13 @@
                 </td>
                 <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario']) ?></td>
                 <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
-                <td class="px-6 py-4 text-right font-black text-navy-dark">$<?= number_format($ped['monto_total'], 2) ?></td>
-                <td class="px-6 py-4 text-center text-gray-400 font-bold"><?= number_format($ped['tasa_aplicada'], 2) ?></td>
+                <td class="px-6 py-4 text-right">
+                  <div class="font-black text-navy-dark">$<?= number_format($ped['monto_total'], 2) ?></div>
+                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format($ped['monto_total'] * $ped['tasa_aplicada'], 2) ?> Bs</div>
+                </td>
+                <td class="px-6 py-4 text-center text-xs font-bold text-gray-400">
+                  <?= number_format($ped['tasa_aplicada'], 2) ?>
+                </td>
                 <td class="px-6 py-4 text-center">
                   <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $ped['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
                     <?= $ped['estado'] ? 'Activo' : 'Anulado' ?>
@@ -72,7 +77,7 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <div class="flex justify-center gap-2">
-                    <button onclick="openEditPedidoModal(<?= $ped['codigo_pedido'] ?>, <?= $ped['codigo_cliente'] ?>, <?= $ped['tasa_aplicada'] ?>, <?= $ped['estado'] ?>)" class="text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Editar pedido">
+                    <button onclick="openEditPedidoModal(<?= $ped['codigo_pedido'] ?>, '<?= $ped['cedula_cliente'] ?>', <?= $ped['tasa_aplicada'] ?>, <?= $ped['estado'] ?>)" class="text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Editar pedido">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
                     <?php if ($ped['estado']): ?>
@@ -111,13 +116,13 @@
               <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
                 <option value="">— Seleccione un cliente —</option>
                 <?php foreach ($clientes as $cli): ?>
-                  <option value="<?= $cli['codigo_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula']) ?>)</option>
+                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa Aplicada (Bs/$)</label>
-              <input type="number" step="0.01" name="tasa_aplicada" id="tasaAplicada" value="<?= htmlspecialchars((string) $tasaActual) ?>" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs/$)</label>
+              <input type="number" step="0.01" name="tasa_aplicada" id="tasaActualInput" value="<?= $tasaActual ?>" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-orange-dk">
             </div>
           </div>
 
@@ -183,13 +188,13 @@
               <select name="codigo_cliente" id="edit_codigo_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
                 <option value="">— Seleccione un cliente —</option>
                 <?php foreach ($clientes as $cli): ?>
-                  <option value="<?= $cli['codigo_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula']) ?>)</option>
+                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa Aplicada (Bs/$)</label>
-              <input type="number" step="0.01" min="0.01" name="tasa_aplicada" id="edit_tasa_aplicada" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio</label>
+              <input type="number" step="0.01" name="tasa_aplicada" id="edit_tasa_aplicada" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Estado</label>
@@ -413,7 +418,7 @@
       const formData = new FormData();
       formData.append('ajax', '1');
       formData.append('codigo_cliente', cliente);
-      formData.append('tasa_aplicada', document.getElementById('tasaAplicada').value);
+      formData.append('tasa_aplicada', document.getElementById('tasaActualInput').value);
       formData.append('items', JSON.stringify(collected.items));
       itemsJsonInput.value = JSON.stringify(collected.items);
 

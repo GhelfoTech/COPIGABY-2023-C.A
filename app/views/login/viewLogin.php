@@ -52,10 +52,6 @@
       <button type="submit" class="btn-login">Ingresar al Sistema</button>
     </form>
 
-    <div class="demo-hint">
-      Demo: <strong>admin</strong> / <strong>admin123</strong> &nbsp;·&nbsp; <strong>gaby</strong> / <strong>gaby2024</strong>
-    </div>
-
     <div class="card-footer">
       CopiGaby 2025 &nbsp;·&nbsp; RIF V-9622717-1
     </div>

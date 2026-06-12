@@ -31,7 +31,7 @@ class pedidoModel extends ConectDB {
      */
     public function getAllPedidos() {
         try {
-            $query = "SELECT p.codigo_pedido, p.codigo_cliente, p.codigo_usuario, p.fecha_pedido,
+            $query = "SELECT p.codigo_pedido, p.cedula_cliente, p.cedula_usuario, p.fecha_pedido,
                              p.tasa_aplicada, p.estado,
                              c.nombre AS nombre_cliente, u.nombre_usuario,
                              COALESCE(
@@ -39,8 +39,8 @@ class pedidoModel extends ConectDB {
                                  0
                              ) AS monto_total
                       FROM pedido p
-                      INNER JOIN cliente c ON p.codigo_cliente = c.codigo_cliente
-                      INNER JOIN usuario u ON p.codigo_usuario = u.codigo_usuario
+                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
+                      LEFT JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
                       ORDER BY p.codigo_pedido DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
@@ -59,9 +59,10 @@ class pedidoModel extends ConectDB {
             return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
         }
 
-        $codigoUsuario = (int) ($datos['codigo_usuario'] ?? 0); // Esperamos codigo_usuario
-        $codigoCliente = (int) ($datos['codigo_cliente'] ?? 0);
-        if ($codigoUsuario <= 0 || $codigoCliente <= 0) {
+        $cedulaUsuario = $datos['codigo_usuario'] ?? ''; 
+        $cedulaCliente = $datos['codigo_cliente'] ?? '';
+        $tasaAplicada  = (float) ($datos['tasa_aplicada'] ?? 1.0);
+        if (empty($cedulaUsuario) || empty($cedulaCliente)) {
             return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
         }
 
@@ -69,13 +70,13 @@ class pedidoModel extends ConectDB {
             $this->conex->beginTransaction();
 
             $stmtPedido = $this->conex->prepare(
-                'INSERT INTO pedido (codigo_cliente, codigo_usuario, fecha_pedido, tasa_aplicada, estado)
-                 VALUES (?, ?, NOW(), ?, 1)'
+                'INSERT INTO pedido (cedula_cliente, cedula_usuario, fecha_pedido, tasa_aplicada, estado) 
+                 VALUES (:cliente, :usuario, NOW(), :tasa, 1)'
             );
             $stmtPedido->execute([
-                $codigoCliente,
-                $codigoUsuario, // Usar codigo_usuario aquí
-                (float) ($datos['tasa_aplicada'] ?? 1.0),
+                ':cliente' => $cedulaCliente,
+                ':usuario' => $cedulaUsuario,
+                ':tasa'    => $tasaAplicada,
             ]);
 
             $codigoPedido = (int) $this->conex->lastInsertId();
@@ -172,32 +173,32 @@ class pedidoModel extends ConectDB {
      * Actualiza los datos modificables del encabezado del pedido.
      */
     public function updatePedido(int $id, array $datos) {
-        $codigoCliente = (int) ($datos['codigo_cliente'] ?? 0);
-        $tasaAplicada = (float) ($datos['tasa_aplicada'] ?? 0);
+        $cedulaCliente = $datos['codigo_cliente'] ?? '';
         $estado = (int) ($datos['estado'] ?? 0);
+        $tasaAplicada = (float) ($datos['tasa_aplicada'] ?? 1.0);
 
-        if ($id <= 0 || $codigoCliente <= 0) {
+        if ($id <= 0 || empty($cedulaCliente)) {
             return ['status' => 'error', 'message' => 'Pedido o cliente no válido'];
         }
-        if ($tasaAplicada <= 0) {
-            return ['status' => 'error', 'message' => 'La tasa aplicada debe ser mayor a cero'];
-        }
 
+        if ($tasaAplicada <= 0) $tasaAplicada = 1.0;
         $estado = $estado ? 1 : 0;
 
         try {
             $this->conex->beginTransaction();
 
             $stmt = $this->conex->prepare(
-                'UPDATE pedido SET codigo_cliente = ?, tasa_aplicada = ?, estado = ?
+                'UPDATE pedido SET cedula_cliente = ?, tasa_aplicada = ?, estado = ?
                  WHERE codigo_pedido = ?'
             );
-            $stmt->bindValue(1, $codigoCliente, PDO::PARAM_INT);
-            $stmt->bindValue(2, $tasaAplicada);
-            $stmt->bindValue(3, $estado, PDO::PARAM_INT);
-            $stmt->bindValue(4, $id, PDO::PARAM_INT);
+            $success = $stmt->execute([
+                $cedulaCliente,
+                $tasaAplicada,
+                $estado,
+                $id
+            ]);
 
-            if (!$stmt->execute()) {
+            if (!$success) {
                 throw new PDOException('No se pudo actualizar el pedido');
             }
 
@@ -239,7 +240,7 @@ class pedidoModel extends ConectDB {
      */
     public function getClientesActivos() {
         try {
-            $stmt = $this->conex->prepare('SELECT codigo_cliente, cedula, nombre FROM cliente ORDER BY nombre ASC');
+            $stmt = $this->conex->prepare('SELECT cedula_cliente, nombre FROM cliente ORDER BY nombre ASC');
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -288,7 +289,10 @@ class pedidoModel extends ConectDB {
     public function getTasaActual() {
         try {
             $stmt = $this->conex->prepare(
-                'SELECT tasa_cambio FROM moneda WHERE estado = 1 ORDER BY codigo_moneda DESC LIMIT 1'
+                'SELECT t.monto_bolivares 
+                 FROM moneda m 
+                 INNER JOIN tasa_cambio t ON m.codigo_tasa = t.codigo_tasa 
+                 WHERE m.estado = 1 ORDER BY m.codigo_moneda DESC LIMIT 1'
             );
             $stmt->execute();
             $tasa = $stmt->fetchColumn();

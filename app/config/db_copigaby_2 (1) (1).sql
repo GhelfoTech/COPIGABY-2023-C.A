@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-06-2026 a las 04:35:34
+-- Tiempo de generación: 12-06-2026 a las 04:23:26
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -159,8 +159,16 @@ CREATE TABLE `detalle_pago` (
   `codigo_detalle_pago` int(11) NOT NULL,
   `codigo_pago` int(11) NOT NULL,
   `codigo_moneda` int(11) NOT NULL,
+  `codigo_metodo` int(11) NOT NULL,
   `monto` decimal(10,0) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_pago`
+--
+
+INSERT INTO `detalle_pago` (`codigo_detalle_pago`, `codigo_pago`, `codigo_moneda`, `codigo_metodo`, `monto`) VALUES
+(555, 553, 510, 562, 600);
 
 -- --------------------------------------------------------
 
@@ -178,6 +186,14 @@ CREATE TABLE `detalle_pedido` (
   `subtotal` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `detalle_pedido`
+--
+
+INSERT INTO `detalle_pedido` (`codigo_detalle_pedido`, `codigo_pedido`, `codigo_producto`, `codigo_servicio`, `cantidad`, `precio_venta`, `subtotal`) VALUES
+(551, 551, 76543, 7, 3.00, 4545.00, 685845.00),
+(552, 552, 759765, 7, 10.00, 50.00, 50.00);
+
 -- --------------------------------------------------------
 
 --
@@ -190,6 +206,45 @@ CREATE TABLE `detalle_transferencia` (
   `codigo_banco` int(11) NOT NULL,
   `codigo_referencia` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_transferencia`
+--
+
+INSERT INTO `detalle_transferencia` (`codigo_detalle_transferencia`, `codigo_detalle_pago`, `codigo_banco`, `codigo_referencia`) VALUES
+(555, 554, 102, 77777);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `dolar`
+--
+
+CREATE TABLE `dolar` (
+  `codigo_dolar` int(11) NOT NULL,
+  `codigo_taza` int(11) NOT NULL,
+  `codigo_efectivo` int(11) NOT NULL,
+  `estado` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `efectivo`
+--
+
+CREATE TABLE `efectivo` (
+  `cidigo_efectivo` int(11) NOT NULL,
+  `codigo_dolar` int(11) NOT NULL,
+  `estado` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `efectivo`
+--
+
+INSERT INTO `efectivo` (`cidigo_efectivo`, `codigo_dolar`, `estado`) VALUES
+(999, 2222, 1);
 
 -- --------------------------------------------------------
 
@@ -267,7 +322,7 @@ CREATE TABLE `moneda` (
   `codigo_moneda` int(11) NOT NULL,
   `nombre_moneda` varchar(15) NOT NULL,
   `simbolo` varchar(2) NOT NULL,
-  `tasa_cambio` decimal(10,0) NOT NULL,
+  `codigo_tasa` int(11) NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -275,9 +330,9 @@ CREATE TABLE `moneda` (
 -- Volcado de datos para la tabla `moneda`
 --
 
-INSERT INTO `moneda` (`codigo_moneda`, `nombre_moneda`, `simbolo`, `tasa_cambio`, `estado`) VALUES
-(981, 'DOLAR', '$', 600, 1),
-(982, 'EURO', '#', 700, 1);
+INSERT INTO `moneda` (`codigo_moneda`, `nombre_moneda`, `simbolo`, `codigo_tasa`, `estado`) VALUES
+(510, 'DOLARES', '$', 105, 1),
+(511, 'EURO', '€', 105, 1);
 
 -- --------------------------------------------------------
 
@@ -291,6 +346,13 @@ CREATE TABLE `movimientos` (
   `cedula_usuario` int(11) NOT NULL,
   `tipo` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `movimientos`
+--
+
+INSERT INTO `movimientos` (`codigo_movimiento`, `fecha`, `cedula_usuario`, `tipo`) VALUES
+(8732, '2026-06-12 03:20:20', 2121212121, 1);
 
 -- --------------------------------------------------------
 
@@ -306,6 +368,15 @@ CREATE TABLE `pagos` (
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`codigo_pago`, `codigo_pedido`, `codigo_metodo`, `fecha_pago`, `estado`) VALUES
+(551, 551, 562, '2026-04-13 08:18:59', 1),
+(552, 552, 564, '2026-01-01 11:11:57', 1),
+(553, 553, 563, '2026-06-10 09:32:11', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -319,6 +390,18 @@ CREATE TABLE `pedido` (
   `fecha_pedido` datetime NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pedido`
+--
+
+INSERT INTO `pedido` (`codigo_pedido`, `cedula_cliente`, `cedula_usuario`, `fecha_pedido`, `estado`) VALUES
+(551, 342123344, 222222222, '2026-04-13 08:18:59', 1),
+(552, 32345654, 323232323, '2026-01-01 11:10:57', 1),
+(553, 23456654, 323232323, '2026-06-10 09:30:14', 1),
+(554, 32137731, 222222222, '2026-01-14 09:13:39', 1),
+(555, 32456432, 222222222, '2026-01-30 11:14:23', 1),
+(556, 123454321, 323232323, '2026-05-01 09:14:23', 1);
 
 -- --------------------------------------------------------
 
@@ -344,6 +427,9 @@ CREATE TABLE `producto_insumo` (
 --
 
 INSERT INTO `producto_insumo` (`codigo_producto`, `nombre_producto`, `codigo_categoria`, `codigo_IVA`, `codigo_medida`, `descripcion`, `stock_actual`, `stock_minimo`, `costo`, `estado`) VALUES
+(7654, 'Lapiz', 101, 2, 24, 'xxxxxxxxxxxxxxxxxxxx', 2, 6, 100.00, 1),
+(76543, 'CINTA', 102, 2, 26, 'XXXXXXXXXXXXXXXXXXX', 50, 10, 3000.00, 1),
+(98765, 'PULSERA', 103, 2, 22, 'XXXXXXXXXXXXXXXXX', 4, 6, 1450.00, 1),
 (759160, 'BLOCK', 101, 1, 22, 'TTTTT', 25, 2, 562.00, 1),
 (759199, 'HOJAS CARTA', 101, 1, 22, 'XXXXXXXXXXXXXXXXX', 25, 2, 30.00, 1),
 (759765, 'HOJAS OFICIO', 101, 1, 22, 'XXXXXXXXXXXXXXXXXXXXXXXXXXX', 22, 2, 40.00, 1);
@@ -370,7 +456,8 @@ CREATE TABLE `proveedor` (
 
 INSERT INTO `proveedor` (`codigo_proveedor`, `rif_proveedor`, `razon_social`, `telefono`, `correo`, `direccion`, `estado`) VALUES
 (987654, 'J3654356', 'INVERSIONES RODRIGUEZ', '04245555555', 'INVERSIONESRODRIGUEZ@gmail.com', 'LARA', 1),
-(317317661, 'J317317661', 'INVERSIONES BURBUJA', '04245555555', 'BURBUJA@gmail.com', 'calle carrera', 1);
+(317317661, 'J317317661', 'INVERSIONES BURBUJA', '04245555555', 'BURBUJA@gmail.com', 'calle carrera', 1),
+(988760998, '54924', 'POINTER', '04228690511', 'mprendegmail.com', 'calle 6 valencia', 1);
 
 -- --------------------------------------------------------
 
@@ -382,6 +469,13 @@ CREATE TABLE `referencia` (
   `referencia` int(11) NOT NULL,
   `numero_comprobante` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `referencia`
+--
+
+INSERT INTO `referencia` (`referencia`, `numero_comprobante`) VALUES
+(77777, '8888888');
 
 -- --------------------------------------------------------
 
@@ -415,7 +509,6 @@ CREATE TABLE `servicio` (
   `nombre_servicio` varchar(50) NOT NULL,
   `descripcion` text NOT NULL,
   `precio` decimal(10,2) NOT NULL,
-  `tipo_servicio` varchar(50) NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -423,10 +516,10 @@ CREATE TABLE `servicio` (
 -- Volcado de datos para la tabla `servicio`
 --
 
-INSERT INTO `servicio` (`codigo_servicio`, `nombre_servicio`, `descripcion`, `precio`, `tipo_servicio`, `estado`) VALUES
-(7, 'IMPRESION ', 'XXXXXXXXXXXXXXXXXX', 40.00, 'IMPESION', 1),
-(8, 'PLASTIFICACION', 'XXXXXXXXXX', 2500.00, 'GRANDE', 1),
-(9, 'Copia', 'Blanco y negro/Color', 30.00, 'COPIA', 1);
+INSERT INTO `servicio` (`codigo_servicio`, `nombre_servicio`, `descripcion`, `precio`, `estado`) VALUES
+(7, 'IMPRESION ', 'XXXXXXXXXXXXXXXXXX', 40.00, 1),
+(8, 'PLASTIFICACION', 'XXXXXXXXXX', 2500.00, 1),
+(9, 'Copia', 'Blanco y negro/Color', 30.00, 1);
 
 -- --------------------------------------------------------
 
@@ -448,6 +541,25 @@ CREATE TABLE `servicio_material` (
 INSERT INTO `servicio_material` (`codigo_servicio_material`, `codigo_producto`, `codigo_servicio`, `cantidad_usada`) VALUES
 (7, 759765, 7, 3),
 (8, 759199, 9, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tasa_cambio`
+--
+
+CREATE TABLE `tasa_cambio` (
+  `codigo_tasa` int(11) NOT NULL,
+  `fecha` datetime NOT NULL,
+  `monto_bolivares` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `tasa_cambio`
+--
+
+INSERT INTO `tasa_cambio` (`codigo_tasa`, `fecha`, `monto_bolivares`) VALUES
+(105, '2026-06-12 02:00:54', 500.00);
 
 -- --------------------------------------------------------
 
@@ -539,7 +651,8 @@ ALTER TABLE `detalle_compra`
 ALTER TABLE `detalle_pago`
   ADD PRIMARY KEY (`codigo_detalle_pago`),
   ADD KEY `codigo_pago` (`codigo_pago`),
-  ADD KEY `codigo_moneda` (`codigo_moneda`);
+  ADD KEY `codigo_moneda` (`codigo_moneda`),
+  ADD KEY `codigo_metodo` (`codigo_metodo`);
 
 --
 -- Indices de la tabla `detalle_pedido`
@@ -557,6 +670,20 @@ ALTER TABLE `detalle_transferencia`
   ADD PRIMARY KEY (`codigo_detalle_transferencia`),
   ADD KEY `codigo_referencia` (`codigo_referencia`),
   ADD KEY `codigo_banco` (`codigo_banco`);
+
+--
+-- Indices de la tabla `dolar`
+--
+ALTER TABLE `dolar`
+  ADD PRIMARY KEY (`codigo_dolar`),
+  ADD KEY `codigo_taza` (`codigo_taza`),
+  ADD KEY `codigo_efectivo` (`codigo_efectivo`);
+
+--
+-- Indices de la tabla `efectivo`
+--
+ALTER TABLE `efectivo`
+  ADD PRIMARY KEY (`cidigo_efectivo`);
 
 --
 -- Indices de la tabla `empresa`
@@ -580,7 +707,8 @@ ALTER TABLE `metodo_pago`
 -- Indices de la tabla `moneda`
 --
 ALTER TABLE `moneda`
-  ADD PRIMARY KEY (`codigo_moneda`);
+  ADD PRIMARY KEY (`codigo_moneda`),
+  ADD KEY `codigo_tasa` (`codigo_tasa`);
 
 --
 -- Indices de la tabla `movimientos`
@@ -647,6 +775,12 @@ ALTER TABLE `servicio_material`
   ADD KEY `nombre_producto` (`codigo_producto`);
 
 --
+-- Indices de la tabla `tasa_cambio`
+--
+ALTER TABLE `tasa_cambio`
+  ADD PRIMARY KEY (`codigo_tasa`);
+
+--
 -- Indices de la tabla `unidad_medida`
 --
 ALTER TABLE `unidad_medida`
@@ -685,19 +819,19 @@ ALTER TABLE `detalle_compra`
 -- AUTO_INCREMENT de la tabla `detalle_pago`
 --
 ALTER TABLE `detalle_pago`
-  MODIFY `codigo_detalle_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_detalle_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=556;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `codigo_detalle_pedido` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_detalle_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=553;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_transferencia`
 --
 ALTER TABLE `detalle_transferencia`
-  MODIFY `codigo_detalle_transferencia` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_detalle_transferencia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=556;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`
@@ -727,19 +861,19 @@ ALTER TABLE `moneda`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `codigo_movimiento` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_movimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8733;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=554;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `codigo_pedido` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=557;
 
 --
 -- AUTO_INCREMENT de la tabla `producto_insumo`
@@ -751,7 +885,7 @@ ALTER TABLE `producto_insumo`
 -- AUTO_INCREMENT de la tabla `proveedor`
 --
 ALTER TABLE `proveedor`
-  MODIFY `codigo_proveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=317317662;
+  MODIFY `codigo_proveedor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=988760999;
 
 --
 -- AUTO_INCREMENT de la tabla `rol`
@@ -770,6 +904,12 @@ ALTER TABLE `servicio`
 --
 ALTER TABLE `servicio_material`
   MODIFY `codigo_servicio_material` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `tasa_cambio`
+--
+ALTER TABLE `tasa_cambio`
+  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT de la tabla `unidad_medida`
@@ -800,7 +940,8 @@ ALTER TABLE `detalle_compra`
 --
 ALTER TABLE `detalle_pago`
   ADD CONSTRAINT `detalle_pago_ibfk_1` FOREIGN KEY (`codigo_pago`) REFERENCES `pagos` (`codigo_pago`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `detalle_pago_ibfk_2` FOREIGN KEY (`codigo_moneda`) REFERENCES `moneda` (`codigo_moneda`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `detalle_pago_ibfk_2` FOREIGN KEY (`codigo_moneda`) REFERENCES `moneda` (`codigo_moneda`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `detalle_pago_ibfk_3` FOREIGN KEY (`codigo_metodo`) REFERENCES `metodo_pago` (`codigo_metodo`);
 
 --
 -- Filtros para la tabla `detalle_pedido`
@@ -819,6 +960,19 @@ ALTER TABLE `detalle_transferencia`
   ADD CONSTRAINT `detalle_transferencia_ibfk_3` FOREIGN KEY (`codigo_detalle_transferencia`) REFERENCES `detalle_pago` (`codigo_detalle_pago`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Filtros para la tabla `dolar`
+--
+ALTER TABLE `dolar`
+  ADD CONSTRAINT `dolar_ibfk_1` FOREIGN KEY (`codigo_taza`) REFERENCES `tasa_cambio` (`codigo_tasa`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `dolar_ibfk_2` FOREIGN KEY (`codigo_efectivo`) REFERENCES `efectivo` (`cidigo_efectivo`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `moneda`
+--
+ALTER TABLE `moneda`
+  ADD CONSTRAINT `moneda_ibfk_1` FOREIGN KEY (`codigo_tasa`) REFERENCES `tasa_cambio` (`codigo_tasa`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Filtros para la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
@@ -828,8 +982,7 @@ ALTER TABLE `movimientos`
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`codigo_pedido`) REFERENCES `pedido` (`codigo_pedido`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`codigo_metodo`) REFERENCES `metodo_pago` (`codigo_metodo`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`codigo_pedido`) REFERENCES `pedido` (`codigo_pedido`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `pedido`

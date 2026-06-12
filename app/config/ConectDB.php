@@ -21,7 +21,7 @@
             }
             try {
                 // Agregamos charset=utf8 para evitar errores de comparación de caracteres
-                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby_2;charset=utf8", "root", "");
+                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby;charset=utf8", "root", "");
                 $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
                 // Si hay un error, se lanza una excepción y se muestra un mensaje de error

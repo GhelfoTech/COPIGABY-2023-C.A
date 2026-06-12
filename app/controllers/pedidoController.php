@@ -57,8 +57,8 @@
                 exit();
             }
 
-            $codigoCliente = (int) $_POST['codigo_cliente'];
-            if ($codigoCliente <= 0) {
+            $codigoCliente = $_POST['codigo_cliente'] ?? '';
+            if (empty($codigoCliente)) {
                 $payload = [
                     'status'  => 'error',
                     'message' => 'Debe seleccionar un cliente válido.',
@@ -75,10 +75,8 @@
 
             $datos = [
                 'codigo_cliente' => $codigoCliente,
-                'codigo_usuario' => (int) $_SESSION['user_id'], // Pasar codigo_usuario
-                'tasa_aplicada'  => isset($_POST['tasa_aplicada']) && $_POST['tasa_aplicada'] !== ''
-                    ? (float) $_POST['tasa_aplicada']
-                    : $object->getTasaActual(),
+                'codigo_usuario' => $_SESSION['user_id'], // La sesión ya tiene la cédula
+                'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
             ];
 
             $result = $object->addPedido($datos, $items);
@@ -97,10 +95,8 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'])) {
                 $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
-                    'codigo_cliente' => (int) $_POST['codigo_cliente'],
-                    'tasa_aplicada'  => isset($_POST['tasa_aplicada']) && $_POST['tasa_aplicada'] !== ''
-                        ? (float) $_POST['tasa_aplicada']
-                        : 0,
+                    'codigo_cliente' => $_POST['codigo_cliente'],
+                    'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
                     'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 0,
                 ]);
                 $_SESSION['pedido_flash'] = $result;
