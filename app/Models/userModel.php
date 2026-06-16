@@ -26,7 +26,7 @@ class userModel extends ConectDB {
 
     /**
      * Registra un nuevo usuario en el sistema.
-     * @param int $rol Por defecto se asigna el rol con código 2 (usualmente Operador/Vendedor).
+     * @param int $rol Por defecto se asigna el rol con código 2 (usualmente Adminstrador/Vendedor).
      */
     public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol = 2) {
         try {

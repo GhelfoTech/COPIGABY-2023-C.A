@@ -52,9 +52,6 @@ class rolModel extends ConectDB {
         }
     }
 
-    /**
-     * Desactivación lógica.
-     */
     public function deleteRol($id) {
         try {
             $stmt = $this->conex->prepare("UPDATE rol SET estado = 0 WHERE codigo_rol = ?");
