@@ -25,7 +25,7 @@
         <h1 class="text-2xl font-[900] text-gray-800">Lista de Categorías</h1>
         <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-          NUEVA CATEGORÍA
+          AÑADIR CATEGORÍA
         </button>
       </div>
 
