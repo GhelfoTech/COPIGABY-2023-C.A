@@ -103,8 +103,9 @@
                 <?php endforeach; ?>
               </select>
             </div>
-            <a href="?url=proveedor" class="bg-gray-100 p-2.5 rounded-lg text-navy hover:bg-orange hover:text-white transition-colors" title="Gestionar Proveedores">
-               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            <a href="?url=proveedor" class="group relative bg-gray-100 p-2.5 rounded-lg text-navy hover:bg-orange hover:text-white transition-colors">
+              <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Gestionar Proveedores</span>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
             </a>
           </div>
           <div>
@@ -128,7 +129,8 @@
                       </select>
                   </div>
                   <div class="col-span-1 flex items-center justify-center">
-                      <a href="?url=producto" class="text-orange hover:text-orange-dk transition-colors" title="Crear Producto si no existe">
+                      <a href="?url=producto" class="group relative text-orange hover:text-orange-dk transition-colors">
+                        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Crear Producto</span>
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M12 4v16m8-8H4"/></svg>
                       </a>
                   </div>
