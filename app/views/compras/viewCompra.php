@@ -42,7 +42,7 @@
               <th class="px-6 py-4">Fecha</th>
               <th class="px-6 py-4 text-right">Monto Total</th>
               <th class="px-6 py-4 text-center">Estado</th>
-              <th class="px-6 py-4 text-center">Acciones</th>
+              <th class="px-6 py-4 text-center">Ver Detalles</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
@@ -58,21 +58,11 @@
                     <?= $c['estado'] ? 'Activa' : 'Inactiva' ?>
                   </span>
                 </td>
-                <td class="px-6 py-4 text-center flex justify-center gap-1">
-                   <button onclick="viewDetails(<?= $c['codigo_compra'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                <td class="px-6 py-4 text-center">
+                   <button type="button" onclick="viewDetails(<?= $c['codigo_compra'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                    </button>
-                   <button onclick="openEditModal(<?= $c['codigo_compra'] ?>, <?= $c['codigo_proveedor'] ?>, '<?= htmlspecialchars($c['numero_factura_proveedor'], ENT_QUOTES) ?>', '<?= $c['fecha_compra'] ?>', <?= $c['monto_total'] ?>, <?= $c['estado'] ?>)" class="group relative text-blue-400 hover:text-blue-600 p-2 transition-colors">
-                     <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Modificar</span>
-                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                   </button>
-                   <?php if($c['estado']): ?>
-                   <button onclick="confirmDelete(<?= $c['codigo_compra'] ?>)" class="group relative text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                     <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-red-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Eliminar</span>
-                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                   </button>
-                   <?php endif; ?>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -215,7 +205,7 @@
 
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="document.getElementById('modalDetalle').classList.add('hidden')"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-3xl animate-fade-up overflow-hidden">
         <div class="p-8">
           <div class="flex justify-between items-start border-b pb-6 mb-6">
@@ -250,8 +240,10 @@
             </div>
           </div>
         </div>
-        <div class="bg-gray-50 px-8 py-4 flex justify-end">
-          <button onclick="document.getElementById('modalDetalle').classList.add('hidden')" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
+        <div class="modal-footer bg-gray-50 px-8 py-4 flex justify-end gap-3 border-t">
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Anular</button>
+          <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
+          <button type="button" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
@@ -290,20 +282,36 @@
       }
     }
 
+    let detailContext = {};
+
+    function closeDetalleModal() {
+      document.getElementById('modalDetalle').classList.add('hidden');
+    }
+
     function viewDetails(id) {
       fetch(`?url=compra&type=details&id=${id}`)
       .then(r => r.json())
       .then(data => {
           const h = data.header;
           const items = data.items;
-          
+          if (!h) return;
+
+          detailContext = {
+            id: h.codigo_compra,
+            proveedor: h.codigo_proveedor,
+            factura: h.numero_factura_proveedor,
+            fecha: h.fecha_compra,
+            total: h.monto_total,
+            estado: h.estado
+          };
+
           document.getElementById('det_factura').innerText = `FACTURA #${h.numero_factura_proveedor}`;
           document.getElementById('det_fecha').innerText = `Fecha de Compra: ${h.fecha_compra}`;
           document.getElementById('det_proveedor').innerText = h.razon_social;
           document.getElementById('det_rif').innerText = `RIF: ${h.rif_proveedor} | Tel: ${h.telefono}`;
           document.getElementById('det_usuario').innerText = h.nombre_usuario;
           document.getElementById('det_total').innerText = `$${parseFloat(h.monto_total).toFixed(2)}`;
-          
+
           const tbody = document.querySelector('#tablaDetallesItems tbody');
           tbody.innerHTML = '';
           items.forEach(it => {
@@ -315,6 +323,16 @@
                 <td class="px-4 py-3 text-right font-black text-orange-dk">$${parseFloat(it.subtotal).toFixed(2)}</td>
               </tr>`;
           });
+
+          const activa = parseInt(h.estado, 10) === 1;
+          document.getElementById('btnDetalleEditar').classList.toggle('hidden', !activa);
+          document.getElementById('btnDetalleEliminar').classList.toggle('hidden', !activa);
+          document.getElementById('btnDetalleEditar').onclick = () => {
+            closeDetalleModal();
+            openEditModal(detailContext.id, detailContext.proveedor, detailContext.factura, detailContext.fecha, detailContext.total, detailContext.estado);
+          };
+          document.getElementById('btnDetalleEliminar').onclick = () => confirmDelete(detailContext.id);
+
           document.getElementById('modalDetalle').classList.remove('hidden');
       });
     }

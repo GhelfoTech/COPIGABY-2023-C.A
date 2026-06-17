@@ -56,7 +56,7 @@
               <th class="px-6 py-4 text-right">Monto Total</th>
               <th class="px-6 py-4">Método Pago</th>
               <th class="px-6 py-4 text-center">Estado</th>
-              <th class="px-6 py-4 text-center">Acciones</th>
+              <th class="px-6 py-4 text-center">Ver Detalles</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
@@ -78,22 +78,10 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <div class="flex justify-center gap-1">
-                    <button onclick="viewDetails(<?= $ped['codigo_pedido'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver Detalle">
-                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    </button>
-                    <?php if ($ped['estado']): ?>
-                    <button onclick="openEditPedido(<?= $ped['codigo_pedido'] ?>)" class="group relative text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Modificar">
-                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Modificar</span>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button onclick="confirmDelete(<?= $ped['codigo_pedido'] ?>)" class="group relative text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
-                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-red-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Eliminar</span>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                    </button>
-                    <?php endif; ?>
-                  </div>
+                  <button type="button" onclick="viewDetails(<?= $ped['codigo_pedido'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver Detalle">
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
                 </td>
               </tr>
             <?php endforeach; ?>
@@ -313,8 +301,10 @@
             </div>
           </div>
         </div>
-        <div class="bg-gray-50 px-8 py-4 flex justify-end">
-          <button onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
+        <div class="modal-footer bg-gray-50 px-8 py-4 flex justify-end gap-3 border-t">
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Anular</button>
+          <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
+          <button type="button" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
@@ -622,6 +612,8 @@
       }
     }
 
+    let detailPedidoId = null;
+
     function viewDetails(id) {
       fetch(`?url=pedido&type=details&id=${id}`)
         .then(r => r.json())
@@ -629,6 +621,8 @@
           const h = data.header;
           const items = data.items;
           if (!h) return;
+
+          detailPedidoId = h.codigo_pedido;
 
           document.getElementById('det_codigo').innerText = 'PEDIDO #' + String(h.codigo_pedido).padStart(4, '0');
           document.getElementById('det_fecha').innerText = 'Fecha: ' + h.fecha_pedido;
@@ -678,6 +672,15 @@
                 <td class="px-4 py-3 text-right font-black text-orange-dk">$${parseFloat(it.subtotal).toFixed(2)}</td>
               </tr>`;
           });
+
+          const activo = parseInt(h.estado, 10) === 1;
+          document.getElementById('btnDetalleEditar').classList.toggle('hidden', !activo);
+          document.getElementById('btnDetalleEliminar').classList.toggle('hidden', !activo);
+          document.getElementById('btnDetalleEditar').onclick = () => {
+            closeDetalleModal();
+            openEditPedido(detailPedidoId);
+          };
+          document.getElementById('btnDetalleEliminar').onclick = () => confirmDelete(detailPedidoId);
 
           modalDetalle.classList.remove('hidden');
         })
