@@ -26,10 +26,10 @@
                 && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
             ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
 
-            if (!isset($_POST['codigo_cliente'], $_POST['items'])) {
+            if (!isset($_POST['codigo_cliente'], $_POST['items'], $_POST['codigo_metodo'])) {
                 $payload = [
                     'status'  => 'error',
-                    'message' => 'Datos incompletos: cliente e ítems son obligatorios.',
+                    'message' => 'Datos incompletos: cliente, ítems y método de pago son obligatorios.',
                 ];
                 if ($isAjax) {
                     header('Content-Type: application/json; charset=utf-8');
@@ -57,29 +57,19 @@
                 exit();
             }
 
-            $codigoCliente = $_POST['codigo_cliente'] ?? '';
-            if (empty($codigoCliente)) {
-                $payload = [
-                    'status'  => 'error',
-                    'message' => 'Debe seleccionar un cliente válido.',
-                ];
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($payload);
-                    exit();
-                }
-                $_SESSION['pedido_flash'] = $payload;
-                header('Location: ?url=pedido');
-                exit();
-            }
-
             $datos = [
-                'codigo_cliente' => $codigoCliente,
-                'codigo_usuario' => $_SESSION['user_id'], // La sesión ya tiene la cédula
-                'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
+                'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
+                'cedula_usuario' => $_SESSION['user_id'],
             ];
 
-            $result = $object->addPedido($datos, $items);
+            $pago = [
+                'codigo_metodo' => (int) $_POST['codigo_metodo'],
+                'monto'         => (float) ($_POST['monto_pago'] ?? 0),
+                'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
+                'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
+            ];
+
+            $result = $object->addPedido($datos, $items, $pago);
 
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');
@@ -93,12 +83,43 @@
         }
 
         elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'], $_POST['items'])) {
+                $isAjax = (
+                    !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+                    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+                ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
+
+                $items = json_decode((string) $_POST['items'], true);
+                if (!is_array($items) || $items === []) {
+                    $payload = ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem válido.'];
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode($payload);
+                        exit();
+                    }
+                    $_SESSION['pedido_flash'] = $payload;
+                    header('Location: ?url=pedido');
+                    exit();
+                }
+
+                $pago = [
+                    'codigo_metodo' => (int) ($_POST['codigo_metodo'] ?? 0),
+                    'monto'         => (float) ($_POST['monto_pago'] ?? 0),
+                    'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
+                    'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
+                ];
+
                 $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
-                    'codigo_cliente' => $_POST['codigo_cliente'],
-                    'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
-                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 0,
-                ]);
+                    'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
+                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 1,
+                ], $items, $pago);
+
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($result);
+                    exit();
+                }
+
                 $_SESSION['pedido_flash'] = $result;
                 header('Location: ?url=pedido');
                 exit();
@@ -107,7 +128,7 @@
             exit();
         }
 
-        if ($_GET['type'] === 'main') {
+        elseif ($_GET['type'] === 'main') {
             if (isset($_POST['deletePedido'])) {
                 $result = $object->deletePedido((int) $_POST['idpedido']);
                 header('Content-Type: application/json; charset=utf-8');
@@ -118,15 +139,32 @@
             exit();
         }
 
-        header('Location: ?url=pedido');
-        exit();
+        elseif ($_GET['type'] === 'details') {
+            if (isset($_GET['id'])) {
+                $header = $object->getPedidoById((int) $_GET['id']);
+                $items  = $object->getItemsByPedido((int) $_GET['id']);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['header' => $header, 'items' => $items]);
+                exit();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['header' => null, 'items' => []]);
+            exit();
+        }
+
+        else {
+            header('Location: ?url=pedido');
+            exit();
+        }
     }
 
-    $pedidos    = $object->getAllPedidos();
-    $clientes   = $object->getClientesActivos();
-    $productos  = $object->getProductosActivos();
-    $servicios  = $object->getServiciosActivos();
-    $tasaActual = $object->getTasaActual();
+    $pedidos     = $object->getAllPedidos();
+    $clientes    = $object->getClientesActivos();
+    $productos   = $object->getProductosActivos();
+    $servicios   = $object->getServiciosActivos();
+    $metodos     = $object->getMetodosActivos();
+    $bancos      = $object->getBancosActivos();
+    $tasaActual  = $object->getTasaActual();
     $pedidoFlash = $_SESSION['pedido_flash'] ?? null;
     unset($_SESSION['pedido_flash']);
 
