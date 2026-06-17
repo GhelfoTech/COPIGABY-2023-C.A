@@ -57,9 +57,25 @@
                 exit();
             }
 
+            if (!isset($_POST['codigo_IVA']) || (int) $_POST['codigo_IVA'] <= 0) {
+                $payload = [
+                    'status'  => 'error',
+                    'message' => 'Debe seleccionar un porcentaje de IVA válido.',
+                ];
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($payload);
+                    exit();
+                }
+                $_SESSION['pedido_flash'] = $payload;
+                header('Location: ?url=pedido');
+                exit();
+            }
+
             $datos = [
                 'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
                 'cedula_usuario' => $_SESSION['user_id'],
+                'codigo_IVA'     => (int) $_POST['codigo_IVA'],
             ];
 
             $pago = [
@@ -107,9 +123,22 @@
                     'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
                 ];
 
+                if (!isset($_POST['codigo_IVA']) || (int) $_POST['codigo_IVA'] <= 0) {
+                    $payload = ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje de IVA válido.'];
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode($payload);
+                        exit();
+                    }
+                    $_SESSION['pedido_flash'] = $payload;
+                    header('Location: ?url=pedido');
+                    exit();
+                }
+
                 $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
                     'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
                     'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 1,
+                    'codigo_IVA'     => (int) $_POST['codigo_IVA'],
                 ], $items, $pago);
 
                 if ($isAjax) {
@@ -164,6 +193,7 @@
     $bancos       = $object->getBancosActivos();
     $monedaActiva = $object->getMonedaActiva();
     $tasaActual   = $object->getTasaActual();
+    $ivas         = $object->getIvasActivos();
     $ivaActivo    = $object->getIvaActivo();
     $pedidoFlash  = $_SESSION['pedido_flash'] ?? null;
     unset($_SESSION['pedido_flash']);

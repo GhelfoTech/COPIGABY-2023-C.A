@@ -100,7 +100,8 @@ class pedidoModel extends ConectDB {
             }
 
             $subtotal = $this->insertarDetallesYDescontarStock($codigoPedido, $items);
-            $totales  = $this->calcularTotalesConIva($subtotal);
+            $codigoIva = isset($datos['codigo_IVA']) ? (int) $datos['codigo_IVA'] : null;
+            $totales  = $this->calcularTotalesConIva($subtotal, $codigoIva);
             $this->registrarPago($codigoPedido, $pago, $totales['total']);
 
             $this->conex->commit();
@@ -169,7 +170,8 @@ class pedidoModel extends ConectDB {
 
             if ($estado === 1) {
                 $subtotal = $this->insertarDetallesYDescontarStock($id, $items);
-                $totales  = $this->calcularTotalesConIva($subtotal);
+                $codigoIva = isset($datos['codigo_IVA']) ? (int) $datos['codigo_IVA'] : null;
+                $totales  = $this->calcularTotalesConIva($subtotal, $codigoIva);
                 $this->registrarPago($id, $pago, $totales['total']);
             }
 
@@ -263,6 +265,7 @@ class pedidoModel extends ConectDB {
                 $pedido['porcentaje_iva'] = $subtotal > 0
                     ? round(($pedido['monto_iva'] / $subtotal) * 100, 2)
                     : (float) $this->getIvaActivo()['porcentaje_iva'];
+                $pedido['codigo_IVA'] = $this->resolverCodigoIvaPedido($pedido);
             }
 
             return $pedido ?: null;
@@ -381,27 +384,75 @@ class pedidoModel extends ConectDB {
     }
 
     /**
-     * Porcentaje de IVA vigente (registro activo en tabla iva).
+     * Porcentaje de IVA vigente (registro activo más reciente en tabla iva).
      */
     public function getIvaActivo(): array {
+        $ivas = $this->getIvasActivos();
+        if (!empty($ivas)) {
+            return $ivas[0];
+        }
+
+        return ['codigo_IVA' => 1, 'porcentaje_iva' => 16.0, 'estado' => 1];
+    }
+
+    /**
+     * Todos los registros de IVA activos para el selector del formulario.
+     */
+    public function getIvasActivos(): array {
         try {
             $stmt = $this->conex->prepare(
-                'SELECT codigo_IVA, porcentaje_iva FROM iva WHERE estado = 1 ORDER BY fecha DESC, codigo_IVA DESC LIMIT 1'
+                'SELECT codigo_IVA, porcentaje_iva, estado
+                 FROM iva
+                 WHERE estado = 1
+                 ORDER BY fecha DESC, codigo_IVA DESC'
             );
             $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if ($row) {
+            return array_map(static function (array $row): array {
                 return [
                     'codigo_IVA'     => (int) $row['codigo_IVA'],
                     'porcentaje_iva' => (float) $row['porcentaje_iva'],
+                    'estado'         => (int) $row['estado'],
                 ];
-            }
+            }, $rows);
         } catch (PDOException $e) {
-            $this->logPdoError('getIvaActivo', $e);
+            $this->logPdoError('getIvasActivos', $e);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene un IVA activo por su código.
+     */
+    public function getIvaByCodigo(int $codigoIva): ?array {
+        if ($codigoIva <= 0) {
+            return null;
         }
 
-        return ['codigo_IVA' => 1, 'porcentaje_iva' => 16.0];
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_IVA, porcentaje_iva, estado
+                 FROM iva
+                 WHERE codigo_IVA = ? AND estado = 1
+                 LIMIT 1'
+            );
+            $stmt->execute([$codigoIva]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                return null;
+            }
+
+            return [
+                'codigo_IVA'     => (int) $row['codigo_IVA'],
+                'porcentaje_iva' => (float) $row['porcentaje_iva'],
+                'estado'         => (int) $row['estado'],
+            ];
+        } catch (PDOException $e) {
+            $this->logPdoError('getIvaByCodigo', $e);
+            return null;
+        }
     }
 
     public function getMonedaDefault(): int {
@@ -612,17 +663,56 @@ class pedidoModel extends ConectDB {
     /**
      * Calcula subtotal, monto de IVA y total general a partir del subtotal de líneas.
      */
-    private function calcularTotalesConIva(float $subtotal): array {
+    private function calcularTotalesConIva(float $subtotal, ?int $codigoIva = null): array {
         $subtotal = round($subtotal, 2);
-        $ivaInfo  = $this->getIvaActivo();
+
+        $ivaInfo = null;
+        if ($codigoIva !== null && $codigoIva > 0) {
+            $ivaInfo = $this->getIvaByCodigo($codigoIva);
+        }
+        if ($ivaInfo === null) {
+            $ivaInfo = $this->getIvaActivo();
+        }
+
         $montoIva = round($subtotal * ((float) $ivaInfo['porcentaje_iva'] / 100), 2);
 
         return [
             'subtotal'       => $subtotal,
+            'codigo_IVA'     => (int) $ivaInfo['codigo_IVA'],
             'porcentaje_iva' => (float) $ivaInfo['porcentaje_iva'],
             'monto_iva'      => $montoIva,
             'total'          => round($subtotal + $montoIva, 2),
         ];
+    }
+
+    /**
+     * Infiere el código de IVA aplicado a un pedido según montos registrados.
+     */
+    private function resolverCodigoIvaPedido(array $pedido): int {
+        $subtotal = (float) ($pedido['subtotal'] ?? 0);
+        $total    = (float) ($pedido['monto_total'] ?? $subtotal);
+        $montoIva = round(max(0, $total - $subtotal), 2);
+
+        if ($subtotal > 0) {
+            $porcentaje = round(($montoIva / $subtotal) * 100, 2);
+            try {
+                $stmt = $this->conex->prepare(
+                    'SELECT codigo_IVA FROM iva
+                     WHERE estado = 1 AND porcentaje_iva = ?
+                     ORDER BY fecha DESC, codigo_IVA DESC
+                     LIMIT 1'
+                );
+                $stmt->execute([$porcentaje]);
+                $codigo = $stmt->fetchColumn();
+                if ($codigo !== false) {
+                    return (int) $codigo;
+                }
+            } catch (PDOException $e) {
+                $this->logPdoError('resolverCodigoIvaPedido', $e);
+            }
+        }
+
+        return (int) $this->getIvaActivo()['codigo_IVA'];
     }
 
     private function registrarPago(int $codigoPedido, array $pago, float $montoTotal): void {

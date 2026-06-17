@@ -179,10 +179,26 @@
                 <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
                 <span id="subtotalGeneral" class="font-bold text-navy-dark">$0.00</span>
               </div>
-              <div class="flex justify-between items-center text-sm mb-3 pb-3 border-b border-gray-200">
-                <span class="text-xs font-black text-gray-400 uppercase tracking-widest">
-                  IVA (<span id="ivaPorcentaje"><?= number_format($ivaActivo['porcentaje_iva'], 2) ?></span>%)
-                </span>
+              <div class="flex justify-between items-center text-sm mb-3 pb-3 border-b border-gray-200 gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">IVA</span>
+                  <select name="codigo_IVA" id="selectIva" required class="px-2 py-1 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none min-w-[110px]">
+                    <?php if (!empty($ivas)): ?>
+                      <?php foreach ($ivas as $iva): ?>
+                        <option value="<?= (int) $iva['codigo_IVA'] ?>"
+                          data-porcentaje="<?= number_format((float) $iva['porcentaje_iva'], 2, '.', '') ?>"
+                          <?= ((int) $iva['codigo_IVA'] === (int) ($ivaActivo['codigo_IVA'] ?? 0)) ? 'selected' : '' ?>>
+                          <?= number_format((float) $iva['porcentaje_iva'], 2) ?>%
+                        </option>
+                      <?php endforeach; ?>
+                    <?php else: ?>
+                      <option value="<?= (int) ($ivaActivo['codigo_IVA'] ?? 1) ?>"
+                        data-porcentaje="<?= number_format((float) ($ivaActivo['porcentaje_iva'] ?? 16), 2, '.', '') ?>">
+                        <?= number_format((float) ($ivaActivo['porcentaje_iva'] ?? 16), 2) ?>%
+                      </option>
+                    <?php endif; ?>
+                  </select>
+                </div>
                 <span id="montoIva" class="font-bold text-orange-dk">$0.00</span>
               </div>
               <span class="text-xs font-black text-gray-400 uppercase tracking-widest mr-4">Total General</span>
@@ -308,7 +324,7 @@
     const productos = <?= json_encode($productos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     const servicios = <?= json_encode($servicios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     const tasaActual = <?= json_encode($tasaActual) ?>;
-    const porcentajeIva = <?= json_encode((float) $ivaActivo['porcentaje_iva']) ?>;
+    const ivaDefaultCodigo = <?= json_encode((int) ($ivaActivo['codigo_IVA'] ?? 1)) ?>;
     const simboloMoneda = <?= json_encode($monedaActiva['simbolo'] ?? '$') ?>;
     const METODOS_CON_BANCO = [563, 564];
 
@@ -330,9 +346,26 @@
     const selectMetodo = document.getElementById('selectMetodo');
     const wrapBanco = document.getElementById('wrapBanco');
     const wrapReferencia = document.getElementById('wrapReferencia');
+    const selectIva = document.getElementById('selectIva');
 
     let itemCounter = 0;
     let editMode = false;
+
+    function getPorcentajeIvaSeleccionado() {
+      if (!selectIva || selectIva.selectedIndex < 0) return 0;
+      const option = selectIva.options[selectIva.selectedIndex];
+      return parseFloat(option.getAttribute('data-porcentaje') || '0');
+    }
+
+    function setIvaSeleccionado(codigoIva) {
+      if (!selectIva) return;
+      const codigo = String(codigoIva || ivaDefaultCodigo);
+      if ([...selectIva.options].some(opt => opt.value === codigo)) {
+        selectIva.value = codigo;
+      } else if (selectIva.options.length > 0) {
+        selectIva.selectedIndex = 0;
+      }
+    }
 
     function toggleModal(forceClose = false) {
       if (forceClose) {
@@ -350,6 +383,7 @@
       btnSubmitPedido.textContent = 'Registrar Pedido';
       formPedido.reset();
       document.getElementById('tasaActualInput').value = tasaActual;
+      setIvaSeleccionado(ivaDefaultCodigo);
       itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
       subtotalGeneral.textContent = simboloMoneda + '0.00';
       montoIva.textContent = simboloMoneda + '0.00';
@@ -396,6 +430,7 @@
         subtotal += parseFloat(row.dataset.subtotal || 0);
       });
       subtotal = Math.round(subtotal * 100) / 100;
+      const porcentajeIva = getPorcentajeIvaSeleccionado();
       const iva = Math.round(subtotal * (porcentajeIva / 100) * 100) / 100;
       const total = Math.round((subtotal + iva) * 100) / 100;
 
@@ -607,7 +642,7 @@
 
           document.getElementById('det_subtotal').innerText = '$' + subtotalDet.toFixed(2);
           document.getElementById('det_total').innerText = '$' + totalDet.toFixed(2);
-          document.getElementById('det_iva').innerText = '$' + ivaDet.toFixed(2) + ' (' + (h.porcentaje_iva ?? porcentajeIva) + '%)';
+          document.getElementById('det_iva').innerText = '$' + ivaDet.toFixed(2) + ' (' + (h.porcentaje_iva ?? getPorcentajeIvaSeleccionado()) + '%)';
           document.getElementById('det_metodo').innerText = h.nombre_metodo || '—';
 
           const pago = h.pago || null;
@@ -669,6 +704,7 @@
           btnSubmitPedido.textContent = 'Actualizar Pedido';
 
           document.getElementById('selectCliente').value = String(h.cedula_cliente);
+          setIvaSeleccionado(h.codigo_IVA || ivaDefaultCodigo);
 
           items.forEach(it => {
             addItemRow({
@@ -725,6 +761,11 @@
           })
           .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación al anular el pedido.' }));
       });
+    }
+
+    selectMetodo.addEventListener('change', toggleCamposBanco);
+    if (selectIva) {
+      selectIva.addEventListener('change', recalcTotal);
     }
 
     document.getElementById('btnAddItem').onclick = () => addItemRow();

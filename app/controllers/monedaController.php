@@ -32,8 +32,15 @@
 
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'], $_POST['nombre_moneda'])) {
+                $idMoneda = (int) $_POST['idmoneda'];
+                if ($idMoneda <= 0) {
+                    $_SESSION['moneda_flash'] = ['status' => 'error', 'message' => 'Identificador de moneda no válido.'];
+                    header('Location: ?url=moneda');
+                    exit();
+                }
+
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $result = $object->updateMoneda((int) $_POST['idmoneda'], [
+                $result = $object->updateMoneda($idMoneda, [
                     'nombre_moneda' => trim((string) $_POST['nombre_moneda']),
                     'simbolo'       => trim((string) ($_POST['simbolo'] ?? '')),
                     'tasa_cambio'   => (float) ($_POST['tasa_cambio'] ?? 0),

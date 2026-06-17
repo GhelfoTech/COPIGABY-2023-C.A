@@ -234,25 +234,29 @@ class monedaModel extends ConectDB {
         try {
             $this->conex->beginTransaction();
 
-            $stmtSearch = $this->conex->prepare(
-                'SELECT codigo_tasa FROM moneda WHERE codigo_moneda = ?'
-            );
-            $stmtSearch->execute([$id]);
-            $idTasa = $stmtSearch->fetchColumn();
-
-            if ($idTasa === false) {
+            $monedaActual = $this->getMonedaById($id);
+            if (!$monedaActual) {
                 throw new PDOException('La moneda indicada no existe');
             }
 
+            // Inserta una tasa nueva y la vincula solo a esta moneda para evitar
+            // actualizaciones masivas cuando varias monedas comparten codigo_tasa.
             $stmtTasa = $this->conex->prepare(
-                'UPDATE tasa_cambio SET monto_bolivares = ?, fecha = NOW() WHERE codigo_tasa = ?'
+                'INSERT INTO tasa_cambio (fecha, monto_bolivares) VALUES (NOW(), ?)'
             );
-            $stmtTasa->execute([$tasa, (int) $idTasa]);
+            $stmtTasa->execute([$tasa]);
+            $idTasaNueva = (int) $this->conex->lastInsertId();
+
+            if ($idTasaNueva <= 0) {
+                throw new PDOException('No se pudo registrar la nueva tasa de cambio');
+            }
 
             $stmt = $this->conex->prepare(
-                'UPDATE moneda SET nombre_moneda = ?, simbolo = ?, estado = ? WHERE codigo_moneda = ?'
+                'UPDATE moneda
+                 SET nombre_moneda = ?, simbolo = ?, estado = ?, codigo_tasa = ?
+                 WHERE codigo_moneda = ?'
             );
-            $stmt->execute([$nombre, $simbolo, $estado, $id]);
+            $stmt->execute([$nombre, $simbolo, $estado, $idTasaNueva, $id]);
 
             if ($estado === 0 && $this->hasActivaColumn()) {
                 $stmtClear = $this->conex->prepare(
