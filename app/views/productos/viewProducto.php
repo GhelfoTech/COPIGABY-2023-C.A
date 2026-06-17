@@ -39,8 +39,8 @@
               <th class="px-6 py-4">Producto</th>
               <th class="px-6 py-4">Categoría / IVA</th>
               <th class="px-6 py-4">Stock (Act/Min)</th>
-              <th class="px-6 py-4">Costo</th>
               <th class="px-6 py-4">Unidad</th>
+              <th class="px-6 py-4">Costo</th>
               <th class="px-6 py-4">Estado</th>
               <th class="px-6 py-4 text-center">Acciones</th>
             </tr>
