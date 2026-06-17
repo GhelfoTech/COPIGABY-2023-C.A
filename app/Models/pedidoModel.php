@@ -9,12 +9,16 @@ use PDOException;
 class pedidoModel extends ConectDB {
     private $conex;
 
+    /** @var monedaModel|null */
+    private $monedaModel;
+
     /** Métodos que requieren banco y referencia */
     private const METODOS_CON_BANCO = [563, 564];
 
     public function __construct() {
         parent::__construct();
         $this->conex = $this->getConnection();
+        $this->monedaModel = new monedaModel();
     }
 
     private function logPdoError(string $context, PDOException $e): void {
@@ -35,9 +39,17 @@ class pedidoModel extends ConectDB {
                              c.nombre AS nombre_cliente, u.nombre_usuario,
                              mp.nombre_metodo,
                              COALESCE(
+                                 (SELECT dpg.monto FROM pagos pg2
+                                  INNER JOIN detalle_pago dpg ON dpg.codigo_pago = pg2.codigo_pago
+                                  WHERE pg2.codigo_pedido = p.codigo_pedido AND pg2.estado = 1
+                                  LIMIT 1),
                                  (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
                                  0
-                             ) AS monto_total
+                             ) AS monto_total,
+                             COALESCE(
+                                 (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
+                                 0
+                             ) AS subtotal
                       FROM pedido p
                       LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
                       LEFT JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
@@ -87,8 +99,9 @@ class pedidoModel extends ConectDB {
                 throw new PDOException('No se pudo obtener el código del pedido insertado');
             }
 
-            $montoTotal = $this->insertarDetallesYDescontarStock($codigoPedido, $items);
-            $this->registrarPago($codigoPedido, $pago, $montoTotal);
+            $subtotal = $this->insertarDetallesYDescontarStock($codigoPedido, $items);
+            $totales  = $this->calcularTotalesConIva($subtotal);
+            $this->registrarPago($codigoPedido, $pago, $totales['total']);
 
             $this->conex->commit();
 
@@ -155,8 +168,9 @@ class pedidoModel extends ConectDB {
             $stmtUpdate->execute([$cedulaCliente, $estado, $id]);
 
             if ($estado === 1) {
-                $montoTotal = $this->insertarDetallesYDescontarStock($id, $items);
-                $this->registrarPago($id, $pago, $montoTotal);
+                $subtotal = $this->insertarDetallesYDescontarStock($id, $items);
+                $totales  = $this->calcularTotalesConIva($subtotal);
+                $this->registrarPago($id, $pago, $totales['total']);
             }
 
             $this->conex->commit();
@@ -217,9 +231,17 @@ class pedidoModel extends ConectDB {
                              pg.codigo_pago, pg.codigo_metodo, pg.fecha_pago AS fecha_pago,
                              mp.nombre_metodo,
                              COALESCE(
+                                 (SELECT dpg.monto FROM pagos pg2
+                                  INNER JOIN detalle_pago dpg ON dpg.codigo_pago = pg2.codigo_pago
+                                  WHERE pg2.codigo_pedido = p.codigo_pedido AND pg2.estado = 1
+                                  LIMIT 1),
                                  (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
                                  0
-                             ) AS monto_total
+                             ) AS monto_total,
+                             COALESCE(
+                                 (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
+                                 0
+                             ) AS subtotal
                       FROM pedido p
                       INNER JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
                       INNER JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
@@ -232,6 +254,15 @@ class pedidoModel extends ConectDB {
 
             if ($pedido && !empty($pedido['codigo_pago'])) {
                 $pedido['pago'] = $this->getDetallePagoByPago((int) $pedido['codigo_pago']);
+            }
+
+            if ($pedido) {
+                $subtotal = (float) ($pedido['subtotal'] ?? 0);
+                $total    = (float) ($pedido['monto_total'] ?? $subtotal);
+                $pedido['monto_iva'] = round(max(0, $total - $subtotal), 2);
+                $pedido['porcentaje_iva'] = $subtotal > 0
+                    ? round(($pedido['monto_iva'] / $subtotal) * 100, 2)
+                    : (float) $this->getIvaActivo()['porcentaje_iva'];
             }
 
             return $pedido ?: null;
@@ -335,35 +366,47 @@ class pedidoModel extends ConectDB {
         }
     }
 
-    public function getTasaActual() {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT t.monto_bolivares
-                 FROM moneda m
-                 INNER JOIN tasa_cambio t ON m.codigo_tasa = t.codigo_tasa
-                 WHERE m.estado = 1 AND m.simbolo = "$"
-                 ORDER BY m.codigo_moneda DESC LIMIT 1'
-            );
-            $stmt->execute();
-            $tasa = $stmt->fetchColumn();
-            return $tasa !== false ? (float) $tasa : 1.0;
-        } catch (PDOException $e) {
-            $this->logPdoError('getTasaActual', $e);
-            return 1.0;
-        }
+    /**
+     * Moneda activa global del sistema (nombre, símbolo, tasa).
+     */
+    public function getMonedaActiva(): ?array {
+        return $this->monedaModel->getMonedaActiva();
     }
 
-    public function getMonedaDefault() {
+    /**
+     * Tasa de cambio de la moneda activa global.
+     */
+    public function getTasaActual(): float {
+        return $this->monedaModel->getTasaActual();
+    }
+
+    /**
+     * Porcentaje de IVA vigente (registro activo en tabla iva).
+     */
+    public function getIvaActivo(): array {
         try {
             $stmt = $this->conex->prepare(
-                'SELECT codigo_moneda FROM moneda WHERE estado = 1 AND simbolo = "$" ORDER BY codigo_moneda DESC LIMIT 1'
+                'SELECT codigo_IVA, porcentaje_iva FROM iva WHERE estado = 1 ORDER BY fecha DESC, codigo_IVA DESC LIMIT 1'
             );
             $stmt->execute();
-            $moneda = $stmt->fetchColumn();
-            return $moneda !== false ? (int) $moneda : 510;
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($row) {
+                return [
+                    'codigo_IVA'     => (int) $row['codigo_IVA'],
+                    'porcentaje_iva' => (float) $row['porcentaje_iva'],
+                ];
+            }
         } catch (PDOException $e) {
-            return 510;
+            $this->logPdoError('getIvaActivo', $e);
         }
+
+        return ['codigo_IVA' => 1, 'porcentaje_iva' => 16.0];
+    }
+
+    public function getMonedaDefault(): int {
+        $moneda = $this->getMonedaActiva();
+        return $moneda ? (int) $moneda['codigo_moneda'] : 510;
     }
 
     /* ------------------------------------------------------------------
@@ -374,11 +417,6 @@ class pedidoModel extends ConectDB {
         $codigoMetodo = (int) ($pago['codigo_metodo'] ?? 0);
         if ($codigoMetodo <= 0) {
             return ['status' => 'error', 'message' => 'Debe seleccionar un método de pago'];
-        }
-
-        $monto = (float) ($pago['monto'] ?? 0);
-        if ($monto <= 0) {
-            return ['status' => 'error', 'message' => 'El monto del pago debe ser mayor a cero'];
         }
 
         if ($this->metodoRequiereBanco($codigoMetodo)) {
@@ -571,9 +609,29 @@ class pedidoModel extends ConectDB {
         }
     }
 
+    /**
+     * Calcula subtotal, monto de IVA y total general a partir del subtotal de líneas.
+     */
+    private function calcularTotalesConIva(float $subtotal): array {
+        $subtotal = round($subtotal, 2);
+        $ivaInfo  = $this->getIvaActivo();
+        $montoIva = round($subtotal * ((float) $ivaInfo['porcentaje_iva'] / 100), 2);
+
+        return [
+            'subtotal'       => $subtotal,
+            'porcentaje_iva' => (float) $ivaInfo['porcentaje_iva'],
+            'monto_iva'      => $montoIva,
+            'total'          => round($subtotal + $montoIva, 2),
+        ];
+    }
+
     private function registrarPago(int $codigoPedido, array $pago, float $montoTotal): void {
         $codigoMetodo = (int) $pago['codigo_metodo'];
-        $monto = (float) ($pago['monto'] ?? $montoTotal);
+        $monto = round($montoTotal, 2);
+
+        if ($monto <= 0) {
+            throw new PDOException('El total del pedido debe ser mayor a cero');
+        }
 
         $stmtPago = $this->conex->prepare(
             'INSERT INTO pagos (codigo_pedido, codigo_metodo, fecha_pago, estado) VALUES (?, ?, NOW(), 1)'

@@ -32,6 +32,12 @@
         <div>
           <h1 class="text-2xl font-[900] text-gray-800">Módulo de Ventas</h1>
           <p class="text-gray-500 text-sm font-semibold">Registro de pedidos de productos y servicios</p>
+          <?php if (!empty($monedaActiva)): ?>
+          <p class="text-xs font-bold text-orange-dk mt-2">
+            Moneda: <?= htmlspecialchars($monedaActiva['nombre_moneda']) ?> (<?= htmlspecialchars($monedaActiva['simbolo']) ?>)
+            — Tasa: <?= number_format($tasaActual, 2) ?> Bs
+          </p>
+          <?php endif; ?>
         </div>
         <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
@@ -62,7 +68,7 @@
                 <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario'] ?? '—') ?></td>
                 <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
                 <td class="px-6 py-4 text-right">
-                  <div class="font-black text-navy-dark text-[1rem]">$<?= number_format($ped['monto_total'], 2) ?></div>
+                  <div class="font-black text-navy-dark text-[1rem]"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?><?= number_format($ped['monto_total'], 2) ?></div>
                   <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format($ped['monto_total'] * $tasaActual, 2) ?> Bs</div>
                 </td>
                 <td class="px-6 py-4 text-xs font-bold text-gray-500 uppercase"><?= htmlspecialchars($ped['nombre_metodo'] ?? '—') ?></td>
@@ -127,8 +133,15 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs/$)</label>
-              <input type="number" step="0.01" id="tasaActualInput" value="<?= $tasaActual ?>" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-orange-dk" readonly>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Moneda / Tasa Global</label>
+              <div class="w-full px-4 py-2 bg-orange/10 border border-orange/30 rounded-lg font-bold text-navy-dark">
+                <span id="monedaActivaLabel"><?= htmlspecialchars($monedaActiva['nombre_moneda'] ?? '—') ?></span>
+                <span class="text-orange-dk ml-1">(<?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>)</span>
+                <span class="block text-xs text-gray-500 mt-1 font-semibold">
+                  Tasa: <span id="tasaActualLabel"><?= number_format($tasaActual, 2) ?></span> Bs 
+                </span>
+              </div>
+              <input type="hidden" id="tasaActualInput" value="<?= $tasaActual ?>">
             </div>
           </div>
 
@@ -161,7 +174,17 @@
           </div>
 
           <div class="flex justify-end mb-6">
-            <div class="bg-gray-50 border rounded-xl px-6 py-3 text-right">
+            <div class="bg-gray-50 border rounded-xl px-6 py-4 text-right min-w-[280px]">
+              <div class="flex justify-between items-center text-sm mb-2">
+                <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
+                <span id="subtotalGeneral" class="font-bold text-navy-dark">$0.00</span>
+              </div>
+              <div class="flex justify-between items-center text-sm mb-3 pb-3 border-b border-gray-200">
+                <span class="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  IVA (<span id="ivaPorcentaje"><?= number_format($ivaActivo['porcentaje_iva'], 2) ?></span>%)
+                </span>
+                <span id="montoIva" class="font-bold text-orange-dk">$0.00</span>
+              </div>
               <span class="text-xs font-black text-gray-400 uppercase tracking-widest mr-4">Total General</span>
               <span id="totalGeneral" class="text-2xl font-black text-navy-dark">$0.00</span>
               <div id="totalBs" class="text-xs font-bold text-orange-dk mt-1">0.00 Bs</div>
@@ -180,10 +203,6 @@
                     <option value="<?= $m['codigo_metodo'] ?>"><?= htmlspecialchars($m['nombre_metodo']) ?></option>
                   <?php endforeach; ?>
                 </select>
-              </div>
-              <div>
-                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Monto ($)</label>
-                <input type="number" step="0.01" min="0" name="monto_pago" id="montoPago" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold text-navy-dark" placeholder="0.00">
               </div>
               <div id="wrapBanco" class="hidden">
                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Banco</label>
@@ -249,8 +268,12 @@
               <p class="font-bold text-navy-dark" id="det_metodo">—</p>
             </div>
             <div>
-              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Monto Pagado</p>
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Total Pagado</p>
               <p class="font-bold text-navy-dark" id="det_monto_pago">—</p>
+            </div>
+            <div>
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">IVA Aplicado</p>
+              <p class="font-bold text-orange-dk" id="det_iva">—</p>
             </div>
             <div id="det_banco_wrap" class="hidden">
               <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Banco</p>
@@ -268,6 +291,7 @@
               <p class="text-navy-dark font-bold text-sm" id="det_usuario">—</p>
             </div>
             <div class="text-right">
+              <p class="text-xs text-gray-400 font-bold mb-1">Subtotal: <span id="det_subtotal">$0.00</span></p>
               <span class="text-xs font-black text-gray-400 uppercase mr-4">Total del Pedido</span>
               <span class="text-3xl font-black text-navy-dark" id="det_total">$0.00</span>
             </div>
@@ -284,6 +308,8 @@
     const productos = <?= json_encode($productos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     const servicios = <?= json_encode($servicios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     const tasaActual = <?= json_encode($tasaActual) ?>;
+    const porcentajeIva = <?= json_encode((float) $ivaActivo['porcentaje_iva']) ?>;
+    const simboloMoneda = <?= json_encode($monedaActiva['simbolo'] ?? '$') ?>;
     const METODOS_CON_BANCO = [563, 564];
 
     const modalPedido = document.getElementById('modalPedido');
@@ -293,6 +319,8 @@
     const overlayPedido = document.getElementById('overlayPedido');
     const itemsBody = document.getElementById('itemsBody');
     const totalGeneral = document.getElementById('totalGeneral');
+    const subtotalGeneral = document.getElementById('subtotalGeneral');
+    const montoIva = document.getElementById('montoIva');
     const totalBs = document.getElementById('totalBs');
     const formPedido = document.getElementById('formPedido');
     const btnSubmitPedido = document.getElementById('btnSubmitPedido');
@@ -302,7 +330,6 @@
     const selectMetodo = document.getElementById('selectMetodo');
     const wrapBanco = document.getElementById('wrapBanco');
     const wrapReferencia = document.getElementById('wrapReferencia');
-    const montoPago = document.getElementById('montoPago');
 
     let itemCounter = 0;
     let editMode = false;
@@ -324,9 +351,10 @@
       formPedido.reset();
       document.getElementById('tasaActualInput').value = tasaActual;
       itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
-      totalGeneral.textContent = '$0.00';
+      subtotalGeneral.textContent = simboloMoneda + '0.00';
+      montoIva.textContent = simboloMoneda + '0.00';
+      totalGeneral.textContent = simboloMoneda + '0.00';
       totalBs.textContent = '0.00 Bs';
-      montoPago.value = '';
       toggleCamposBanco();
     }
 
@@ -363,15 +391,18 @@
     }
 
     function recalcTotal() {
-      let total = 0;
+      let subtotal = 0;
       itemsBody.querySelectorAll('tr[data-item]').forEach(row => {
-        total += parseFloat(row.dataset.subtotal || 0);
+        subtotal += parseFloat(row.dataset.subtotal || 0);
       });
-      totalGeneral.textContent = '$' + total.toFixed(2);
+      subtotal = Math.round(subtotal * 100) / 100;
+      const iva = Math.round(subtotal * (porcentajeIva / 100) * 100) / 100;
+      const total = Math.round((subtotal + iva) * 100) / 100;
+
+      subtotalGeneral.textContent = simboloMoneda + subtotal.toFixed(2);
+      montoIva.textContent = simboloMoneda + iva.toFixed(2);
+      totalGeneral.textContent = simboloMoneda + total.toFixed(2);
       totalBs.textContent = (total * parseFloat(tasaActual)).toFixed(2) + ' Bs';
-      if (!editMode || document.activeElement !== montoPago) {
-        montoPago.value = total > 0 ? total.toFixed(2) : '';
-      }
     }
 
     function normalizeCantidad(input) {
@@ -411,7 +442,9 @@
       tr.remove();
       if (!itemsBody.querySelector('tr[data-item]')) {
         itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
-        totalGeneral.textContent = '$0.00';
+        subtotalGeneral.textContent = simboloMoneda + '0.00';
+        montoIva.textContent = simboloMoneda + '0.00';
+        totalGeneral.textContent = simboloMoneda + '0.00';
         totalBs.textContent = '0.00 Bs';
       } else {
         recalcTotal();
@@ -567,11 +600,20 @@
           document.getElementById('det_cliente').innerText = h.nombre_cliente || '—';
           document.getElementById('det_telefono').innerText = 'Tel: ' + (h.telefono_cliente || '—');
           document.getElementById('det_usuario').innerText = h.nombre_usuario || '—';
-          document.getElementById('det_total').innerText = '$' + parseFloat(h.monto_total).toFixed(2);
+
+          const subtotalDet = parseFloat(h.subtotal ?? h.monto_total ?? 0);
+          const totalDet = parseFloat(h.monto_total ?? 0);
+          const ivaDet = parseFloat(h.monto_iva ?? Math.max(0, totalDet - subtotalDet));
+
+          document.getElementById('det_subtotal').innerText = '$' + subtotalDet.toFixed(2);
+          document.getElementById('det_total').innerText = '$' + totalDet.toFixed(2);
+          document.getElementById('det_iva').innerText = '$' + ivaDet.toFixed(2) + ' (' + (h.porcentaje_iva ?? porcentajeIva) + '%)';
           document.getElementById('det_metodo').innerText = h.nombre_metodo || '—';
 
           const pago = h.pago || null;
-          document.getElementById('det_monto_pago').innerText = pago ? '$' + parseFloat(pago.monto).toFixed(2) : '$' + parseFloat(h.monto_total).toFixed(2);
+          document.getElementById('det_monto_pago').innerText = pago
+            ? '$' + parseFloat(pago.monto).toFixed(2)
+            : '$' + totalDet.toFixed(2);
 
           const bancoWrap = document.getElementById('det_banco_wrap');
           const refWrap = document.getElementById('det_ref_wrap');
@@ -644,7 +686,6 @@
           toggleCamposBanco();
 
           const pago = h.pago || null;
-          montoPago.value = pago ? parseFloat(pago.monto).toFixed(2) : parseFloat(h.monto_total).toFixed(2);
           if (pago && pago.codigo_banco) {
             document.getElementById('selectBanco').value = String(pago.codigo_banco);
           }

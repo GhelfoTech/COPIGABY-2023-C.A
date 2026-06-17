@@ -108,6 +108,70 @@ index.php
 <files>
 This section contains the contents of the repository's files.
 
+<file path=".gitignore">
+/vendor/
+</file>
+
+<file path="app/controllers/clienteController.php">
+<?php
+
+    use App\models\clienteModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    // Seguridad: Verificar sesión activa
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new clienteModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula_cliente'])) {
+                $object->addCliente($_POST);
+                header("Location: ?url=cliente");
+                exit();
+            }
+            header("Location: ?url=cliente");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_actual'])) {
+                $object->updateCliente($_POST['id_actual'], $_POST);
+                header("Location: ?url=cliente");
+                exit();
+            }
+            header("Location: ?url=cliente");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteCliente'])) {
+                $result = $object->deleteCliente($_POST['idcliente']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=cliente");
+            exit();
+        }
+
+        else {
+            header("Location: ?url=cliente");
+            exit();
+        }
+    }
+
+    // Carga por defecto: Listado de clientes
+    $clientes = $object->getAllClientes();
+    include 'app/views/cliente/viewCliente.php';
+?>
+</file>
+
 <file path="app/controllers/empresaController.php">
 <?php
 
@@ -186,6 +250,118 @@ This section contains the contents of the repository's files.
 
     $empresas = $object->getAllEmpresas();
     include 'app/views/empresa/viewEmpresa.php';
+</file>
+
+<file path="app/controllers/metodopagoController.php">
+<?php
+
+    use App\models\metodopagoModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new metodopagoModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_metodo'])) {
+                $object->addMetodo($_POST['nombre_metodo']);
+                header("Location: ?url=metodopago");
+                exit();
+            }
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_metodo'])) {
+                $estado = isset($_POST['estado']) ? 1 : 0;
+                $object->updateMetodo(
+                    (int) $_POST['codigo_metodo'],
+                    $_POST['nombre_metodo'],
+                    $estado
+                );
+                header("Location: ?url=metodopago");
+                exit();
+            }
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteMetodo'])) {
+                $result = $object->deleteMetodo((int) $_POST['codigo_metodo']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+        }
+
+        header("Location: ?url=metodopago");
+        exit();
+    }
+
+    $metodos = $object->getAllMetodos();
+    // Carga la interfaz visual
+    include 'app/views/metodopago/viewMetodoPago.php';
+</file>
+
+<file path="app/controllers/monedaController.php">
+<?php
+
+    use App\models\monedaModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    // Verificación de sesión para asegurar que solo usuarios autenticados accedan
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new monedaModel();
+
+    if (isset($_GET['type'])) {
+
+        // Acción para registrar una nueva moneda
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_moneda'])) {
+                $object->addMoneda($_POST);
+                header("Location: ?url=moneda");
+                exit();
+            }
+        }
+
+        // Acción para actualizar datos de una moneda existente
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'], $_POST['nombre_moneda'])) {
+                $estado = isset($_POST['estado']) ? 1 : 0;
+                $object->updateMoneda((int) $_POST['idmoneda'], [
+                    'nombre_moneda' => trim($_POST['nombre_moneda']),
+                    'simbolo'       => trim($_POST['simbolo']),
+                    'tasa_cambio'   => (float) $_POST['tasa_cambio'],
+                    'estado'        => $estado,
+                ]);
+                header("Location: ?url=moneda");
+                exit();
+            }
+        }
+
+        // Acciones principales (vía AJAX para eliminación lógica)
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteMoneda'])) {
+                $result = $object->deleteMoneda((int) $_POST['idmoneda']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+        }
+    }
+
+    // Carga predeterminada: obtiene todas las monedas y carga la interfaz
+    $monedas = $object->getAllMonedas();
+    include 'app/views/moneda/viewMoneda.php';
 </file>
 
 <file path="app/controllers/movimientosController.php">
@@ -338,679 +514,6 @@ This section contains the contents of the repository's files.
     $pedidos = $object->getPedidosActivos();
     $metodos = $object->getMetodosActivos();
     include 'app/views/pagos/viewPagos.php';
-</file>
-
-<file path="app/Models/empresaModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use PDO;
-use PDOException;
-
-class empresaModel extends ConectDB {
-    private $conex;
-
-    private $codigo_empresa;
-    private $rif_empresa;
-    private $nombre_empresa;
-    private $telefono;
-    private $correo;
-    private $direccion;
-    private $logo;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Obtiene todas las empresas registradas.
-     */
-    public function getAllEmpresas() {
-        try {
-            $query = "SELECT codigo_empresa, rif_empresa, nombre_empresa, telefono, correo, direccion, logo
-                      FROM empresa ORDER BY codigo_empresa DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene una empresa por su código.
-     */
-    public function getEmpresaById($id) {
-        try {
-            $query = "SELECT codigo_empresa, rif_empresa, nombre_empresa, telefono, correo, direccion, logo
-                      FROM empresa WHERE codigo_empresa = ?";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Registra una nueva empresa.
-     */
-    public function addEmpresa($datos) {
-        try {
-            $query = "INSERT INTO empresa (rif_empresa, nombre_empresa, telefono, correo, direccion, logo)
-                      VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['rif_empresa'],
-                $datos['nombre_empresa'],
-                $datos['telefono'],
-                $datos['correo'],
-                $datos['direccion'],
-                $datos['logo']
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Empresa registrada con éxito."]
-                : ["status" => "error", "message" => "No se pudo registrar la empresa."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Actualiza los datos de una empresa existente.
-     */
-    public function updateEmpresa($id, $datos) {
-        try {
-            $query = "UPDATE empresa SET rif_empresa = ?, nombre_empresa = ?, telefono = ?,
-                      correo = ?, direccion = ?, logo = ? WHERE codigo_empresa = ?";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['rif_empresa'],
-                $datos['nombre_empresa'],
-                $datos['telefono'],
-                $datos['correo'],
-                $datos['direccion'],
-                $datos['logo'],
-                (int) $id
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Empresa actualizada."]
-                : ["status" => "error", "message" => "No se pudo actualizar la empresa."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Elimina una empresa de forma permanente.
-     */
-    public function deleteEmpresa($id) {
-        try {
-            $stmt = $this->conex->prepare("DELETE FROM empresa WHERE codigo_empresa = ?");
-            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-}
-</file>
-
-<file path="app/Models/movimientosModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use PDO;
-use PDOException;
-
-class movimientosModel extends ConectDB {
-    private $conex;
-
-    private $codigo_movimiento;
-    private $fecha;
-    private $cedula_usuario;
-    private $tipo;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Obtiene todos los movimientos con datos del usuario asociado.
-     */
-    public function getAllMovimientos() {
-        try {
-            $query = "SELECT m.codigo_movimiento, m.fecha, m.cedula_usuario, m.tipo, u.nombre_usuario
-                      FROM movimientos m
-                      INNER JOIN usuario u ON m.cedula_usuario = u.cedula_usuario
-                      ORDER BY m.codigo_movimiento DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene un movimiento por su código.
-     */
-    public function getMovimientoById($id) {
-        try {
-            $query = "SELECT m.codigo_movimiento, m.fecha, m.cedula_usuario, m.tipo, u.nombre_usuario
-                      FROM movimientos m
-                      INNER JOIN usuario u ON m.cedula_usuario = u.cedula_usuario
-                      WHERE m.codigo_movimiento = ?";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Registra un nuevo movimiento.
-     */
-    public function addMovimiento($datos) {
-        try {
-            $query = "INSERT INTO movimientos (fecha, cedula_usuario, tipo) VALUES (?, ?, ?)";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['fecha'],
-                (int) $datos['cedula_usuario'],
-                (int) $datos['tipo']
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Movimiento registrado con éxito."]
-                : ["status" => "error", "message" => "No se pudo registrar el movimiento."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Actualiza un movimiento existente.
-     */
-    public function updateMovimiento($id, $datos) {
-        try {
-            $query = "UPDATE movimientos SET fecha = ?, cedula_usuario = ?, tipo = ?
-                      WHERE codigo_movimiento = ?";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['fecha'],
-                (int) $datos['cedula_usuario'],
-                (int) $datos['tipo'],
-                (int) $id
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Movimiento actualizado."]
-                : ["status" => "error", "message" => "No se pudo actualizar el movimiento."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Elimina un movimiento de forma permanente.
-     */
-    public function deleteMovimiento($id) {
-        try {
-            $stmt = $this->conex->prepare("DELETE FROM movimientos WHERE codigo_movimiento = ?");
-            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-}
-</file>
-
-<file path="app/Models/pagosModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use PDO;
-use PDOException;
-
-class pagosModel extends ConectDB {
-    private $conex;
-
-    private $codigo_pago;
-    private $codigo_pedido;
-    private $codigo_metodo;
-    private $fecha_pago;
-    private $estado;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Obtiene todos los pagos con información de pedido y método de pago.
-     */
-    public function getAllPagos() {
-        try {
-            $query = "SELECT pg.codigo_pago, pg.codigo_pedido, pg.codigo_metodo, pg.fecha_pago, pg.estado,
-                             mp.nombre_metodo, p.cedula_cliente, c.nombre AS nombre_cliente
-                      FROM pagos pg
-                      INNER JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
-                      INNER JOIN pedido p ON pg.codigo_pedido = p.codigo_pedido
-                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
-                      ORDER BY pg.codigo_pago DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene un pago por su código.
-     */
-    public function getPagoById($id) {
-        try {
-            $query = "SELECT pg.codigo_pago, pg.codigo_pedido, pg.codigo_metodo, pg.fecha_pago, pg.estado,
-                             mp.nombre_metodo, p.cedula_cliente, c.nombre AS nombre_cliente
-                      FROM pagos pg
-                      INNER JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
-                      INNER JOIN pedido p ON pg.codigo_pedido = p.codigo_pedido
-                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
-                      WHERE pg.codigo_pago = ?";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Registra un nuevo pago.
-     */
-    public function addPago($datos) {
-        try {
-            $query = "INSERT INTO pagos (codigo_pedido, codigo_metodo, fecha_pago, estado)
-                      VALUES (?, ?, ?, 1)";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                (int) $datos['codigo_pedido'],
-                (int) $datos['codigo_metodo'],
-                $datos['fecha_pago']
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Pago registrado con éxito."]
-                : ["status" => "error", "message" => "No se pudo registrar el pago."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Actualiza un pago existente.
-     */
-    public function updatePago($id, $datos) {
-        try {
-            $query = "UPDATE pagos SET codigo_pedido = ?, codigo_metodo = ?, fecha_pago = ?, estado = ?
-                      WHERE codigo_pago = ?";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                (int) $datos['codigo_pedido'],
-                (int) $datos['codigo_metodo'],
-                $datos['fecha_pago'],
-                (int) $datos['estado'],
-                (int) $id
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Pago actualizado."]
-                : ["status" => "error", "message" => "No se pudo actualizar el pago."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Desactivación lógica de un pago.
-     */
-    public function deletePago($id) {
-        try {
-            $stmt = $this->conex->prepare("UPDATE pagos SET estado = 0 WHERE codigo_pago = ?");
-            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Pedidos activos para el selector del formulario.
-     */
-    public function getPedidosActivos() {
-        try {
-            $stmt = $this->conex->prepare(
-                "SELECT codigo_pedido, cedula_cliente, fecha_pedido FROM pedido WHERE estado = 1 ORDER BY codigo_pedido DESC"
-            );
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Métodos de pago activos para el selector del formulario.
-     */
-    public function getMetodosActivos() {
-        try {
-            $stmt = $this->conex->prepare(
-                "SELECT codigo_metodo, nombre_metodo FROM metodo_pago WHERE estado = 1 ORDER BY nombre_metodo ASC"
-            );
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-}
-</file>
-
-<file path="app/Models/tasaCambioModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use PDO;
-use PDOException;
-
-class tasaCambioModel extends ConectDB {
-    private $conex;
-
-    private $codigo_tasa;
-    private $fecha;
-    private $monto_bolivares;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Obtiene todas las tasas de cambio registradas.
-     */
-    public function getAllTasas() {
-        try {
-            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio ORDER BY fecha DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene una tasa de cambio por su código.
-     */
-    public function getTasaById($id) {
-        try {
-            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio WHERE codigo_tasa = ?";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Obtiene la tasa de cambio más reciente.
-     */
-    public function getTasaActual() {
-        try {
-            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio ORDER BY fecha DESC LIMIT 1";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Registra una nueva tasa de cambio.
-     */
-    public function addTasa($datos) {
-        try {
-            $query = "INSERT INTO tasa_cambio (fecha, monto_bolivares) VALUES (?, ?)";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['fecha'],
-                $datos['monto_bolivares']
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Tasa de cambio registrada con éxito."]
-                : ["status" => "error", "message" => "No se pudo registrar la tasa de cambio."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Actualiza una tasa de cambio existente.
-     */
-    public function updateTasa($id, $datos) {
-        try {
-            $query = "UPDATE tasa_cambio SET fecha = ?, monto_bolivares = ? WHERE codigo_tasa = ?";
-            $stmt = $this->conex->prepare($query);
-            $success = $stmt->execute([
-                $datos['fecha'],
-                $datos['monto_bolivares'],
-                (int) $id
-            ]);
-            return $success
-                ? ["status" => "success", "message" => "Tasa de cambio actualizada."]
-                : ["status" => "error", "message" => "No se pudo actualizar la tasa de cambio."];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Elimina una tasa de cambio de forma permanente.
-     */
-    public function deleteTasa($id) {
-        try {
-            $stmt = $this->conex->prepare("DELETE FROM tasa_cambio WHERE codigo_tasa = ?");
-            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
-        } catch (PDOException $e) {
-            return ["status" => "error", "message" => $e->getMessage()];
-        }
-    }
-}
-</file>
-
-<file path=".gitignore">
-/vendor/
-</file>
-
-<file path="app/controllers/clienteController.php">
-<?php
-
-    use App\models\clienteModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Seguridad: Verificar sesión activa
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new clienteModel();
-
-    if (isset($_GET['type'])) {
-
-        if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula_cliente'])) {
-                $object->addCliente($_POST);
-                header("Location: ?url=cliente");
-                exit();
-            }
-            header("Location: ?url=cliente");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_actual'])) {
-                $object->updateCliente($_POST['id_actual'], $_POST);
-                header("Location: ?url=cliente");
-                exit();
-            }
-            header("Location: ?url=cliente");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteCliente'])) {
-                $result = $object->deleteCliente($_POST['idcliente']);
-                header('Content-Type: application/json');
-                echo json_encode($result);
-                exit();
-            }
-            header("Location: ?url=cliente");
-            exit();
-        }
-
-        else {
-            header("Location: ?url=cliente");
-            exit();
-        }
-    }
-
-    // Carga por defecto: Listado de clientes
-    $clientes = $object->getAllClientes();
-    include 'app/views/cliente/viewCliente.php';
-?>
-</file>
-
-<file path="app/controllers/metodopagoController.php">
-<?php
-
-    use App\models\metodopagoModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new metodopagoModel();
-
-    if (isset($_GET['type'])) {
-
-        if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_metodo'])) {
-                $object->addMetodo($_POST['nombre_metodo']);
-                header("Location: ?url=metodopago");
-                exit();
-            }
-        }
-
-        elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_metodo'])) {
-                $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMetodo(
-                    (int) $_POST['codigo_metodo'],
-                    $_POST['nombre_metodo'],
-                    $estado
-                );
-                header("Location: ?url=metodopago");
-                exit();
-            }
-        }
-
-        elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteMetodo'])) {
-                $result = $object->deleteMetodo((int) $_POST['codigo_metodo']);
-                header('Content-Type: application/json');
-                echo json_encode($result);
-                exit();
-            }
-        }
-
-        header("Location: ?url=metodopago");
-        exit();
-    }
-
-    $metodos = $object->getAllMetodos();
-    // Carga la interfaz visual
-    include 'app/views/metodopago/viewMetodoPago.php';
-</file>
-
-<file path="app/controllers/monedaController.php">
-<?php
-
-    use App\models\monedaModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    // Verificación de sesión para asegurar que solo usuarios autenticados accedan
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new monedaModel();
-
-    if (isset($_GET['type'])) {
-
-        // Acción para registrar una nueva moneda
-        if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_moneda'])) {
-                $object->addMoneda($_POST);
-                header("Location: ?url=moneda");
-                exit();
-            }
-        }
-
-        // Acción para actualizar datos de una moneda existente
-        elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'], $_POST['nombre_moneda'])) {
-                $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMoneda((int) $_POST['idmoneda'], [
-                    'nombre_moneda' => trim($_POST['nombre_moneda']),
-                    'simbolo'       => trim($_POST['simbolo']),
-                    'tasa_cambio'   => (float) $_POST['tasa_cambio'],
-                    'estado'        => $estado,
-                ]);
-                header("Location: ?url=moneda");
-                exit();
-            }
-        }
-
-        // Acciones principales (vía AJAX para eliminación lógica)
-        elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteMoneda'])) {
-                $result = $object->deleteMoneda((int) $_POST['idmoneda']);
-                header('Content-Type: application/json');
-                echo json_encode($result);
-                exit();
-            }
-        }
-    }
-
-    // Carga predeterminada: obtiene todas las monedas y carga la interfaz
-    $monedas = $object->getAllMonedas();
-    include 'app/views/moneda/viewMoneda.php';
 </file>
 
 <file path="app/controllers/rolController.php">
@@ -1341,6 +844,124 @@ class dashboardModel extends ConectDB {
 }
 </file>
 
+<file path="app/Models/empresaModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use PDO;
+use PDOException;
+
+class empresaModel extends ConectDB {
+    private $conex;
+
+    private $codigo_empresa;
+    private $rif_empresa;
+    private $nombre_empresa;
+    private $telefono;
+    private $correo;
+    private $direccion;
+    private $logo;
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
+    }
+
+    /**
+     * Obtiene todas las empresas registradas.
+     */
+    public function getAllEmpresas() {
+        try {
+            $query = "SELECT codigo_empresa, rif_empresa, nombre_empresa, telefono, correo, direccion, logo
+                      FROM empresa ORDER BY codigo_empresa DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene una empresa por su código.
+     */
+    public function getEmpresaById($id) {
+        try {
+            $query = "SELECT codigo_empresa, rif_empresa, nombre_empresa, telefono, correo, direccion, logo
+                      FROM empresa WHERE codigo_empresa = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Registra una nueva empresa.
+     */
+    public function addEmpresa($datos) {
+        try {
+            $query = "INSERT INTO empresa (rif_empresa, nombre_empresa, telefono, correo, direccion, logo)
+                      VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['rif_empresa'],
+                $datos['nombre_empresa'],
+                $datos['telefono'],
+                $datos['correo'],
+                $datos['direccion'],
+                $datos['logo']
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Empresa registrada con éxito."]
+                : ["status" => "error", "message" => "No se pudo registrar la empresa."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza los datos de una empresa existente.
+     */
+    public function updateEmpresa($id, $datos) {
+        try {
+            $query = "UPDATE empresa SET rif_empresa = ?, nombre_empresa = ?, telefono = ?,
+                      correo = ?, direccion = ?, logo = ? WHERE codigo_empresa = ?";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['rif_empresa'],
+                $datos['nombre_empresa'],
+                $datos['telefono'],
+                $datos['correo'],
+                $datos['direccion'],
+                $datos['logo'],
+                (int) $id
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Empresa actualizada."]
+                : ["status" => "error", "message" => "No se pudo actualizar la empresa."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Elimina una empresa de forma permanente.
+     */
+    public function deleteEmpresa($id) {
+        try {
+            $stmt = $this->conex->prepare("DELETE FROM empresa WHERE codigo_empresa = ?");
+            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+}
+</file>
+
 <file path="app/Models/IVAModel.php">
 <?php
 
@@ -1655,6 +1276,269 @@ class monedaModel extends ConectDB {
 }
 </file>
 
+<file path="app/Models/movimientosModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use PDO;
+use PDOException;
+
+class movimientosModel extends ConectDB {
+    private $conex;
+
+    private $codigo_movimiento;
+    private $fecha;
+    private $cedula_usuario;
+    private $tipo;
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
+    }
+
+    /**
+     * Obtiene todos los movimientos con datos del usuario asociado.
+     */
+    public function getAllMovimientos() {
+        try {
+            $query = "SELECT m.codigo_movimiento, m.fecha, m.cedula_usuario, m.tipo, u.nombre_usuario
+                      FROM movimientos m
+                      INNER JOIN usuario u ON m.cedula_usuario = u.cedula_usuario
+                      ORDER BY m.codigo_movimiento DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene un movimiento por su código.
+     */
+    public function getMovimientoById($id) {
+        try {
+            $query = "SELECT m.codigo_movimiento, m.fecha, m.cedula_usuario, m.tipo, u.nombre_usuario
+                      FROM movimientos m
+                      INNER JOIN usuario u ON m.cedula_usuario = u.cedula_usuario
+                      WHERE m.codigo_movimiento = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Registra un nuevo movimiento.
+     */
+    public function addMovimiento($datos) {
+        try {
+            $query = "INSERT INTO movimientos (fecha, cedula_usuario, tipo) VALUES (?, ?, ?)";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['fecha'],
+                (int) $datos['cedula_usuario'],
+                (int) $datos['tipo']
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Movimiento registrado con éxito."]
+                : ["status" => "error", "message" => "No se pudo registrar el movimiento."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza un movimiento existente.
+     */
+    public function updateMovimiento($id, $datos) {
+        try {
+            $query = "UPDATE movimientos SET fecha = ?, cedula_usuario = ?, tipo = ?
+                      WHERE codigo_movimiento = ?";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['fecha'],
+                (int) $datos['cedula_usuario'],
+                (int) $datos['tipo'],
+                (int) $id
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Movimiento actualizado."]
+                : ["status" => "error", "message" => "No se pudo actualizar el movimiento."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Elimina un movimiento de forma permanente.
+     */
+    public function deleteMovimiento($id) {
+        try {
+            $stmt = $this->conex->prepare("DELETE FROM movimientos WHERE codigo_movimiento = ?");
+            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+}
+</file>
+
+<file path="app/Models/pagosModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use PDO;
+use PDOException;
+
+class pagosModel extends ConectDB {
+    private $conex;
+
+    private $codigo_pago;
+    private $codigo_pedido;
+    private $codigo_metodo;
+    private $fecha_pago;
+    private $estado;
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
+    }
+
+    /**
+     * Obtiene todos los pagos con información de pedido y método de pago.
+     */
+    public function getAllPagos() {
+        try {
+            $query = "SELECT pg.codigo_pago, pg.codigo_pedido, pg.codigo_metodo, pg.fecha_pago, pg.estado,
+                             mp.nombre_metodo, p.cedula_cliente, c.nombre AS nombre_cliente
+                      FROM pagos pg
+                      INNER JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
+                      INNER JOIN pedido p ON pg.codigo_pedido = p.codigo_pedido
+                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
+                      ORDER BY pg.codigo_pago DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene un pago por su código.
+     */
+    public function getPagoById($id) {
+        try {
+            $query = "SELECT pg.codigo_pago, pg.codigo_pedido, pg.codigo_metodo, pg.fecha_pago, pg.estado,
+                             mp.nombre_metodo, p.cedula_cliente, c.nombre AS nombre_cliente
+                      FROM pagos pg
+                      INNER JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
+                      INNER JOIN pedido p ON pg.codigo_pedido = p.codigo_pedido
+                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
+                      WHERE pg.codigo_pago = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Registra un nuevo pago.
+     */
+    public function addPago($datos) {
+        try {
+            $query = "INSERT INTO pagos (codigo_pedido, codigo_metodo, fecha_pago, estado)
+                      VALUES (?, ?, ?, 1)";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                (int) $datos['codigo_pedido'],
+                (int) $datos['codigo_metodo'],
+                $datos['fecha_pago']
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Pago registrado con éxito."]
+                : ["status" => "error", "message" => "No se pudo registrar el pago."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza un pago existente.
+     */
+    public function updatePago($id, $datos) {
+        try {
+            $query = "UPDATE pagos SET codigo_pedido = ?, codigo_metodo = ?, fecha_pago = ?, estado = ?
+                      WHERE codigo_pago = ?";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                (int) $datos['codigo_pedido'],
+                (int) $datos['codigo_metodo'],
+                $datos['fecha_pago'],
+                (int) $datos['estado'],
+                (int) $id
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Pago actualizado."]
+                : ["status" => "error", "message" => "No se pudo actualizar el pago."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Desactivación lógica de un pago.
+     */
+    public function deletePago($id) {
+        try {
+            $stmt = $this->conex->prepare("UPDATE pagos SET estado = 0 WHERE codigo_pago = ?");
+            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Pedidos activos para el selector del formulario.
+     */
+    public function getPedidosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                "SELECT codigo_pedido, cedula_cliente, fecha_pedido FROM pedido WHERE estado = 1 ORDER BY codigo_pedido DESC"
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Métodos de pago activos para el selector del formulario.
+     */
+    public function getMetodosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                "SELECT codigo_metodo, nombre_metodo FROM metodo_pago WHERE estado = 1 ORDER BY nombre_metodo ASC"
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+}
+</file>
+
 <file path="app/Models/productoModel.php">
 <?php
 
@@ -1866,6 +1750,122 @@ class proveedorModel extends ConectDB {
         try {
             $stmt = $this->conex->prepare("UPDATE proveedor SET estado = 0 WHERE codigo_proveedor = ?");
             return ["status" => $stmt->execute([$id]) ? "success" : "error"];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+}
+</file>
+
+<file path="app/Models/tasaCambioModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use PDO;
+use PDOException;
+
+class tasaCambioModel extends ConectDB {
+    private $conex;
+
+    private $codigo_tasa;
+    private $fecha;
+    private $monto_bolivares;
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
+    }
+
+    /**
+     * Obtiene todas las tasas de cambio registradas.
+     */
+    public function getAllTasas() {
+        try {
+            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio ORDER BY fecha DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene una tasa de cambio por su código.
+     */
+    public function getTasaById($id) {
+        try {
+            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio WHERE codigo_tasa = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Obtiene la tasa de cambio más reciente.
+     */
+    public function getTasaActual() {
+        try {
+            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio ORDER BY fecha DESC LIMIT 1";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Registra una nueva tasa de cambio.
+     */
+    public function addTasa($datos) {
+        try {
+            $query = "INSERT INTO tasa_cambio (fecha, monto_bolivares) VALUES (?, ?)";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['fecha'],
+                $datos['monto_bolivares']
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Tasa de cambio registrada con éxito."]
+                : ["status" => "error", "message" => "No se pudo registrar la tasa de cambio."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza una tasa de cambio existente.
+     */
+    public function updateTasa($id, $datos) {
+        try {
+            $query = "UPDATE tasa_cambio SET fecha = ?, monto_bolivares = ? WHERE codigo_tasa = ?";
+            $stmt = $this->conex->prepare($query);
+            $success = $stmt->execute([
+                $datos['fecha'],
+                $datos['monto_bolivares'],
+                (int) $id
+            ]);
+            return $success
+                ? ["status" => "success", "message" => "Tasa de cambio actualizada."]
+                : ["status" => "error", "message" => "No se pudo actualizar la tasa de cambio."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Elimina una tasa de cambio de forma permanente.
+     */
+    public function deleteTasa($id) {
+        try {
+            $stmt = $this->conex->prepare("DELETE FROM tasa_cambio WHERE codigo_tasa = ?");
+            return ["status" => $stmt->execute([(int) $id]) ? "success" : "error"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
         }
@@ -4865,282 +4865,6 @@ COMMIT;
 </html>
 </file>
 
-<file path="app/views/productos/viewProducto.php">
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CopiGaby — Gestión de Productos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tailwind-config.js"></script>
-  <link rel="stylesheet" href="assets/css/theme.css">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
-</head>
-<body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
-
-  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
-
-  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
-    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestión de Productos</h2>
-    </header>
-
-    <main class="p-8 flex-1 animate-fade-up">
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-2xl font-[900] text-gray-800">Inventario de Productos</h1>
-          <p class="text-gray-500 text-sm font-semibold">Control de existencias e insumos</p>
-        </div>
-        <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-          AÑADIR PRODUCTO
-        </button>
-      </div>
-
-      <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
-          <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
-            <tr>
-              <th class="px-6 py-4">Producto</th>
-              <th class="px-6 py-4">Categoría / IVA</th>
-              <th class="px-6 py-4">Stock (Act/Min)</th>
-              <th class="px-6 py-4">Unidad</th>
-              <th class="px-6 py-4">Costo</th>
-              <th class="px-6 py-4">Estado</th>
-              <th class="px-6 py-4 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-700 font-semibold text-sm divide-y">
-            <?php foreach ($productos as $p): ?>
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4">
-                  <div class="font-black text-navy-dark uppercase"><?= htmlspecialchars($p['nombre_producto']) ?></div>
-                  <div class="text-[0.7rem] text-gray-400 font-bold">COD: #<?= str_pad($p['codigo_producto'], 4, '0', STR_PAD_LEFT) ?></div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="text-navy-light"><?= htmlspecialchars($p['nombre_categoria']) ?></div>
-                  <div class="text-[0.7rem] text-orange-dk font-bold italic">IVA: <?= $p['porcentaje_iva'] ?>%</div>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="<?= ($p['stock_actual'] <= $p['stock_minimo']) ? 'text-red-500 font-black' : 'text-green-600' ?>">
-                    <?= $p['stock_actual'] ?>
-                  </span>
-                  <span class="text-gray-300 mx-1">/</span>
-                  <span class="text-gray-400 text-[0.75rem] font-bold"><?= $p['stock_minimo'] ?></span>
-                </td>
-                <td class="px-6 py-4 text-gray-500 font-bold">
-                  <?= htmlspecialchars($p['nombre_medida']) ?>
-                </td>
-                <td class="px-6 py-4 font-black text-navy-dark">
-                  $<?= number_format($p['costo'], 2) ?>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $p['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
-                    <?= $p['estado'] ? 'Activo' : 'Inactivo' ?>
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <div class="flex justify-center gap-2">
-                    <button onclick='openEditModal(<?= json_encode($p) ?>)' class="group relative text-blue-500 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Modificar</span>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button onclick="confirmDelete(<?= $p['codigo_producto'] ?>)" class="group relative text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-red-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Eliminar</span>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    </main>
-  </div>
-
-  <div id="modalProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlay"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark tracking-tight">Nuevo Producto / Insumo</h3>
-          <button class="closeModal"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=producto&type=register" method="POST" class="p-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
-              <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
-              <select name="codigo_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($categorias as $c): ?>
-                  <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">IVA (%)</label>
-              <select name="codigo_IVA" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none focus:border-orange font-bold">
-                <?php foreach($ivas as $i): ?>
-                  <option value="<?= $i['codigo_IVA'] ?>"><?= $i['porcentaje_iva'] ?>%</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
-              <select name="codigo_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none focus:border-orange font-bold">
-                <?php foreach($medidas as $m): ?>
-                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción / Notas</label>
-              <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" value="0" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
-              <input type="number" name="stock_minimo" value="5" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($)</label>
-              <input type="number" step="0.01" name="costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-            </div>
-          </div>
-          <div class="flex justify-end gap-3 mt-8">
-            <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModal">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all uppercase tracking-wide">Guardar Producto</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalEditProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Editar Producto</h3>
-          <button onclick="closeEditModal()"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=producto&type=update" method="POST" class="p-6">
-          <input type="hidden" name="idproducto" id="edit_id">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
-              <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
-              <select name="codigo_categoria" id="edit_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($categorias as $c): ?>
-                  <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">IVA (%)</label>
-              <select name="codigo_IVA" id="edit_iva" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($ivas as $i): ?>
-                  <option value="<?= $i['codigo_IVA'] ?>"><?= $i['porcentaje_iva'] ?>%</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
-              <select name="codigo_medida" id="edit_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($medidas as $m): ?>
-                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-              <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" id="edit_stock_actual" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
-              <input type="number" name="stock_minimo" id="edit_stock_minimo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo ($)</label>
-              <input type="number" step="0.01" name="costo" id="edit_costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-            </div>
-            <div class="col-span-2 flex items-center gap-2 pt-4">
-              <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
-              <label class="text-sm font-bold text-navy-dark uppercase tracking-tight">Activo</label>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar Producto</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const modal = document.getElementById('modalProduct');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const closeBtns = document.querySelectorAll('.closeModal');
-    const overlay = document.getElementById('overlay');
-    const toggleModal = () => modal.classList.toggle('hidden');
-
-    btnOpen.onclick = toggleModal;
-    closeBtns.forEach(btn => btn.onclick = toggleModal);
-    overlay.onclick = toggleModal;
-
-    function openEditModal(data) {
-        document.getElementById('edit_id').value = data.codigo_producto;
-        document.getElementById('edit_nombre').value = data.nombre_producto;
-        document.getElementById('edit_categoria').value = data.codigo_categoria;
-        document.getElementById('edit_medida').value = data.codigo_medida;
-        document.getElementById('edit_iva').value = data.codigo_iva;
-        document.getElementById('edit_descripcion').value = data.descripcion;
-        document.getElementById('edit_stock_actual').value = data.stock_actual;
-        document.getElementById('edit_stock_minimo').value = data.stock_minimo;
-        document.getElementById('edit_costo').value = data.costo;
-        document.getElementById('edit_estado').checked = (data.estado == 1);
-        document.getElementById('modalEditProduct').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-        document.getElementById('modalEditProduct').classList.add('hidden');
-    }
-
-    function confirmDelete(id) {
-      if(confirm('¿Desea desactivar este producto del inventario?')) {
-        const f = new FormData();
-        f.append('deleteProduct', 'true');
-        f.append('idproducto', id);
-        fetch('?url=producto&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar');
-        });
-      }
-    }
-  </script>
-</body>
-</html>
-</file>
-
 <file path="app/views/proveedores/viewProveedor.php">
 <!DOCTYPE html>
 <html lang="es">
@@ -6072,140 +5796,280 @@ class servicioModel extends ConectDB {
 }
 </file>
 
-<file path="app/controllers/pedidoController.php">
-<?php
+<file path="app/views/productos/viewProducto.php">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CopiGaby — Gestión de Productos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
-    use App\models\pedidoModel;
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
+    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestión de Productos</h2>
+    </header>
+
+    <main class="p-8 flex-1 animate-fade-up">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-[900] text-gray-800">Inventario de Productos</h1>
+          <p class="text-gray-500 text-sm font-semibold">Control de existencias e insumos</p>
+        </div>
+        <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+          AÑADIR PRODUCTO
+        </button>
+      </div>
+
+      <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
+        <table class="w-full text-left">
+          <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
+            <tr>
+              <th class="px-6 py-4">Producto</th>
+              <th class="px-6 py-4">Categoría / IVA</th>
+              <th class="px-6 py-4">Stock (Act/Min)</th>
+              <th class="px-6 py-4">Unidad</th>
+              <th class="px-6 py-4">Costo</th>
+              <th class="px-6 py-4">Estado</th>
+              <th class="px-6 py-4 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700 font-semibold text-sm divide-y">
+            <?php foreach ($productos as $p): ?>
+              <tr class="hover:bg-gray-50/80 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="font-black text-navy-dark uppercase"><?= htmlspecialchars($p['nombre_producto']) ?></div>
+                  <div class="text-[0.7rem] text-gray-400 font-bold">COD: #<?= str_pad($p['codigo_producto'], 4, '0', STR_PAD_LEFT) ?></div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-navy-light"><?= htmlspecialchars($p['nombre_categoria']) ?></div>
+                  <div class="text-[0.7rem] text-orange-dk font-bold italic">IVA: <?= $p['porcentaje_iva'] ?>%</div>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="<?= ($p['stock_actual'] <= $p['stock_minimo']) ? 'text-red-500 font-black' : 'text-green-600' ?>">
+                    <?= $p['stock_actual'] ?>
+                  </span>
+                  <span class="text-gray-300 mx-1">/</span>
+                  <span class="text-gray-400 text-[0.75rem] font-bold"><?= $p['stock_minimo'] ?></span>
+                </td>
+                <td class="px-6 py-4 text-gray-500 font-bold">
+                  <?= htmlspecialchars($p['nombre_medida']) ?>
+                </td>
+                <td class="px-6 py-4 font-black text-navy-dark">
+                  $<?= number_format($p['costo'], 2) ?>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $p['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
+                    <?= $p['estado'] ? 'Activo' : 'Inactivo' ?>
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <div class="flex justify-center gap-2">
+                    <button onclick='openEditModal(<?= json_encode($p) ?>)' class="group relative text-blue-500 p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Modificar</span>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button onclick="confirmDelete(<?= $p['codigo_producto'] ?>)" class="group relative text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-red-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Eliminar</span>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div id="modalProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlay"></div>
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark tracking-tight">Nuevo Producto / Insumo</h3>
+          <button class="closeModal"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=producto&type=register" method="POST" class="p-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
+              <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
+              <select name="codigo_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+                <?php foreach($categorias as $c): ?>
+                  <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">IVA (%)</label>
+              <select name="codigo_IVA" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none focus:border-orange font-bold">
+                <?php foreach($ivas as $i): ?>
+                  <option value="<?= $i['codigo_IVA'] ?>"><?= $i['porcentaje_iva'] ?>%</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
+              <select name="codigo_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none focus:border-orange font-bold">
+                <?php foreach($medidas as $m): ?>
+                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción / Notas</label>
+              <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
+              <input type="number" name="stock_actual" value="0" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
+              <input type="number" name="stock_minimo" value="5" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($)</label>
+              <input type="number" step="0.01" name="costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-8">
+            <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModal">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all uppercase tracking-wide">Guardar Producto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEditProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Editar Producto</h3>
+          <button onclick="closeEditModal()"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=producto&type=update" method="POST" class="p-6">
+          <input type="hidden" name="idproducto" id="edit_id">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
+              <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
+              <select name="codigo_categoria" id="edit_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+                <?php foreach($categorias as $c): ?>
+                  <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">IVA (%)</label>
+              <select name="codigo_IVA" id="edit_iva" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+                <?php foreach($ivas as $i): ?>
+                  <option value="<?= $i['codigo_IVA'] ?>"><?= $i['porcentaje_iva'] ?>%</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
+              <select name="codigo_medida" id="edit_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+                <?php foreach($medidas as $m): ?>
+                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
+              <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
+              <input type="number" name="stock_actual" id="edit_stock_actual" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
+              <input type="number" name="stock_minimo" id="edit_stock_minimo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo ($)</label>
+              <input type="number" step="0.01" name="costo" id="edit_costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            </div>
+            <div class="col-span-2 flex items-center gap-2 pt-4">
+              <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
+              <label class="text-sm font-bold text-navy-dark uppercase tracking-tight">Activo</label>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-8">
+            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar Producto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('modalProduct');
+    const btnOpen = document.getElementById('btnOpenModal');
+    const closeBtns = document.querySelectorAll('.closeModal');
+    const overlay = document.getElementById('overlay');
+    const toggleModal = () => modal.classList.toggle('hidden');
+
+    btnOpen.onclick = toggleModal;
+    closeBtns.forEach(btn => btn.onclick = toggleModal);
+    overlay.onclick = toggleModal;
+
+    function openEditModal(data) {
+        document.getElementById('edit_id').value = data.codigo_producto;
+        document.getElementById('edit_nombre').value = data.nombre_producto;
+        document.getElementById('edit_categoria').value = data.codigo_categoria;
+        document.getElementById('edit_medida').value = data.codigo_medida;
+        document.getElementById('edit_iva').value = data.codigo_iva;
+        document.getElementById('edit_descripcion').value = data.descripcion;
+        document.getElementById('edit_stock_actual').value = data.stock_actual;
+        document.getElementById('edit_stock_minimo').value = data.stock_minimo;
+        document.getElementById('edit_costo').value = data.costo;
+        document.getElementById('edit_estado').checked = (data.estado == 1);
+        document.getElementById('modalEditProduct').classList.remove('hidden');
     }
 
-    if (!isset($_SESSION['user_id'])) {
-        header('Location: ?url=login');
-        exit();
+    function closeEditModal() {
+        document.getElementById('modalEditProduct').classList.add('hidden');
     }
 
-    $object = new pedidoModel();
-
-    if (isset($_GET['type'])) {
-
-        if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: ?url=pedido');
-                exit();
-            }
-
-            $isAjax = (
-                !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-                && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
-            ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
-
-            if (!isset($_POST['codigo_cliente'], $_POST['items'])) {
-                $payload = [
-                    'status'  => 'error',
-                    'message' => 'Datos incompletos: cliente e ítems son obligatorios.',
-                ];
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($payload);
-                    exit();
-                }
-                $_SESSION['pedido_flash'] = $payload;
-                header('Location: ?url=pedido');
-                exit();
-            }
-
-            $items = json_decode((string) $_POST['items'], true);
-            if (!is_array($items) || $items === []) {
-                $payload = [
-                    'status'  => 'error',
-                    'message' => 'El pedido debe incluir al menos un ítem válido.',
-                ];
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($payload);
-                    exit();
-                }
-                $_SESSION['pedido_flash'] = $payload;
-                header('Location: ?url=pedido');
-                exit();
-            }
-
-            $codigoCliente = $_POST['codigo_cliente'] ?? '';
-            if (empty($codigoCliente)) {
-                $payload = [
-                    'status'  => 'error',
-                    'message' => 'Debe seleccionar un cliente válido.',
-                ];
-                if ($isAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($payload);
-                    exit();
-                }
-                $_SESSION['pedido_flash'] = $payload;
-                header('Location: ?url=pedido');
-                exit();
-            }
-
-            $datos = [
-                'codigo_cliente' => $codigoCliente,
-                'codigo_usuario' => $_SESSION['user_id'], // La sesión ya tiene la cédula
-                'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
-            ];
-
-            $result = $object->addPedido($datos, $items);
-
-            if ($isAjax) {
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode($result);
-                exit();
-            }
-
-            $_SESSION['pedido_flash'] = $result;
-            header('Location: ?url=pedido');
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'])) {
-                $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
-                    'codigo_cliente' => $_POST['codigo_cliente'],
-                    'tasa_aplicada'  => (float) ($_POST['tasa_aplicada'] ?? 1.0),
-                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 0,
-                ]);
-                $_SESSION['pedido_flash'] = $result;
-                header('Location: ?url=pedido');
-                exit();
-            }
-            header('Location: ?url=pedido');
-            exit();
-        }
-
-        if ($_GET['type'] === 'main') {
-            if (isset($_POST['deletePedido'])) {
-                $result = $object->deletePedido((int) $_POST['idpedido']);
-                header('Content-Type: application/json; charset=utf-8');
-                echo json_encode($result);
-                exit();
-            }
-            header('Location: ?url=pedido');
-            exit();
-        }
-
-        header('Location: ?url=pedido');
-        exit();
+    function confirmDelete(id) {
+      if(confirm('¿Desea desactivar este producto del inventario?')) {
+        const f = new FormData();
+        f.append('deleteProduct', 'true');
+        f.append('idproducto', id);
+        fetch('?url=producto&type=main', { method:'POST', body:f })
+        .then(r => r.json()).then(d => {
+          if(d.status === 'success') location.reload();
+          else alert('No se pudo procesar');
+        });
+      }
     }
-
-    $pedidos    = $object->getAllPedidos();
-    $clientes   = $object->getClientesActivos();
-    $productos  = $object->getProductosActivos();
-    $servicios  = $object->getServiciosActivos();
-    $tasaActual = $object->getTasaActual();
-    $pedidoFlash = $_SESSION['pedido_flash'] ?? null;
-    unset($_SESSION['pedido_flash']);
-
-    include 'app/views/pedidos/viewPedido.php';
+  </script>
+</body>
+</html>
 </file>
 
 <file path="app/Models/compraModel.php">
@@ -6390,315 +6254,6 @@ class compraModel extends ConectDB {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) { return []; }
     }
-}
-</file>
-
-<file path="app/Models/pedidoModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use PDO;
-use PDOException;
-
-class pedidoModel extends ConectDB {
-    private $conex;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Registra errores PDO en el log del servidor (no silencioso).
-     */
-    private function logPdoError(string $context, PDOException $e): void {
-        error_log(sprintf(
-            '[pedidoModel::%s] %s | SQLSTATE=%s',
-            $context,
-            $e->getMessage(),
-            $e->getCode()
-        ));
-    }
-
-    /**
-     * Obtiene todos los pedidos con nombres de cliente y usuario.
-     */
-    public function getAllPedidos() {
-        try {
-            $query = "SELECT p.codigo_pedido, p.cedula_cliente, p.cedula_usuario, p.fecha_pedido,
-                             p.tasa_aplicada, p.estado,
-                             c.nombre AS nombre_cliente, u.nombre_usuario,
-                             COALESCE(
-                                 (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
-                                 0
-                             ) AS monto_total
-                      FROM pedido p
-                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
-                      LEFT JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
-                      ORDER BY p.codigo_pedido DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $this->logPdoError('getAllPedidos', $e);
-            return [];
-        }
-    }
-
-    /**
-     * Registra un pedido con sus detalles en transacción y descuenta stock de productos.
-     */
-    public function addPedido(array $datos, array $items) {
-        if (empty($items)) {
-            return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
-        }
-
-        $cedulaUsuario = $datos['codigo_usuario'] ?? ''; 
-        $cedulaCliente = $datos['codigo_cliente'] ?? '';
-        $tasaAplicada  = (float) ($datos['tasa_aplicada'] ?? 1.0);
-        if (empty($cedulaUsuario) || empty($cedulaCliente)) {
-            return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
-        }
-
-        try {
-            $this->conex->beginTransaction();
-
-            $stmtPedido = $this->conex->prepare(
-                'INSERT INTO pedido (cedula_cliente, cedula_usuario, fecha_pedido, tasa_aplicada, estado) 
-                 VALUES (:cliente, :usuario, NOW(), :tasa, 1)'
-            );
-            $stmtPedido->execute([
-                ':cliente' => $cedulaCliente,
-                ':usuario' => $cedulaUsuario,
-                ':tasa'    => $tasaAplicada,
-            ]);
-
-            $codigoPedido = (int) $this->conex->lastInsertId();
-            if ($codigoPedido <= 0) {
-                throw new PDOException('No se pudo obtener el código del pedido insertado');
-            }
-
-            $stmtDetalle = $this->conex->prepare(
-                'INSERT INTO detalle_pedido (codigo_pedido, codigo_producto, codigo_servicio, cantidad, precio_venta, subtotal)
-                 VALUES (?, ?, ?, ?, ?, ?)'
-            );
-
-            $stmtStock = $this->conex->prepare(
-                'UPDATE producto_insumo SET stock_actual = stock_actual - ?
-                 WHERE codigo_producto = ? AND stock_actual >= ?'
-            );
-
-            foreach ($items as $index => $item) {
-                $linea = (int) $index + 1;
-                $tipo = (string) ($item['tipo'] ?? '');
-                $cantidad = (int) ($item['cantidad'] ?? 0);
-                $precioVenta = (float) ($item['precio_venta'] ?? 0);
-
-                if ($cantidad < 1) {
-                    throw new PDOException("Cantidad inválida en la línea {$linea}");
-                }
-                if ($precioVenta < 0) {
-                    throw new PDOException("Precio inválido en la línea {$linea}");
-                }
-
-                $subtotal = round($cantidad * $precioVenta, 2);
-
-                if ($tipo === 'producto') {
-                    $codigoProducto = (int) ($item['codigo_producto'] ?? 0);
-                    $codigoServicio = null;
-
-                    if ($codigoProducto <= 0) {
-                        throw new PDOException("Producto no válido en la línea {$linea}");
-                    }
-
-                    $stmtStock->execute([$cantidad, $codigoProducto, $cantidad]);
-                    if ($stmtStock->rowCount() === 0) {
-                        throw new PDOException("Stock insuficiente para el producto en la línea {$linea}");
-                    }
-                } elseif ($tipo === 'servicio') {
-                    $codigoServicio = (int) ($item['codigo_servicio'] ?? 0);
-                    $codigoProducto = null;
-
-                    if ($codigoServicio <= 0) {
-                        throw new PDOException("Servicio no válido en la línea {$linea}");
-                    }
-                } else {
-                    throw new PDOException("Tipo de ítem no reconocido en la línea {$linea}");
-                }
-
-                $stmtDetalle->bindValue(1, $codigoPedido, PDO::PARAM_INT);
-                $stmtDetalle->bindValue(
-                    2,
-                    $codigoProducto,
-                    $codigoProducto === null ? PDO::PARAM_NULL : PDO::PARAM_INT
-                );
-                $stmtDetalle->bindValue(
-                    3,
-                    $codigoServicio,
-                    $codigoServicio === null ? PDO::PARAM_NULL : PDO::PARAM_INT
-                );
-                $stmtDetalle->bindValue(4, $cantidad, PDO::PARAM_INT);
-                $stmtDetalle->bindValue(5, $precioVenta);
-                $stmtDetalle->bindValue(6, $subtotal);
-                $stmtDetalle->execute();
-            }
-
-            $this->conex->commit();
-
-            return [
-                'status'        => 'success',
-                'message'       => 'Pedido registrado exitosamente',
-                'codigo_pedido' => $codigoPedido,
-            ];
-        } catch (PDOException $e) {
-            if ($this->conex->inTransaction()) {
-                $this->conex->rollBack();
-            }
-            $this->logPdoError('addPedido', $e);
-
-            return [
-                'status'  => 'error',
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Actualiza los datos modificables del encabezado del pedido.
-     */
-    public function updatePedido(int $id, array $datos) {
-        $cedulaCliente = $datos['codigo_cliente'] ?? '';
-        $estado = (int) ($datos['estado'] ?? 0);
-        $tasaAplicada = (float) ($datos['tasa_aplicada'] ?? 1.0);
-
-        if ($id <= 0 || empty($cedulaCliente)) {
-            return ['status' => 'error', 'message' => 'Pedido o cliente no válido'];
-        }
-
-        if ($tasaAplicada <= 0) $tasaAplicada = 1.0;
-        $estado = $estado ? 1 : 0;
-
-        try {
-            $this->conex->beginTransaction();
-
-            $stmt = $this->conex->prepare(
-                'UPDATE pedido SET cedula_cliente = ?, tasa_aplicada = ?, estado = ?
-                 WHERE codigo_pedido = ?'
-            );
-            $success = $stmt->execute([
-                $cedulaCliente,
-                $tasaAplicada,
-                $estado,
-                $id
-            ]);
-
-            if (!$success) {
-                throw new PDOException('No se pudo actualizar el pedido');
-            }
-
-            $this->conex->commit();
-
-            return [
-                'status'  => 'success',
-                'message' => 'Pedido actualizado con éxito',
-            ];
-        } catch (PDOException $e) {
-            if ($this->conex->inTransaction()) {
-                $this->conex->rollBack();
-            }
-            $this->logPdoError('updatePedido', $e);
-
-            return [
-                'status'  => 'error',
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Anulación lógica del pedido.
-     */
-    public function deletePedido(int $id) {
-        try {
-            $stmt = $this->conex->prepare('UPDATE pedido SET estado = 0 WHERE codigo_pedido = ?');
-            $stmt->bindValue(1, $id, PDO::PARAM_INT);
-            return ['status' => $stmt->execute() ? 'success' : 'error'];
-        } catch (PDOException $e) {
-            $this->logPdoError('deletePedido', $e);
-            return ['status' => 'error', 'message' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Clientes disponibles para el formulario.
-     */
-    public function getClientesActivos() {
-        try {
-            $stmt = $this->conex->prepare('SELECT cedula_cliente, nombre FROM cliente ORDER BY nombre ASC');
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $this->logPdoError('getClientesActivos', $e);
-            return [];
-        }
-    }
-
-    /**
-     * Productos activos para el formulario.
-     */
-    public function getProductosActivos() {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT codigo_producto, nombre_producto, costo, stock_actual
-                 FROM producto_insumo WHERE estado = 1 ORDER BY nombre_producto ASC'
-            );
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $this->logPdoError('getProductosActivos', $e);
-            return [];
-        }
-    }
-
-    /**
-     * Servicios activos para el formulario.
-     */
-    public function getServiciosActivos() {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT codigo_servicio, nombre_servicio, precio
-                 FROM servicio WHERE estado = 1 ORDER BY nombre_servicio ASC'
-            );
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $this->logPdoError('getServiciosActivos', $e);
-            return [];
-        }
-    }
-
-    /**
-     * Tasa de cambio activa para el encabezado del pedido.
-     */
-    public function getTasaActual() {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT t.monto_bolivares 
-                 FROM moneda m 
-                 INNER JOIN tasa_cambio t ON m.codigo_tasa = t.codigo_tasa 
-                 WHERE m.estado = 1 ORDER BY m.codigo_moneda DESC LIMIT 1'
-            );
-            $stmt->execute();
-            $tasa = $stmt->fetchColumn();
-            return $tasa !== false ? (float) $tasa : 1.0;
-        } catch (PDOException $e) {
-            $this->logPdoError('getTasaActual', $e);
-            return 1.0;
-        }
-    }
-
 }
 </file>
 
@@ -7029,501 +6584,818 @@ function navIconClass(bool $active): string {
 </script>
 </file>
 
-<file path="app/views/pedidos/viewPedido.php">
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CopiGaby — Gestión de Pedidos</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tailwind-config.js"></script>
-  <link rel="stylesheet" href="assets/css/theme.css">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
-</head>
-<body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
+<file path="app/controllers/pedidoController.php">
+<?php
 
-  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
+    use App\models\pedidoModel;
 
-  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
-    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <h2 class="text-navy-dark font-extrabold text-xl">GESTION DE PEDIDOS</h2>
-    </header>
-
-    <main class="p-8 flex-1 animate-fade-up">
-      <?php if (!empty($pedidoFlash)): ?>
-      <div id="pedidoFlash" class="mb-6 px-5 py-4 rounded-xl border font-bold text-sm <?= ($pedidoFlash['status'] ?? '') === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700' ?>">
-        <?= htmlspecialchars($pedidoFlash['message'] ?? 'Operación completada.') ?>
-      </div>
-      <?php endif; ?>
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-2xl font-[900] text-gray-800">Lista de Pedidos</h1>
-          <p class="text-gray-500 text-sm font-semibold">Registro de ventas de productos y servicios</p>
-        </div>
-        <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-          AÑADIR PEDIDO
-        </button>
-      </div>
-
-      <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
-              <th class="px-6 py-4">Código</th>
-              <th class="px-6 py-4">Cliente</th>
-              <th class="px-6 py-4">Atendido por</th>
-              <th class="px-6 py-4">Fecha</th>
-              <th class="px-6 py-4 text-right">Total</th>
-              <th class="px-6 py-4 text-center">Tasa (Bs)</th>
-              <th class="px-6 py-4 text-center">Estado</th>
-              <th class="px-6 py-4 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-700 font-semibold text-sm divide-y">
-            <?php if (!empty($pedidos)): ?>
-            <?php foreach ($pedidos as $ped): ?>
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4">
-                  <div class="font-black text-navy-dark">#<?= str_pad($ped['codigo_pedido'], 4, '0', STR_PAD_LEFT) ?></div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="text-navy-light uppercase font-bold"><?= htmlspecialchars($ped['nombre_cliente']) ?></div>
-                </td>
-                <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario']) ?></td>
-                <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
-                <td class="px-6 py-4 text-right">
-                  <div class="font-black text-navy-dark">$<?= number_format($ped['monto_total'], 2) ?></div>
-                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format($ped['monto_total'] * $ped['tasa_aplicada'], 2) ?> Bs</div>
-                </td>
-                <td class="px-6 py-4 text-center text-xs font-bold text-gray-400">
-                  <?= number_format($ped['tasa_aplicada'], 2) ?>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $ped['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
-                    <?= $ped['estado'] ? 'Activo' : 'Anulado' ?>
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <div class="flex justify-center gap-2">
-                    <button onclick="openEditPedidoModal(<?= $ped['codigo_pedido'] ?>, '<?= $ped['cedula_cliente'] ?>', <?= $ped['tasa_aplicada'] ?>, <?= $ped['estado'] ?>)" class="text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Editar pedido">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <?php if ($ped['estado']): ?>
-                    <button onclick="confirmDelete(<?= $ped['codigo_pedido'] ?>)" class="text-red-400 hover:text-red-600 p-2 transition-colors" title="Anular pedido">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                    <?php endif; ?>
-                  </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-            <?php else: ?>
-              <tr><td colspan="8" class="px-6 py-10 text-center text-gray-400 font-bold italic">No se encontraron pedidos registrados.</td></tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
-      </div>
-    </main>
-  </div>
-
-  <div id="modalPedido" class="fixed inset-0 z-[150] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlayPedido"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-4xl animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
-          <h3 class="text-xl font-black text-navy-dark tracking-tight">Nuevo Pedido</h3>
-          <button type="button" class="text-gray-400 hover:text-navy-dark closeModalPedido">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <form id="formPedido" action="?url=pedido&type=register" method="POST" class="p-6 text-left">
-          <input type="hidden" name="items" id="itemsJson">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</label>
-              <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
-                <option value="">— Seleccione un cliente —</option>
-                <?php foreach ($clientes as $cli): ?>
-                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs/$)</label>
-              <input type="number" step="0.01" name="tasa_aplicada" id="tasaActualInput" value="<?= $tasaActual ?>" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-orange-dk">
-            </div>
-          </div>
-
-          <div class="mb-4 flex justify-between items-center">
-            <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider">Detalle del Pedido</h4>
-            <button type="button" id="btnAddItem" class="flex items-center gap-1 text-xs font-black uppercase text-orange hover:text-orange-dk transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-              Agregar ítem
-            </button>
-          </div>
-
-          <div class="overflow-x-auto border rounded-lg mb-4">
-            <table class="w-full text-left text-sm">
-              <thead>
-                <tr class="bg-navy-dark text-white text-[0.65rem] uppercase tracking-widest">
-                  <th class="px-4 py-3">Tipo</th>
-                  <th class="px-4 py-3">Descripción</th>
-                  <th class="px-4 py-3 w-24">Cantidad</th>
-                  <th class="px-4 py-3 w-32">Precio</th>
-                  <th class="px-4 py-3 w-32 text-right">Subtotal</th>
-                  <th class="px-4 py-3 w-12"></th>
-                </tr>
-              </thead>
-              <tbody id="itemsBody" class="divide-y font-semibold text-gray-700">
-                <tr id="emptyRow">
-                  <td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="flex justify-end mb-6">
-            <div class="bg-gray-50 border rounded-xl px-6 py-3 text-right">
-              <span class="text-xs font-black text-gray-400 uppercase tracking-widest mr-4">Total General</span>
-              <span id="totalGeneral" class="text-2xl font-black text-navy-dark">$0.00</span>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-3">
-            <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModalPedido">Cancelar</button>
-            <button type="submit" id="btnSubmitPedido" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Registrar Pedido</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalEditPedido" class="fixed inset-0 z-[150] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlayEditPedido"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
-          <h3 class="text-xl font-black text-navy-dark tracking-tight">Editar Pedido</h3>
-          <button type="button" class="text-gray-400 hover:text-navy-dark" onclick="closeEditPedidoModal()">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <form action="?url=pedido&type=update" method="POST" class="p-6 text-left">
-          <input type="hidden" name="codigo_pedido" id="edit_codigo_pedido">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</label>
-              <select name="codigo_cliente" id="edit_codigo_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
-                <option value="">— Seleccione un cliente —</option>
-                <?php foreach ($clientes as $cli): ?>
-                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio</label>
-              <input type="number" step="0.01" name="tasa_aplicada" id="edit_tasa_aplicada" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Estado</label>
-              <select name="estado" id="edit_estado" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
-                <option value="1">Activo</option>
-                <option value="0">Anulado</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3 mt-6">
-            <button type="button" onclick="closeEditPedidoModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Actualizar Pedido</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const productos = <?= json_encode($productos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-    const servicios = <?= json_encode($servicios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-
-    const modalPedido = document.getElementById('modalPedido');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const closeBtns = document.querySelectorAll('.closeModalPedido');
-    const overlayPedido = document.getElementById('overlayPedido');
-    const itemsBody = document.getElementById('itemsBody');
-    const totalGeneral = document.getElementById('totalGeneral');
-    const formPedido = document.getElementById('formPedido');
-    const btnSubmitPedido = document.getElementById('btnSubmitPedido');
-    const itemsJsonInput = document.getElementById('itemsJson');
-    let itemCounter = 0;
-
-    const toggleModal = (forceClose = false) => {
-      if (forceClose) {
-        modalPedido.classList.add('hidden');
-        return;
-      }
-      modalPedido.classList.toggle('hidden');
-    };
-
-    btnOpen.onclick = () => toggleModal();
-    closeBtns.forEach(btn => btn.onclick = () => toggleModal(true));
-    overlayPedido.onclick = () => toggleModal(true);
-
-    function buildOptions(tipo) {
-      const list = tipo === 'producto' ? productos : servicios;
-      let html = '<option value="">— Seleccionar —</option>';
-      list.forEach(item => {
-        const id = tipo === 'producto' ? item.codigo_producto : item.codigo_servicio;
-        const nombre = tipo === 'producto' ? item.nombre_producto : item.nombre_servicio;
-        const precio = tipo === 'producto' ? item.costo : item.precio;
-        const stock = tipo === 'producto' ? item.stock_actual : '';
-        const extra = stock !== '' ? ` data-stock="${stock}"` : '';
-        html += `<option value="${id}" data-precio="${precio}"${extra}>${nombre}</option>`;
-      });
-      return html;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
 
-    function recalcTotal() {
-      let total = 0;
-      itemsBody.querySelectorAll('tr[data-item]').forEach(row => {
-        total += parseFloat(row.dataset.subtotal || 0);
-      });
-      totalGeneral.textContent = '$' + total.toFixed(2);
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?url=login');
+        exit();
     }
 
-    function normalizeCantidad(input) {
-      let value = parseInt(input.value, 10);
-      if (isNaN(value) || value < 1) {
-        value = 1;
-      }
-      input.value = String(value);
-      return value;
-    }
+    $object = new pedidoModel();
 
-    function updateRowSubtotal(row) {
-      const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
-      const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
-      const subtotal = cantidad * precio;
-      row.querySelector('.item-subtotal').textContent = '$' + subtotal.toFixed(2);
-      row.dataset.subtotal = subtotal.toFixed(2);
-      recalcTotal();
-    }
+    if (isset($_GET['type'])) {
 
-    function onTipoChange(row) {
-      const tipo = row.querySelector('.item-tipo').value;
-      const selectItem = row.querySelector('.item-select');
-      selectItem.innerHTML = buildOptions(tipo);
-      row.querySelector('.item-precio').value = '';
-      row.querySelector('.item-subtotal').textContent = '$0.00';
-      row.dataset.subtotal = '0';
-      recalcTotal();
-    }
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ?url=pedido');
+                exit();
+            }
 
-    function onItemSelect(row) {
-      const selectItem = row.querySelector('.item-select');
-      const option = selectItem.options[selectItem.selectedIndex];
-      const precio = option ? option.getAttribute('data-precio') : '';
-      row.querySelector('.item-precio').value = precio !== null && precio !== '' ? precio : '';
-      updateRowSubtotal(row);
-    }
+            $isAjax = (
+                !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+                && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+            ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
 
-    function removeItemRow(tr) {
-      tr.remove();
-      if (!itemsBody.querySelector('tr[data-item]')) {
-        itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
-        totalGeneral.textContent = '$0.00';
-      } else {
-        recalcTotal();
-      }
-    }
+            if (!isset($_POST['codigo_cliente'], $_POST['items'], $_POST['codigo_metodo'])) {
+                $payload = [
+                    'status'  => 'error',
+                    'message' => 'Datos incompletos: cliente, ítems y método de pago son obligatorios.',
+                ];
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($payload);
+                    exit();
+                }
+                $_SESSION['pedido_flash'] = $payload;
+                header('Location: ?url=pedido');
+                exit();
+            }
 
-    function addItemRow() {
-      const emptyRow = document.getElementById('emptyRow');
-      if (emptyRow) {
-        emptyRow.remove();
-      }
+            $items = json_decode((string) $_POST['items'], true);
+            if (!is_array($items) || $items === []) {
+                $payload = [
+                    'status'  => 'error',
+                    'message' => 'El pedido debe incluir al menos un ítem válido.',
+                ];
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($payload);
+                    exit();
+                }
+                $_SESSION['pedido_flash'] = $payload;
+                header('Location: ?url=pedido');
+                exit();
+            }
 
-      itemCounter += 1;
-      const tr = document.createElement('tr');
-      tr.id = 'item-' + itemCounter;
-      tr.dataset.item = '1';
-      tr.dataset.subtotal = '0';
-      tr.innerHTML = `
-        <td class="px-4 py-3">
-          <select class="item-tipo w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
-            <option value="producto">Producto</option>
-            <option value="servicio">Servicio</option>
-          </select>
-        </td>
-        <td class="px-4 py-3">
-          <select class="item-select w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none" required></select>
-        </td>
-        <td class="px-4 py-3">
-          <input type="number" step="1" min="1" value="1" class="item-cantidad w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
-        </td>
-        <td class="px-4 py-3">
-          <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
-        </td>
-        <td class="px-4 py-3 text-right font-black text-navy-dark item-subtotal">$0.00</td>
-        <td class="px-4 py-3 text-center">
-          <button type="button" class="btn-remove text-red-400 hover:text-red-600 p-1" title="Quitar">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </td>
-      `;
+            $datos = [
+                'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
+                'cedula_usuario' => $_SESSION['user_id'],
+            ];
 
-      itemsBody.appendChild(tr);
+            $pago = [
+                'codigo_metodo' => (int) $_POST['codigo_metodo'],
+                'monto'         => (float) ($_POST['monto_pago'] ?? 0),
+                'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
+                'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
+            ];
 
-      const selectItem = tr.querySelector('.item-select');
-      selectItem.innerHTML = buildOptions('producto');
+            $result = $object->addPedido($datos, $items, $pago);
 
-      tr.querySelector('.item-tipo').addEventListener('change', () => onTipoChange(tr));
-      selectItem.addEventListener('change', () => onItemSelect(tr));
-      tr.querySelector('.item-cantidad').addEventListener('input', () => updateRowSubtotal(tr));
-      tr.querySelector('.item-cantidad').addEventListener('change', () => updateRowSubtotal(tr));
-      tr.querySelector('.btn-remove').addEventListener('click', () => removeItemRow(tr));
-    }
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($result);
+                exit();
+            }
 
-    function collectItemsFromRows() {
-      const rows = itemsBody.querySelectorAll('tr[data-item]');
-      if (rows.length === 0) {
-        return { ok: false, message: 'Debe agregar al menos un ítem al pedido.', items: [] };
-      }
-
-      const items = [];
-
-      for (const row of rows) {
-        const tipo = row.querySelector('.item-tipo').value;
-        const selectItem = row.querySelector('.item-select');
-        const id = selectItem.value;
-        const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
-        const precio = parseFloat(row.querySelector('.item-precio').value);
-
-        if (!id) {
-          return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
-        }
-        if (isNaN(precio) || precio < 0) {
-          return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
+            $_SESSION['pedido_flash'] = $result;
+            header('Location: ?url=pedido');
+            exit();
         }
 
-        const item = { tipo, cantidad, precio_venta: precio };
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'], $_POST['items'])) {
+                $isAjax = (
+                    !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+                    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+                ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
 
-        if (tipo === 'producto') {
-          item.codigo_producto = parseInt(id, 10);
-          const option = selectItem.options[selectItem.selectedIndex];
-          const stock = parseInt(option.getAttribute('data-stock') || '0', 10);
-          if (cantidad > stock) {
-            return {
-              ok: false,
-              message: 'Stock insuficiente para: ' + option.text,
-              items: [],
-            };
-          }
-        } else {
-          item.codigo_servicio = parseInt(id, 10);
+                $items = json_decode((string) $_POST['items'], true);
+                if (!is_array($items) || $items === []) {
+                    $payload = ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem válido.'];
+                    if ($isAjax) {
+                        header('Content-Type: application/json; charset=utf-8');
+                        echo json_encode($payload);
+                        exit();
+                    }
+                    $_SESSION['pedido_flash'] = $payload;
+                    header('Location: ?url=pedido');
+                    exit();
+                }
+
+                $pago = [
+                    'codigo_metodo' => (int) ($_POST['codigo_metodo'] ?? 0),
+                    'monto'         => (float) ($_POST['monto_pago'] ?? 0),
+                    'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
+                    'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
+                ];
+
+                $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
+                    'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
+                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 1,
+                ], $items, $pago);
+
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($result);
+                    exit();
+                }
+
+                $_SESSION['pedido_flash'] = $result;
+                header('Location: ?url=pedido');
+                exit();
+            }
+            header('Location: ?url=pedido');
+            exit();
         }
 
-        items.push(item);
-      }
-
-      return { ok: true, message: '', items };
-    }
-
-    async function submitPedido(e) {
-      e.preventDefault();
-
-      const cliente = document.getElementById('selectCliente').value;
-      if (!cliente) {
-        alert('Seleccione un cliente.');
-        return;
-      }
-
-      const collected = collectItemsFromRows();
-      if (!collected.ok) {
-        alert(collected.message);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('ajax', '1');
-      formData.append('codigo_cliente', cliente);
-      formData.append('tasa_aplicada', document.getElementById('tasaActualInput').value);
-      formData.append('items', JSON.stringify(collected.items));
-      itemsJsonInput.value = JSON.stringify(collected.items);
-
-      const originalLabel = btnSubmitPedido.textContent;
-      btnSubmitPedido.disabled = true;
-      btnSubmitPedido.textContent = 'Guardando...';
-
-      try {
-        const response = await fetch('?url=pedido&type=register', {
-          method: 'POST',
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (data.status === 'success') {
-          toggleModal(true);
-          location.reload();
-          return;
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deletePedido'])) {
+                $result = $object->deletePedido((int) $_POST['idpedido']);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($result);
+                exit();
+            }
+            header('Location: ?url=pedido');
+            exit();
         }
 
-        alert(data.message || 'No se pudo registrar el pedido.');
-      } catch (err) {
-        console.error('Error al registrar pedido:', err);
-        alert('Error de comunicación con el servidor. Revise la consola o el log de PHP.');
-      } finally {
-        btnSubmitPedido.disabled = false;
-        btnSubmitPedido.textContent = originalLabel;
-      }
+        elseif ($_GET['type'] === 'details') {
+            if (isset($_GET['id'])) {
+                $header = $object->getPedidoById((int) $_GET['id']);
+                $items  = $object->getItemsByPedido((int) $_GET['id']);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['header' => $header, 'items' => $items]);
+                exit();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['header' => null, 'items' => []]);
+            exit();
+        }
+
+        else {
+            header('Location: ?url=pedido');
+            exit();
+        }
     }
 
-    document.getElementById('btnAddItem').onclick = addItemRow;
-    formPedido.addEventListener('submit', submitPedido);
+    $pedidos     = $object->getAllPedidos();
+    $clientes    = $object->getClientesActivos();
+    $productos   = $object->getProductosActivos();
+    $servicios   = $object->getServiciosActivos();
+    $metodos     = $object->getMetodosActivos();
+    $bancos      = $object->getBancosActivos();
+    $tasaActual  = $object->getTasaActual();
+    $pedidoFlash = $_SESSION['pedido_flash'] ?? null;
+    unset($_SESSION['pedido_flash']);
 
-    const modalEditPedido = document.getElementById('modalEditPedido');
-    const overlayEditPedido = document.getElementById('overlayEditPedido');
+    include 'app/views/pedidos/viewPedido.php';
+</file>
 
-    function openEditPedidoModal(id, clienteId, tasa, estado) {
-      document.getElementById('edit_codigo_pedido').value = id;
-      document.getElementById('edit_codigo_cliente').value = clienteId;
-      document.getElementById('edit_tasa_aplicada').value = tasa;
-      document.getElementById('edit_estado').value = String(estado);
-      modalEditPedido.classList.remove('hidden');
+<file path="app/Models/pedidoModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use PDO;
+use PDOException;
+
+class pedidoModel extends ConectDB {
+    private $conex;
+
+    /** Métodos que requieren banco y referencia */
+    private const METODOS_CON_BANCO = [563, 564];
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
     }
 
-    function closeEditPedidoModal() {
-      modalEditPedido.classList.add('hidden');
+    private function logPdoError(string $context, PDOException $e): void {
+        error_log(sprintf(
+            '[pedidoModel::%s] %s | SQLSTATE=%s',
+            $context,
+            $e->getMessage(),
+            $e->getCode()
+        ));
     }
 
-    overlayEditPedido.onclick = closeEditPedidoModal;
-
-    function confirmDelete(id) {
-      if (!confirm('¿Desea anular este pedido?')) {
-        return;
-      }
-      const f = new FormData();
-      f.append('deletePedido', 'true');
-      f.append('idpedido', String(id));
-      fetch('?url=pedido&type=main', { method: 'POST', body: f })
-        .then(r => r.json())
-        .then(d => {
-          if (d.status === 'success') {
-            location.reload();
-          } else {
-            alert(d.message || 'No se pudo procesar la anulación');
-          }
-        })
-        .catch(() => alert('Error de comunicación al anular el pedido.'));
+    /**
+     * Obtiene todos los pedidos con nombres de cliente y usuario.
+     */
+    public function getAllPedidos() {
+        try {
+            $query = "SELECT p.codigo_pedido, p.cedula_cliente, p.cedula_usuario, p.fecha_pedido, p.estado,
+                             c.nombre AS nombre_cliente, u.nombre_usuario,
+                             mp.nombre_metodo,
+                             COALESCE(
+                                 (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
+                                 0
+                             ) AS monto_total
+                      FROM pedido p
+                      LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
+                      LEFT JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
+                      LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
+                      LEFT JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
+                      ORDER BY p.codigo_pedido DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getAllPedidos', $e);
+            return [];
+        }
     }
-  </script>
-</body>
-</html>
+
+    /**
+     * Registra un pedido completo: cabecera, detalle, pago e inventario.
+     */
+    public function addPedido(array $datos, array $items, array $pago) {
+        if (empty($items)) {
+            return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
+        }
+
+        $cedulaUsuario = $datos['cedula_usuario'] ?? '';
+        $cedulaCliente = $datos['cedula_cliente'] ?? '';
+
+        if (empty($cedulaUsuario) || empty($cedulaCliente)) {
+            return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
+        }
+
+        $validacionPago = $this->validarDatosPago($pago);
+        if ($validacionPago !== true) {
+            return $validacionPago;
+        }
+
+        try {
+            $this->conex->beginTransaction();
+
+            $stmtPedido = $this->conex->prepare(
+                'INSERT INTO pedido (cedula_cliente, cedula_usuario, fecha_pedido, estado)
+                 VALUES (?, ?, NOW(), 1)'
+            );
+            $stmtPedido->execute([$cedulaCliente, $cedulaUsuario]);
+
+            $codigoPedido = (int) $this->conex->lastInsertId();
+            if ($codigoPedido <= 0) {
+                throw new PDOException('No se pudo obtener el código del pedido insertado');
+            }
+
+            $montoTotal = $this->insertarDetallesYDescontarStock($codigoPedido, $items);
+            $this->registrarPago($codigoPedido, $pago, $montoTotal);
+
+            $this->conex->commit();
+
+            return [
+                'status'        => 'success',
+                'message'       => 'Pedido registrado exitosamente',
+                'codigo_pedido' => $codigoPedido,
+            ];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            $this->logPdoError('addPedido', $e);
+
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza un pedido existente reajustando detalle, pago e inventario.
+     */
+    public function updatePedido(int $id, array $datos, array $items, array $pago) {
+        if ($id <= 0) {
+            return ['status' => 'error', 'message' => 'Pedido no válido'];
+        }
+
+        $cedulaCliente = $datos['cedula_cliente'] ?? '';
+        if (empty($cedulaCliente)) {
+            return ['status' => 'error', 'message' => 'Debe seleccionar un cliente válido'];
+        }
+
+        if (empty($items)) {
+            return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
+        }
+
+        $validacionPago = $this->validarDatosPago($pago);
+        if ($validacionPago !== true) {
+            return $validacionPago;
+        }
+
+        $estado = isset($datos['estado']) ? ((int) $datos['estado'] ? 1 : 0) : 1;
+
+        try {
+            $this->conex->beginTransaction();
+
+            $pedidoActual = $this->getPedidoById($id);
+            if (!$pedidoActual) {
+                throw new PDOException('El pedido indicado no existe');
+            }
+
+            if ((int) $pedidoActual['estado'] === 1) {
+                $this->restaurarStockPedido($id);
+            }
+
+            $stmtDelDetalle = $this->conex->prepare('DELETE FROM detalle_pedido WHERE codigo_pedido = ?');
+            $stmtDelDetalle->execute([$id]);
+
+            $stmtDelPagos = $this->conex->prepare('DELETE FROM pagos WHERE codigo_pedido = ?');
+            $stmtDelPagos->execute([$id]);
+
+            $stmtUpdate = $this->conex->prepare(
+                'UPDATE pedido SET cedula_cliente = ?, estado = ? WHERE codigo_pedido = ?'
+            );
+            $stmtUpdate->execute([$cedulaCliente, $estado, $id]);
+
+            if ($estado === 1) {
+                $montoTotal = $this->insertarDetallesYDescontarStock($id, $items);
+                $this->registrarPago($id, $pago, $montoTotal);
+            }
+
+            $this->conex->commit();
+
+            return ['status' => 'success', 'message' => 'Pedido actualizado con éxito'];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            $this->logPdoError('updatePedido', $e);
+
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Anulación lógica del pedido con reversión de inventario.
+     */
+    public function deletePedido(int $id) {
+        try {
+            $this->conex->beginTransaction();
+
+            $pedido = $this->getPedidoById($id);
+            if (!$pedido) {
+                throw new PDOException('Pedido no encontrado');
+            }
+
+            if ((int) $pedido['estado'] === 1) {
+                $this->restaurarStockPedido($id);
+            }
+
+            $stmtPedido = $this->conex->prepare('UPDATE pedido SET estado = 0 WHERE codigo_pedido = ?');
+            $stmtPedido->execute([$id]);
+
+            $stmtPago = $this->conex->prepare('UPDATE pagos SET estado = 0 WHERE codigo_pedido = ?');
+            $stmtPago->execute([$id]);
+
+            $this->conex->commit();
+
+            return ['status' => 'success', 'message' => 'Pedido anulado correctamente'];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            $this->logPdoError('deletePedido', $e);
+
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Cabecera detallada de un pedido.
+     */
+    public function getPedidoById($id) {
+        try {
+            $query = "SELECT p.*, c.nombre AS nombre_cliente, c.telefono AS telefono_cliente,
+                             u.nombre_usuario,
+                             pg.codigo_pago, pg.codigo_metodo, pg.fecha_pago AS fecha_pago,
+                             mp.nombre_metodo,
+                             COALESCE(
+                                 (SELECT SUM(dp.subtotal) FROM detalle_pedido dp WHERE dp.codigo_pedido = p.codigo_pedido),
+                                 0
+                             ) AS monto_total
+                      FROM pedido p
+                      INNER JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
+                      INNER JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
+                      LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
+                      LEFT JOIN metodo_pago mp ON pg.codigo_metodo = mp.codigo_metodo
+                      WHERE p.codigo_pedido = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($pedido && !empty($pedido['codigo_pago'])) {
+                $pedido['pago'] = $this->getDetallePagoByPago((int) $pedido['codigo_pago']);
+            }
+
+            return $pedido ?: null;
+        } catch (PDOException $e) {
+            $this->logPdoError('getPedidoById', $e);
+            return null;
+        }
+    }
+
+    /**
+     * Ítems de un pedido con tipo inferido para edición.
+     */
+    public function getItemsByPedido($id) {
+        try {
+            $query = "SELECT dp.*,
+                             pi.nombre_producto,
+                             s.nombre_servicio,
+                             s.precio AS precio_servicio,
+                             CASE
+                                 WHEN ABS(s.precio - dp.precio_venta) < 0.01 THEN 'servicio'
+                                 ELSE 'producto'
+                             END AS tipo
+                      FROM detalle_pedido dp
+                      INNER JOIN producto_insumo pi ON dp.codigo_producto = pi.codigo_producto
+                      INNER JOIN servicio s ON dp.codigo_servicio = s.codigo_servicio
+                      WHERE dp.codigo_pedido = ?
+                      ORDER BY dp.codigo_detalle_pedido ASC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getItemsByPedido', $e);
+            return [];
+        }
+    }
+
+    public function getClientesActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT cedula_cliente, nombre FROM cliente ORDER BY nombre ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getClientesActivos', $e);
+            return [];
+        }
+    }
+
+    public function getProductosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_producto, nombre_producto, costo, stock_actual
+                 FROM producto_insumo WHERE estado = 1 ORDER BY nombre_producto ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getProductosActivos', $e);
+            return [];
+        }
+    }
+
+    public function getServiciosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_servicio, nombre_servicio, precio
+                 FROM servicio WHERE estado = 1 ORDER BY nombre_servicio ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getServiciosActivos', $e);
+            return [];
+        }
+    }
+
+    public function getMetodosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_metodo, nombre_metodo FROM metodo_pago WHERE estado = 1 ORDER BY nombre_metodo ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getMetodosActivos', $e);
+            return [];
+        }
+    }
+
+    public function getBancosActivos() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_banco, nombre_banco FROM banco WHERE estado = 1 ORDER BY nombre_banco ASC'
+            );
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getBancosActivos', $e);
+            return [];
+        }
+    }
+
+    public function getTasaActual() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT t.monto_bolivares
+                 FROM moneda m
+                 INNER JOIN tasa_cambio t ON m.codigo_tasa = t.codigo_tasa
+                 WHERE m.estado = 1 AND m.simbolo = "$"
+                 ORDER BY m.codigo_moneda DESC LIMIT 1'
+            );
+            $stmt->execute();
+            $tasa = $stmt->fetchColumn();
+            return $tasa !== false ? (float) $tasa : 1.0;
+        } catch (PDOException $e) {
+            $this->logPdoError('getTasaActual', $e);
+            return 1.0;
+        }
+    }
+
+    public function getMonedaDefault() {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_moneda FROM moneda WHERE estado = 1 AND simbolo = "$" ORDER BY codigo_moneda DESC LIMIT 1'
+            );
+            $stmt->execute();
+            $moneda = $stmt->fetchColumn();
+            return $moneda !== false ? (int) $moneda : 510;
+        } catch (PDOException $e) {
+            return 510;
+        }
+    }
+
+    /* ------------------------------------------------------------------
+     * Métodos privados de soporte transaccional
+     * ------------------------------------------------------------------ */
+
+    private function validarDatosPago(array $pago) {
+        $codigoMetodo = (int) ($pago['codigo_metodo'] ?? 0);
+        if ($codigoMetodo <= 0) {
+            return ['status' => 'error', 'message' => 'Debe seleccionar un método de pago'];
+        }
+
+        $monto = (float) ($pago['monto'] ?? 0);
+        if ($monto <= 0) {
+            return ['status' => 'error', 'message' => 'El monto del pago debe ser mayor a cero'];
+        }
+
+        if ($this->metodoRequiereBanco($codigoMetodo)) {
+            if (empty($pago['codigo_banco'])) {
+                return ['status' => 'error', 'message' => 'Debe seleccionar el banco para este método de pago'];
+            }
+            if (empty(trim((string) ($pago['referencia'] ?? '')))) {
+                return ['status' => 'error', 'message' => 'Debe indicar la referencia del pago'];
+            }
+        }
+
+        return true;
+    }
+
+    private function metodoRequiereBanco(int $codigoMetodo): bool {
+        return in_array($codigoMetodo, self::METODOS_CON_BANCO, true);
+    }
+
+    private function insertarDetallesYDescontarStock(int $codigoPedido, array $items): float {
+        $stmtDetalle = $this->conex->prepare(
+            'INSERT INTO detalle_pedido (codigo_pedido, codigo_producto, codigo_servicio, cantidad, precio_venta, subtotal)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
+
+        $montoTotal = 0.0;
+
+        foreach ($items as $index => $item) {
+            $linea = (int) $index + 1;
+            $tipo = (string) ($item['tipo'] ?? '');
+            $cantidad = (float) ($item['cantidad'] ?? 0);
+            $precioVenta = (float) ($item['precio_venta'] ?? 0);
+
+            if ($cantidad <= 0) {
+                throw new PDOException("Cantidad inválida en la línea {$linea}");
+            }
+            if ($precioVenta < 0) {
+                throw new PDOException("Precio inválido en la línea {$linea}");
+            }
+
+            $subtotal = round($cantidad * $precioVenta, 2);
+            $montoTotal += $subtotal;
+
+            [$codigoProducto, $codigoServicio] = $this->resolverCodigosDetalle($item, $tipo, $linea);
+
+            $stmtDetalle->execute([
+                $codigoPedido,
+                $codigoProducto,
+                $codigoServicio,
+                $cantidad,
+                $precioVenta,
+                $subtotal,
+            ]);
+
+            $this->descontarInventario($tipo, $codigoProducto, $codigoServicio, $cantidad, $linea);
+        }
+
+        return round($montoTotal, 2);
+    }
+
+    /**
+     * Resuelve los códigos FK exigidos por detalle_pedido (ambos NOT NULL).
+     */
+    private function resolverCodigosDetalle(array $item, string $tipo, int $linea): array {
+        if ($tipo === 'producto') {
+            $codigoProducto = (int) ($item['codigo_producto'] ?? 0);
+            if ($codigoProducto <= 0) {
+                throw new PDOException("Producto no válido en la línea {$linea}");
+            }
+
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_servicio FROM servicio_material WHERE codigo_producto = ? LIMIT 1'
+            );
+            $stmt->execute([$codigoProducto]);
+            $codigoServicio = $stmt->fetchColumn();
+
+            if ($codigoServicio === false) {
+                $stmtFallback = $this->conex->prepare(
+                    'SELECT codigo_servicio FROM servicio WHERE estado = 1 ORDER BY codigo_servicio ASC LIMIT 1'
+                );
+                $stmtFallback->execute();
+                $codigoServicio = $stmtFallback->fetchColumn();
+            }
+
+            if ($codigoServicio === false) {
+                throw new PDOException("No hay servicios activos para vincular el producto en la línea {$linea}");
+            }
+
+            return [$codigoProducto, (int) $codigoServicio];
+        }
+
+        if ($tipo === 'servicio') {
+            $codigoServicio = (int) ($item['codigo_servicio'] ?? 0);
+            if ($codigoServicio <= 0) {
+                throw new PDOException("Servicio no válido en la línea {$linea}");
+            }
+
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_producto FROM servicio_material WHERE codigo_servicio = ? LIMIT 1'
+            );
+            $stmt->execute([$codigoServicio]);
+            $codigoProducto = $stmt->fetchColumn();
+
+            if ($codigoProducto === false) {
+                throw new PDOException("El servicio de la línea {$linea} no tiene materiales configurados en servicio_material");
+            }
+
+            return [(int) $codigoProducto, $codigoServicio];
+        }
+
+        throw new PDOException("Tipo de ítem no reconocido en la línea {$linea}");
+    }
+
+    private function descontarInventario(
+        string $tipo,
+        int $codigoProducto,
+        int $codigoServicio,
+        float $cantidad,
+        int $linea
+    ): void {
+        if ($tipo === 'producto') {
+            $stmtStock = $this->conex->prepare(
+                'UPDATE producto_insumo SET stock_actual = stock_actual - ?
+                 WHERE codigo_producto = ? AND stock_actual >= ?'
+            );
+            $stmtStock->execute([(int) $cantidad, $codigoProducto, (int) $cantidad]);
+
+            if ($stmtStock->rowCount() === 0) {
+                throw new PDOException("Stock insuficiente para el producto en la línea {$linea}");
+            }
+            return;
+        }
+
+        $stmtMateriales = $this->conex->prepare(
+            'SELECT codigo_producto, cantidad_usada FROM servicio_material WHERE codigo_servicio = ?'
+        );
+        $stmtMateriales->execute([$codigoServicio]);
+        $materiales = $stmtMateriales->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($materiales)) {
+            throw new PDOException("El servicio de la línea {$linea} no tiene materiales para descontar");
+        }
+
+        $stmtStock = $this->conex->prepare(
+            'UPDATE producto_insumo SET stock_actual = stock_actual - ?
+             WHERE codigo_producto = ? AND stock_actual >= ?'
+        );
+
+        foreach ($materiales as $material) {
+            $cantidadDescontar = (int) ceil($material['cantidad_usada'] * $cantidad);
+            $stmtStock->execute([
+                $cantidadDescontar,
+                (int) $material['codigo_producto'],
+                $cantidadDescontar,
+            ]);
+
+            if ($stmtStock->rowCount() === 0) {
+                throw new PDOException("Stock insuficiente de materiales para el servicio en la línea {$linea}");
+            }
+        }
+    }
+
+    private function restaurarStockPedido(int $codigoPedido): void {
+        $items = $this->getItemsByPedido($codigoPedido);
+
+        $stmtSumar = $this->conex->prepare(
+            'UPDATE producto_insumo SET stock_actual = stock_actual + ? WHERE codigo_producto = ?'
+        );
+
+        foreach ($items as $item) {
+            $cantidad = (float) $item['cantidad'];
+
+            if ($item['tipo'] === 'producto') {
+                $stmtSumar->execute([(int) $cantidad, (int) $item['codigo_producto']]);
+                continue;
+            }
+
+            $stmtMateriales = $this->conex->prepare(
+                'SELECT codigo_producto, cantidad_usada FROM servicio_material WHERE codigo_servicio = ?'
+            );
+            $stmtMateriales->execute([(int) $item['codigo_servicio']]);
+            $materiales = $stmtMateriales->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($materiales as $material) {
+                $cantidadRestaurar = (int) ceil($material['cantidad_usada'] * $cantidad);
+                $stmtSumar->execute([
+                    $cantidadRestaurar,
+                    (int) $material['codigo_producto'],
+                ]);
+            }
+        }
+    }
+
+    private function registrarPago(int $codigoPedido, array $pago, float $montoTotal): void {
+        $codigoMetodo = (int) $pago['codigo_metodo'];
+        $monto = (float) ($pago['monto'] ?? $montoTotal);
+
+        $stmtPago = $this->conex->prepare(
+            'INSERT INTO pagos (codigo_pedido, codigo_metodo, fecha_pago, estado) VALUES (?, ?, NOW(), 1)'
+        );
+        $stmtPago->execute([$codigoPedido, $codigoMetodo]);
+
+        $codigoPago = (int) $this->conex->lastInsertId();
+        $codigoMoneda = $this->getMonedaDefault();
+
+        $stmtDetallePago = $this->conex->prepare(
+            'INSERT INTO detalle_pago (codigo_pago, codigo_moneda, codigo_metodo, monto) VALUES (?, ?, ?, ?)'
+        );
+        $stmtDetallePago->execute([$codigoPago, $codigoMoneda, $codigoMetodo, $monto]);
+
+        $codigoDetallePago = (int) $this->conex->lastInsertId();
+
+        if ($this->metodoRequiereBanco($codigoMetodo)) {
+            $referencia = (int) preg_replace('/\D/', '', (string) $pago['referencia']);
+            if ($referencia <= 0) {
+                throw new PDOException('La referencia del pago no es válida');
+            }
+
+            $numeroComprobante = trim((string) $pago['referencia']);
+
+            $stmtRef = $this->conex->prepare(
+                'INSERT IGNORE INTO referencia (referencia, numero_comprobante) VALUES (?, ?)'
+            );
+            $stmtRef->execute([$referencia, $numeroComprobante]);
+
+            $stmtTransf = $this->conex->prepare(
+                'INSERT INTO detalle_transferencia (codigo_detalle_pago, codigo_banco, codigo_referencia)
+                 VALUES (?, ?, ?)'
+            );
+            $stmtTransf->execute([
+                $codigoDetallePago,
+                (int) $pago['codigo_banco'],
+                $referencia,
+            ]);
+        }
+    }
+
+    private function getDetallePagoByPago(int $codigoPago): ?array {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT dp.codigo_detalle_pago, dp.codigo_moneda, dp.codigo_metodo, dp.monto,
+                        dt.codigo_banco, b.nombre_banco, r.numero_comprobante, r.referencia
+                 FROM detalle_pago dp
+                 LEFT JOIN detalle_transferencia dt ON dt.codigo_detalle_pago = dp.codigo_detalle_pago
+                 LEFT JOIN banco b ON dt.codigo_banco = b.codigo_banco
+                 LEFT JOIN referencia r ON dt.codigo_referencia = r.referencia
+                 WHERE dp.codigo_pago = ?
+                 LIMIT 1'
+            );
+            $stmt->execute([$codigoPago]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+}
 </file>
 
 <file path="app/views/compras/viewCompra.php">
@@ -7907,6 +7779,702 @@ function navIconClass(bool $active): string {
         document.getElementById('inputTotal').value = total.toFixed(2);
         document.getElementById('formCompra').submit();
     }
+  </script>
+</body>
+</html>
+</file>
+
+<file path="app/views/pedidos/viewPedido.php">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CopiGaby — Gestión de Pedidos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
+
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
+
+  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
+    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestión de Pedidos</h2>
+    </header>
+
+    <main class="p-8 flex-1 animate-fade-up">
+      <?php if (!empty($pedidoFlash)): ?>
+      <div id="pedidoFlash" class="mb-6 px-5 py-4 rounded-xl border font-bold text-sm <?= ($pedidoFlash['status'] ?? '') === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700' ?>">
+        <?= htmlspecialchars($pedidoFlash['message'] ?? 'Operación completada.') ?>
+      </div>
+      <?php endif; ?>
+
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-[900] text-gray-800">Módulo de Ventas</h1>
+          <p class="text-gray-500 text-sm font-semibold">Registro de pedidos de productos y servicios</p>
+        </div>
+        <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+          AÑADIR PEDIDO
+        </button>
+      </div>
+
+      <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
+        <table class="w-full text-left">
+          <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
+            <tr>
+              <th class="px-6 py-4 text-center">ID</th>
+              <th class="px-6 py-4">Cliente</th>
+              <th class="px-6 py-4">Atendido por</th>
+              <th class="px-6 py-4">Fecha</th>
+              <th class="px-6 py-4 text-right">Monto Total</th>
+              <th class="px-6 py-4">Método Pago</th>
+              <th class="px-6 py-4 text-center">Estado</th>
+              <th class="px-6 py-4 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700 font-semibold text-sm divide-y">
+            <?php if (!empty($pedidos)): ?>
+            <?php foreach ($pedidos as $ped): ?>
+              <tr class="hover:bg-gray-50/80 transition-colors">
+                <td class="px-6 py-4 text-center text-gray-400 font-bold">#<?= str_pad($ped['codigo_pedido'], 4, '0', STR_PAD_LEFT) ?></td>
+                <td class="px-6 py-4 uppercase text-[0.8rem] font-bold text-navy-light"><?= htmlspecialchars($ped['nombre_cliente'] ?? '—') ?></td>
+                <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario'] ?? '—') ?></td>
+                <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
+                <td class="px-6 py-4 text-right">
+                  <div class="font-black text-navy-dark text-[1rem]">$<?= number_format($ped['monto_total'], 2) ?></div>
+                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format($ped['monto_total'] * $tasaActual, 2) ?> Bs</div>
+                </td>
+                <td class="px-6 py-4 text-xs font-bold text-gray-500 uppercase"><?= htmlspecialchars($ped['nombre_metodo'] ?? '—') ?></td>
+                <td class="px-6 py-4 text-center">
+                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $ped['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
+                    <?= $ped['estado'] ? 'Activo' : 'Anulado' ?>
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <div class="flex justify-center gap-1">
+                    <button onclick="viewDetails(<?= $ped['codigo_pedido'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver Detalle">
+                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                    <?php if ($ped['estado']): ?>
+                    <button onclick="openEditPedido(<?= $ped['codigo_pedido'] ?>)" class="group relative text-blue-400 hover:text-blue-600 p-2 transition-colors" title="Modificar">
+                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Modificar</span>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button onclick="confirmDelete(<?= $ped['codigo_pedido'] ?>)" class="group relative text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
+                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-red-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Eliminar</span>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </button>
+                    <?php endif; ?>
+                  </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+            <?php else: ?>
+              <tr><td colspan="8" class="px-6 py-10 text-center text-gray-400 font-bold italic">No se encontraron pedidos registrados.</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Crear / Editar Pedido -->
+  <div id="modalPedido" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" id="overlayPedido"></div>
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-4xl animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
+          <h3 id="modalPedidoTitulo" class="text-xl font-black text-navy-dark tracking-tight">Nuevo Pedido</h3>
+          <button type="button" class="text-gray-400 hover:text-navy-dark closeModalPedido">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form id="formPedido" action="?url=pedido&type=register" method="POST" class="p-6 text-left">
+          <input type="hidden" name="items" id="itemsJson">
+          <input type="hidden" name="codigo_pedido" id="codigoPedidoEdit" value="">
+          <input type="hidden" name="ajax" value="1">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</label>
+              <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+                <option value="">— Seleccione un cliente —</option>
+                <?php foreach ($clientes as $cli): ?>
+                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs/$)</label>
+              <input type="number" step="0.01" id="tasaActualInput" value="<?= $tasaActual ?>" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-orange-dk" readonly>
+            </div>
+          </div>
+
+          <div class="mb-4 flex justify-between items-center">
+            <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider">Detalle del Pedido</h4>
+            <button type="button" id="btnAddItem" class="flex items-center gap-1 text-xs font-black uppercase text-orange hover:text-orange-dk transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+              Agregar ítem
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border rounded-lg mb-4">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="bg-navy-dark text-white text-[0.65rem] uppercase tracking-widest">
+                  <th class="px-4 py-3">Tipo</th>
+                  <th class="px-4 py-3">Descripción</th>
+                  <th class="px-4 py-3 w-24">Cantidad</th>
+                  <th class="px-4 py-3 w-32">Precio</th>
+                  <th class="px-4 py-3 w-32 text-right">Subtotal</th>
+                  <th class="px-4 py-3 w-12"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody" class="divide-y font-semibold text-gray-700">
+                <tr id="emptyRow">
+                  <td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-end mb-6">
+            <div class="bg-gray-50 border rounded-xl px-6 py-3 text-right">
+              <span class="text-xs font-black text-gray-400 uppercase tracking-widest mr-4">Total General</span>
+              <span id="totalGeneral" class="text-2xl font-black text-navy-dark">$0.00</span>
+              <div id="totalBs" class="text-xs font-bold text-orange-dk mt-1">0.00 Bs</div>
+            </div>
+          </div>
+
+          <!-- Sección de Pago -->
+          <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 mb-6">
+            <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider mb-4">Datos del Pago</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Método de Pago</label>
+                <select name="codigo_metodo" id="selectMetodo" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
+                  <option value="">— Seleccione —</option>
+                  <?php foreach ($metodos as $m): ?>
+                    <option value="<?= $m['codigo_metodo'] ?>"><?= htmlspecialchars($m['nombre_metodo']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Monto ($)</label>
+                <input type="number" step="0.01" min="0" name="monto_pago" id="montoPago" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold text-navy-dark" placeholder="0.00">
+              </div>
+              <div id="wrapBanco" class="hidden">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Banco</label>
+                <select name="codigo_banco" id="selectBanco" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
+                  <option value="">— Seleccione banco —</option>
+                  <?php foreach ($bancos as $b): ?>
+                    <option value="<?= $b['codigo_banco'] ?>"><?= htmlspecialchars($b['nombre_banco']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div id="wrapReferencia" class="hidden">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Referencia / Comprobante</label>
+                <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModalPedido">Cancelar</button>
+            <button type="submit" id="btnSubmitPedido" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Registrar Pedido</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ver Detalle (solo lectura) -->
+  <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-3xl animate-fade-up overflow-hidden">
+        <div class="p-8">
+          <div class="flex justify-between items-start border-b pb-6 mb-6">
+            <div>
+              <h3 class="text-2xl font-black text-navy-dark uppercase tracking-tighter" id="det_codigo">PEDIDO #0000</h3>
+              <p class="text-gray-400 font-bold text-sm" id="det_fecha">Fecha: --/--/----</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-black text-orange uppercase tracking-widest">Cliente</p>
+              <h4 class="font-black text-navy-light uppercase" id="det_cliente">—</h4>
+              <p class="text-gray-500 text-xs font-bold" id="det_telefono">Tel: —</p>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <table class="w-full text-left" id="tablaDetallesItems">
+              <thead class="bg-gray-50 text-gray-400 text-[0.65rem] uppercase font-black tracking-widest">
+                <tr>
+                  <th class="px-4 py-3 text-navy-dark">Descripción</th>
+                  <th class="px-4 py-3 text-center">Tipo</th>
+                  <th class="px-4 py-3 text-center">Cant.</th>
+                  <th class="px-4 py-3 text-right">Precio</th>
+                  <th class="px-4 py-3 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y text-sm font-bold text-navy-dark"></tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-50 rounded-xl p-4 text-sm">
+            <div>
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Método de Pago</p>
+              <p class="font-bold text-navy-dark" id="det_metodo">—</p>
+            </div>
+            <div>
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Monto Pagado</p>
+              <p class="font-bold text-navy-dark" id="det_monto_pago">—</p>
+            </div>
+            <div id="det_banco_wrap" class="hidden">
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Banco</p>
+              <p class="font-bold text-navy-dark" id="det_banco">—</p>
+            </div>
+            <div id="det_ref_wrap" class="hidden">
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Referencia</p>
+              <p class="font-bold text-navy-dark" id="det_referencia">—</p>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-end border-t pt-6">
+            <div>
+              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Atendido por</p>
+              <p class="text-navy-dark font-bold text-sm" id="det_usuario">—</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-black text-gray-400 uppercase mr-4">Total del Pedido</span>
+              <span class="text-3xl font-black text-navy-dark" id="det_total">$0.00</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-8 py-4 flex justify-end">
+          <button onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const productos = <?= json_encode($productos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+    const servicios = <?= json_encode($servicios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+    const tasaActual = <?= json_encode($tasaActual) ?>;
+    const METODOS_CON_BANCO = [563, 564];
+
+    const modalPedido = document.getElementById('modalPedido');
+    const modalDetalle = document.getElementById('modalDetalle');
+    const btnOpen = document.getElementById('btnOpenModal');
+    const closeBtns = document.querySelectorAll('.closeModalPedido');
+    const overlayPedido = document.getElementById('overlayPedido');
+    const itemsBody = document.getElementById('itemsBody');
+    const totalGeneral = document.getElementById('totalGeneral');
+    const totalBs = document.getElementById('totalBs');
+    const formPedido = document.getElementById('formPedido');
+    const btnSubmitPedido = document.getElementById('btnSubmitPedido');
+    const itemsJsonInput = document.getElementById('itemsJson');
+    const modalPedidoTitulo = document.getElementById('modalPedidoTitulo');
+    const codigoPedidoEdit = document.getElementById('codigoPedidoEdit');
+    const selectMetodo = document.getElementById('selectMetodo');
+    const wrapBanco = document.getElementById('wrapBanco');
+    const wrapReferencia = document.getElementById('wrapReferencia');
+    const montoPago = document.getElementById('montoPago');
+
+    let itemCounter = 0;
+    let editMode = false;
+
+    function toggleModal(forceClose = false) {
+      if (forceClose) {
+        modalPedido.classList.add('hidden');
+        return;
+      }
+      modalPedido.classList.toggle('hidden');
+    }
+
+    function resetFormPedido() {
+      editMode = false;
+      codigoPedidoEdit.value = '';
+      formPedido.action = '?url=pedido&type=register';
+      modalPedidoTitulo.textContent = 'Nuevo Pedido';
+      btnSubmitPedido.textContent = 'Registrar Pedido';
+      formPedido.reset();
+      document.getElementById('tasaActualInput').value = tasaActual;
+      itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
+      totalGeneral.textContent = '$0.00';
+      totalBs.textContent = '0.00 Bs';
+      montoPago.value = '';
+      toggleCamposBanco();
+    }
+
+    btnOpen.onclick = () => {
+      resetFormPedido();
+      toggleModal();
+    };
+    closeBtns.forEach(btn => btn.onclick = () => { toggleModal(true); resetFormPedido(); });
+    overlayPedido.onclick = () => { toggleModal(true); resetFormPedido(); };
+
+    function toggleCamposBanco() {
+      const metodo = parseInt(selectMetodo.value, 10);
+      const requiere = METODOS_CON_BANCO.includes(metodo);
+      wrapBanco.classList.toggle('hidden', !requiere);
+      wrapReferencia.classList.toggle('hidden', !requiere);
+      document.getElementById('selectBanco').required = requiere;
+      document.getElementById('referenciaPago').required = requiere;
+    }
+
+    selectMetodo.addEventListener('change', toggleCamposBanco);
+
+    function buildOptions(tipo) {
+      const list = tipo === 'producto' ? productos : servicios;
+      let html = '<option value="">— Seleccionar —</option>';
+      list.forEach(item => {
+        const id = tipo === 'producto' ? item.codigo_producto : item.codigo_servicio;
+        const nombre = tipo === 'producto' ? item.nombre_producto : item.nombre_servicio;
+        const precio = tipo === 'producto' ? item.costo : item.precio;
+        const stock = tipo === 'producto' ? item.stock_actual : '';
+        const extra = stock !== '' ? ` data-stock="${stock}"` : '';
+        html += `<option value="${id}" data-precio="${precio}"${extra}>${nombre}</option>`;
+      });
+      return html;
+    }
+
+    function recalcTotal() {
+      let total = 0;
+      itemsBody.querySelectorAll('tr[data-item]').forEach(row => {
+        total += parseFloat(row.dataset.subtotal || 0);
+      });
+      totalGeneral.textContent = '$' + total.toFixed(2);
+      totalBs.textContent = (total * parseFloat(tasaActual)).toFixed(2) + ' Bs';
+      if (!editMode || document.activeElement !== montoPago) {
+        montoPago.value = total > 0 ? total.toFixed(2) : '';
+      }
+    }
+
+    function normalizeCantidad(input) {
+      let value = parseInt(input.value, 10);
+      if (isNaN(value) || value < 1) value = 1;
+      input.value = String(value);
+      return value;
+    }
+
+    function updateRowSubtotal(row) {
+      const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
+      const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
+      const subtotal = cantidad * precio;
+      row.querySelector('.item-subtotal').textContent = '$' + subtotal.toFixed(2);
+      row.dataset.subtotal = subtotal.toFixed(2);
+      recalcTotal();
+    }
+
+    function onTipoChange(row) {
+      const tipo = row.querySelector('.item-tipo').value;
+      row.querySelector('.item-select').innerHTML = buildOptions(tipo);
+      row.querySelector('.item-precio').value = '';
+      row.querySelector('.item-subtotal').textContent = '$0.00';
+      row.dataset.subtotal = '0';
+      recalcTotal();
+    }
+
+    function onItemSelect(row) {
+      const selectItem = row.querySelector('.item-select');
+      const option = selectItem.options[selectItem.selectedIndex];
+      const precio = option ? option.getAttribute('data-precio') : '';
+      row.querySelector('.item-precio').value = precio !== null && precio !== '' ? precio : '';
+      updateRowSubtotal(row);
+    }
+
+    function removeItemRow(tr) {
+      tr.remove();
+      if (!itemsBody.querySelector('tr[data-item]')) {
+        itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
+        totalGeneral.textContent = '$0.00';
+        totalBs.textContent = '0.00 Bs';
+      } else {
+        recalcTotal();
+      }
+    }
+
+    function bindItemRow(tr) {
+      tr.querySelector('.item-tipo').addEventListener('change', () => onTipoChange(tr));
+      tr.querySelector('.item-select').addEventListener('change', () => onItemSelect(tr));
+      tr.querySelector('.item-cantidad').addEventListener('input', () => updateRowSubtotal(tr));
+      tr.querySelector('.item-cantidad').addEventListener('change', () => updateRowSubtotal(tr));
+      tr.querySelector('.btn-remove').addEventListener('click', () => removeItemRow(tr));
+    }
+
+    function addItemRow(prefill = null) {
+      const emptyRow = document.getElementById('emptyRow');
+      if (emptyRow) emptyRow.remove();
+
+      itemCounter += 1;
+      const tr = document.createElement('tr');
+      tr.id = 'item-' + itemCounter;
+      tr.dataset.item = '1';
+      tr.dataset.subtotal = '0';
+      tr.innerHTML = `
+        <td class="px-4 py-3">
+          <select class="item-tipo w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
+            <option value="producto">Producto</option>
+            <option value="servicio">Servicio</option>
+          </select>
+        </td>
+        <td class="px-4 py-3">
+          <select class="item-select w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none" required></select>
+        </td>
+        <td class="px-4 py-3">
+          <input type="number" step="1" min="1" value="1" class="item-cantidad w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none">
+        </td>
+        <td class="px-4 py-3">
+          <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
+        </td>
+        <td class="px-4 py-3 text-right font-black text-navy-dark item-subtotal">$0.00</td>
+        <td class="px-4 py-3 text-center">
+          <button type="button" class="btn-remove text-red-400 hover:text-red-600 p-1" title="Quitar">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </td>
+      `;
+
+      itemsBody.appendChild(tr);
+      bindItemRow(tr);
+
+      if (prefill) {
+        tr.querySelector('.item-tipo').value = prefill.tipo;
+        tr.querySelector('.item-select').innerHTML = buildOptions(prefill.tipo);
+        const selectVal = prefill.tipo === 'producto' ? prefill.codigo_producto : prefill.codigo_servicio;
+        tr.querySelector('.item-select').value = String(selectVal);
+        tr.querySelector('.item-cantidad').value = String(parseInt(prefill.cantidad, 10));
+        tr.querySelector('.item-precio').value = parseFloat(prefill.precio_venta).toFixed(2);
+        updateRowSubtotal(tr);
+      } else {
+        tr.querySelector('.item-select').innerHTML = buildOptions('producto');
+      }
+    }
+
+    function collectItemsFromRows() {
+      const rows = itemsBody.querySelectorAll('tr[data-item]');
+      if (rows.length === 0) {
+        return { ok: false, message: 'Debe agregar al menos un ítem al pedido.', items: [] };
+      }
+
+      const items = [];
+      for (const row of rows) {
+        const tipo = row.querySelector('.item-tipo').value;
+        const selectItem = row.querySelector('.item-select');
+        const id = selectItem.value;
+        const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
+        const precio = parseFloat(row.querySelector('.item-precio').value);
+
+        if (!id) return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
+        if (isNaN(precio) || precio < 0) return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
+
+        const item = { tipo, cantidad, precio_venta: precio };
+        if (tipo === 'producto') {
+          item.codigo_producto = parseInt(id, 10);
+          const option = selectItem.options[selectItem.selectedIndex];
+          const stock = parseInt(option.getAttribute('data-stock') || '0', 10);
+          if (cantidad > stock) {
+            return { ok: false, message: 'Stock insuficiente para: ' + option.text, items: [] };
+          }
+        } else {
+          item.codigo_servicio = parseInt(id, 10);
+        }
+        items.push(item);
+      }
+      return { ok: true, message: '', items };
+    }
+
+    async function submitPedido(e) {
+      e.preventDefault();
+
+      if (!document.getElementById('selectCliente').value) {
+        Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Seleccione un cliente.' });
+        return;
+      }
+
+      const collected = collectItemsFromRows();
+      if (!collected.ok) {
+        Swal.fire({ icon: 'warning', title: 'Detalle incompleto', text: collected.message });
+        return;
+      }
+
+      const formData = new FormData(formPedido);
+      formData.set('items', JSON.stringify(collected.items));
+      itemsJsonInput.value = JSON.stringify(collected.items);
+
+      const originalLabel = btnSubmitPedido.textContent;
+      btnSubmitPedido.disabled = true;
+      btnSubmitPedido.textContent = 'Guardando...';
+
+      const url = editMode ? '?url=pedido&type=update' : '?url=pedido&type=register';
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: formData,
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Operación completada.', timer: 1500, showConfirmButton: false })
+            .then(() => location.reload());
+          return;
+        }
+        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido.' });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error de comunicación', text: 'Revise la consola o el log de PHP.' });
+      } finally {
+        btnSubmitPedido.disabled = false;
+        btnSubmitPedido.textContent = originalLabel;
+      }
+    }
+
+    function viewDetails(id) {
+      fetch(`?url=pedido&type=details&id=${id}`)
+        .then(r => r.json())
+        .then(data => {
+          const h = data.header;
+          const items = data.items;
+          if (!h) return;
+
+          document.getElementById('det_codigo').innerText = 'PEDIDO #' + String(h.codigo_pedido).padStart(4, '0');
+          document.getElementById('det_fecha').innerText = 'Fecha: ' + h.fecha_pedido;
+          document.getElementById('det_cliente').innerText = h.nombre_cliente || '—';
+          document.getElementById('det_telefono').innerText = 'Tel: ' + (h.telefono_cliente || '—');
+          document.getElementById('det_usuario').innerText = h.nombre_usuario || '—';
+          document.getElementById('det_total').innerText = '$' + parseFloat(h.monto_total).toFixed(2);
+          document.getElementById('det_metodo').innerText = h.nombre_metodo || '—';
+
+          const pago = h.pago || null;
+          document.getElementById('det_monto_pago').innerText = pago ? '$' + parseFloat(pago.monto).toFixed(2) : '$' + parseFloat(h.monto_total).toFixed(2);
+
+          const bancoWrap = document.getElementById('det_banco_wrap');
+          const refWrap = document.getElementById('det_ref_wrap');
+          if (pago && pago.nombre_banco) {
+            bancoWrap.classList.remove('hidden');
+            document.getElementById('det_banco').innerText = pago.nombre_banco;
+          } else {
+            bancoWrap.classList.add('hidden');
+          }
+          if (pago && pago.numero_comprobante) {
+            refWrap.classList.remove('hidden');
+            document.getElementById('det_referencia').innerText = pago.numero_comprobante;
+          } else {
+            refWrap.classList.add('hidden');
+          }
+
+          const tbody = document.querySelector('#tablaDetallesItems tbody');
+          tbody.innerHTML = '';
+          items.forEach(it => {
+            const nombre = it.tipo === 'servicio' ? it.nombre_servicio : it.nombre_producto;
+            tbody.innerHTML += `
+              <tr>
+                <td class="px-4 py-3 uppercase">${nombre}</td>
+                <td class="px-4 py-3 text-center text-xs uppercase text-gray-500">${it.tipo}</td>
+                <td class="px-4 py-3 text-center">${parseFloat(it.cantidad)}</td>
+                <td class="px-4 py-3 text-right">$${parseFloat(it.precio_venta).toFixed(2)}</td>
+                <td class="px-4 py-3 text-right font-black text-orange-dk">$${parseFloat(it.subtotal).toFixed(2)}</td>
+              </tr>`;
+          });
+
+          modalDetalle.classList.remove('hidden');
+        })
+        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el detalle del pedido.' }));
+    }
+
+    function closeDetalleModal() {
+      modalDetalle.classList.add('hidden');
+    }
+
+    function openEditPedido(id) {
+      fetch(`?url=pedido&type=details&id=${id}`)
+        .then(r => r.json())
+        .then(data => {
+          const h = data.header;
+          const items = data.items;
+          if (!h) return;
+
+          resetFormPedido();
+          editMode = true;
+          codigoPedidoEdit.value = h.codigo_pedido;
+          formPedido.action = '?url=pedido&type=update';
+          modalPedidoTitulo.textContent = 'Modificar Pedido #' + String(h.codigo_pedido).padStart(4, '0');
+          btnSubmitPedido.textContent = 'Actualizar Pedido';
+
+          document.getElementById('selectCliente').value = String(h.cedula_cliente);
+
+          items.forEach(it => {
+            addItemRow({
+              tipo: it.tipo,
+              codigo_producto: it.codigo_producto,
+              codigo_servicio: it.codigo_servicio,
+              cantidad: it.cantidad,
+              precio_venta: it.precio_venta,
+            });
+          });
+
+          if (h.codigo_metodo) {
+            selectMetodo.value = String(h.codigo_metodo);
+          }
+          toggleCamposBanco();
+
+          const pago = h.pago || null;
+          montoPago.value = pago ? parseFloat(pago.monto).toFixed(2) : parseFloat(h.monto_total).toFixed(2);
+          if (pago && pago.codigo_banco) {
+            document.getElementById('selectBanco').value = String(pago.codigo_banco);
+          }
+          if (pago && pago.numero_comprobante) {
+            document.getElementById('referenciaPago').value = pago.numero_comprobante;
+          }
+
+          modalPedido.classList.remove('hidden');
+        })
+        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el pedido para edición.' }));
+    }
+
+    function confirmDelete(id) {
+      Swal.fire({
+        title: '¿Anular pedido?',
+        text: 'Se revertirá el inventario y el pedido quedará inactivo. Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar',
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        const f = new FormData();
+        f.append('deletePedido', 'true');
+        f.append('idpedido', String(id));
+        fetch('?url=pedido&type=main', { method: 'POST', body: f })
+          .then(r => r.json())
+          .then(d => {
+            if (d.status === 'success') {
+              Swal.fire({ icon: 'success', title: 'Anulado', text: d.message || 'Pedido anulado.', timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
+            } else {
+              Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo anular el pedido.' });
+            }
+          })
+          .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación al anular el pedido.' }));
+      });
+    }
+
+    document.getElementById('btnAddItem').onclick = () => addItemRow();
+    formPedido.addEventListener('submit', submitPedido);
   </script>
 </body>
 </html>

@@ -64,7 +64,6 @@
 
             $pago = [
                 'codigo_metodo' => (int) $_POST['codigo_metodo'],
-                'monto'         => (float) ($_POST['monto_pago'] ?? 0),
                 'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
                 'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
             ];
@@ -104,7 +103,6 @@
 
                 $pago = [
                     'codigo_metodo' => (int) ($_POST['codigo_metodo'] ?? 0),
-                    'monto'         => (float) ($_POST['monto_pago'] ?? 0),
                     'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
                     'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
                 ];
@@ -158,14 +156,16 @@
         }
     }
 
-    $pedidos     = $object->getAllPedidos();
-    $clientes    = $object->getClientesActivos();
-    $productos   = $object->getProductosActivos();
-    $servicios   = $object->getServiciosActivos();
-    $metodos     = $object->getMetodosActivos();
-    $bancos      = $object->getBancosActivos();
-    $tasaActual  = $object->getTasaActual();
-    $pedidoFlash = $_SESSION['pedido_flash'] ?? null;
+    $pedidos      = $object->getAllPedidos();
+    $clientes     = $object->getClientesActivos();
+    $productos    = $object->getProductosActivos();
+    $servicios    = $object->getServiciosActivos();
+    $metodos      = $object->getMetodosActivos();
+    $bancos       = $object->getBancosActivos();
+    $monedaActiva = $object->getMonedaActiva();
+    $tasaActual   = $object->getTasaActual();
+    $ivaActivo    = $object->getIvaActivo();
+    $pedidoFlash  = $_SESSION['pedido_flash'] ?? null;
     unset($_SESSION['pedido_flash']);
 
     include 'app/views/pedidos/viewPedido.php';

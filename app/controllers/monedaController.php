@@ -2,11 +2,12 @@
 
     use App\models\monedaModel;
 
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
-    // Verificación de sesión para asegurar que solo usuarios autenticados accedan
     if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
+        header('Location: ?url=login');
         exit();
     }
 
@@ -14,41 +15,82 @@
 
     if (isset($_GET['type'])) {
 
-        // Acción para registrar una nueva moneda
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_moneda'])) {
-                $object->addMoneda($_POST);
-                header("Location: ?url=moneda");
+                $result = $object->addMoneda([
+                    'nombre_moneda' => trim((string) $_POST['nombre_moneda']),
+                    'simbolo'       => trim((string) ($_POST['simbolo'] ?? '')),
+                    'tasa_cambio'   => (float) ($_POST['tasa_cambio'] ?? 0),
+                ]);
+                $_SESSION['moneda_flash'] = $result;
+                header('Location: ?url=moneda');
                 exit();
             }
+            header('Location: ?url=moneda');
+            exit();
         }
 
-        // Acción para actualizar datos de una moneda existente
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'], $_POST['nombre_moneda'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMoneda((int) $_POST['idmoneda'], [
-                    'nombre_moneda' => trim($_POST['nombre_moneda']),
-                    'simbolo'       => trim($_POST['simbolo']),
-                    'tasa_cambio'   => (float) $_POST['tasa_cambio'],
+                $result = $object->updateMoneda((int) $_POST['idmoneda'], [
+                    'nombre_moneda' => trim((string) $_POST['nombre_moneda']),
+                    'simbolo'       => trim((string) ($_POST['simbolo'] ?? '')),
+                    'tasa_cambio'   => (float) ($_POST['tasa_cambio'] ?? 0),
                     'estado'        => $estado,
                 ]);
-                header("Location: ?url=moneda");
+                $_SESSION['moneda_flash'] = $result;
+                header('Location: ?url=moneda');
                 exit();
             }
+            header('Location: ?url=moneda');
+            exit();
         }
 
-        // Acciones principales (vía AJAX para eliminación lógica)
-        elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteMoneda'])) {
-                $result = $object->deleteMoneda((int) $_POST['idmoneda']);
-                header('Content-Type: application/json');
+        elseif ($_GET['type'] === 'setActive') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'])) {
+                $result = $object->setMonedaActiva((int) $_POST['idmoneda']);
+                header('Content-Type: application/json; charset=utf-8');
                 echo json_encode($result);
                 exit();
             }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => 'Solicitud inválida']);
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'details') {
+            if (isset($_GET['id'])) {
+                $moneda = $object->getMonedaById((int) $_GET['id']);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($moneda ?: ['status' => 'error', 'message' => 'Moneda no encontrada']);
+                exit();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['status' => 'error', 'message' => 'ID requerido']);
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteMoneda'])) {
+                $result = $object->deleteMoneda((int) $_POST['idmoneda']);
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode($result);
+                exit();
+            }
+            header('Location: ?url=moneda');
+            exit();
+        }
+
+        else {
+            header('Location: ?url=moneda');
+            exit();
         }
     }
 
-    // Carga predeterminada: obtiene todas las monedas y carga la interfaz
-    $monedas = $object->getAllMonedas();
+    $monedas       = $object->getAllMonedas();
+    $monedaActiva  = $object->getMonedaActiva();
+    $monedaFlash   = $_SESSION['moneda_flash'] ?? null;
+    unset($_SESSION['moneda_flash']);
+
     include 'app/views/moneda/viewMoneda.php';
