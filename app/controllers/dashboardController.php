@@ -14,9 +14,7 @@
     $stats = [
         'productos_activos' => $dashboardModel->getTotalProductosActivos(),
         'servicios_activos' => $dashboardModel->getTotalServiciosActivos(),
-        'clientes_activos'  => $dashboardModel->getTotalClientesActivos(),
         'usuarios_activos'  => $dashboardModel->getTotalUsuariosActivos(),
-        'pedidos_mes'       => $dashboardModel->getPedidosMesActual(),
         'ventas_mes'        => $dashboardModel->getVentasMesActual()
     ];
 

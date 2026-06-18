@@ -41,37 +41,11 @@ class dashboardModel extends ConectDB {
     }
 
     /**
-     * Obtiene el número total de clientes registrados.
-     */
-    public function getTotalClientesActivos() {
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM cliente");
-            $stmt->execute();
-            return $stmt->fetchColumn();
-        } catch (PDOException $e) {
-            return 0;
-        }
-    }
-
-    /**
      * Obtiene el número total de usuarios activos del sistema.
      */
     public function getTotalUsuariosActivos() {
         try {
             $stmt = $this->conex->prepare("SELECT COUNT(*) FROM usuario WHERE estado = 1");
-            $stmt->execute();
-            return $stmt->fetchColumn();
-        } catch (PDOException $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Obtiene el número de pedidos activos en el mes actual.
-     */
-    public function getPedidosMesActual() {
-        try {
-            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM pedido WHERE estado = 1 AND MONTH(fecha_pedido) = MONTH(CURRENT_DATE()) AND YEAR(fecha_pedido) = YEAR(CURRENT_DATE())");
             $stmt->execute();
             return $stmt->fetchColumn();
         } catch (PDOException $e) {
