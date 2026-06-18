@@ -173,7 +173,7 @@
 
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-sm" onclick="closeDetalleModal()"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
         <div class="p-8">
           <div class="flex justify-between items-start border-b pb-6 mb-6">
