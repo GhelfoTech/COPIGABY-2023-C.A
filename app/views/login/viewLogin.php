@@ -36,7 +36,7 @@
       <div class="field">
         <label for="username">Usuario</label>
         <div class="input-wrap">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+          <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
           <input type="text" id="username" name="username" placeholder="Tu nombre de usuario" autocomplete="username" required />
         </div>
       </div>
@@ -44,8 +44,20 @@
       <div class="field">
         <label for="password">Contraseña</label>
         <div class="input-wrap">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+          <svg class="icon-lock" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
           <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+          <button type="button" class="toggle-pw" id="togglePassword" aria-label="Mostrar contraseña">
+            <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -53,9 +65,26 @@
     </form>
 
     <div class="card-footer">
-      CopiGaby 2023 &nbsp;·&nbsp; RIF <?= htmlspecialchars($rifEmpresa ?? 'J-504149357') ?>
+      CopiGaby 2023 C.A &nbsp;·&nbsp; RIF <?= htmlspecialchars($rifEmpresa ?? 'J-504149357') ?>
     </div>
   </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const toggleBtn = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  const eyeOpen = toggleBtn.querySelector('.eye-open');
+  const eyeClosed = toggleBtn.querySelector('.eye-closed');
+
+  toggleBtn.addEventListener('click', function () {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    eyeOpen.style.display = isPassword ? 'none' : '';
+    eyeClosed.style.display = isPassword ? '' : 'none';
+    toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  });
+});
+</script>
 
 </body>
 </html>

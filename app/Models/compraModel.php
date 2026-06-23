@@ -58,7 +58,7 @@ class compraModel extends ConectDB {
                              VALUES (?, ?, ?, ?, ?)";
             $stmtDetalle = $this->conex->prepare($queryDetalle);
 
-            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual + ?, costo = ? 
+            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual + ? 
                            WHERE codigo_producto = ?";
             $stmtStock = $this->conex->prepare($queryStock);
 
@@ -74,10 +74,9 @@ class compraModel extends ConectDB {
                     $subtotal
                 ]);
 
-                // Actualizar inventario (Sumar stock y actualizar costo al más reciente)
+                // Actualizar inventario (sumar stock únicamente)
                 $stmtStock->execute([
                     $item['cantidad'],
-                    $item['costo'],
                     $item['codigo_producto']
                 ]);
             }
@@ -143,7 +142,14 @@ class compraModel extends ConectDB {
      */
     public function getProducts() {
         try {
-            $stmt = $this->conex->prepare("SELECT codigo_producto, nombre_producto, costo FROM producto_insumo WHERE estado = 1");
+            $query = "SELECT p.codigo_producto, p.nombre_producto,
+                             COALESCE(
+                                 (SELECT dc.costo_unitario FROM detalle_compra dc
+                                  WHERE dc.codigo_producto = p.codigo_producto
+                                  ORDER BY dc.codigo_compra DESC LIMIT 1),
+                             0) AS costo
+                      FROM producto_insumo p WHERE p.estado = 1";
+            $stmt = $this->conex->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) { return []; }

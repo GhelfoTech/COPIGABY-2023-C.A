@@ -151,7 +151,8 @@ body::before {
 
 .input-wrap { position: relative; }
 
-.input-wrap svg {
+.input-wrap .input-icon,
+.input-wrap .icon-lock {
   position: absolute;
   left: 14px;
   top: 50%;
@@ -162,12 +163,37 @@ body::before {
   pointer-events: none;
 }
 
+/* Password toggle button */
+.toggle-pw {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 2;
+}
+
+.toggle-pw:hover { color: var(--orange); }
+
+.toggle-pw svg {
+  width: 20px;
+  height: 20px;
+}
+
 .input-wrap input {
   width: 100%;
   background: rgba(255, 255, 255, 0.07);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 13px 14px 13px 44px;
+  padding: 13px 44px 13px 44px;
   color: var(--white);
   font-family: 'Nunito', sans-serif;
   font-size: 0.95rem;

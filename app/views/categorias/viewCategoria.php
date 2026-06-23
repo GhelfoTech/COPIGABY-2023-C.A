@@ -36,7 +36,7 @@
               <th class="px-6 py-4">Código</th>
               <th class="px-6 py-4">Nombre de Categoría</th>
               <th class="px-6 py-4">Estado</th>
-              <th class="px-6 py-4 text-center">Ver Detalles</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
@@ -56,7 +56,7 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <button type="button" onclick='viewDetails(<?= json_encode($cat, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
                 </td>

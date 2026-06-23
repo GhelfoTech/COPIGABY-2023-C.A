@@ -39,10 +39,9 @@
               <th class="px-6 py-4">Producto</th>
               <th class="px-6 py-4">Categoría / IVA</th>
               <th class="px-6 py-4">Stock (Act/Min)</th>
-              <th class="px-6 py-4">Unidad</th>
               <th class="px-6 py-4">Costo</th>
               <th class="px-6 py-4">Estado</th>
-              <th class="px-6 py-4 text-center">Ver Detalles</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
@@ -63,9 +62,6 @@
                   <span class="text-gray-300 mx-1">/</span>
                   <span class="text-gray-400 text-[0.75rem] font-bold"><?= $p['stock_minimo'] ?></span>
                 </td>
-                <td class="px-6 py-4 text-gray-500 font-bold">
-                  <?= htmlspecialchars($p['nombre_medida']) ?>
-                </td>
                 <td class="px-6 py-4 font-black text-navy-dark">
                   $<?= number_format($p['costo'], 2) ?>
                 </td>
@@ -76,7 +72,7 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <button type="button" onclick='viewDetails(<?= json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
                 </td>
@@ -119,14 +115,6 @@
               </select>
             </div>
             <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
-              <select name="codigo_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none focus:border-orange font-bold">
-                <?php foreach($medidas as $m): ?>
-                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción / Notas</label>
               <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
             </div>
@@ -137,10 +125,6 @@
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
               <input type="number" name="stock_minimo" value="5" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($)</label>
-              <input type="number" step="0.01" name="costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
           </div>
           <div class="flex justify-end gap-3 mt-8">
@@ -184,14 +168,6 @@
               </select>
             </div>
             <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Unidad de Medida</label>
-              <select name="codigo_medida" id="edit_medida" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($medidas as $m): ?>
-                  <option value="<?= $m['codigo_media'] ?>"><?= $m['nombre'] ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
               <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
             </div>
@@ -202,10 +178,6 @@
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
               <input type="number" name="stock_minimo" id="edit_stock_minimo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo ($)</label>
-              <input type="number" step="0.01" name="costo" id="edit_costo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div class="col-span-2 flex items-center gap-2 pt-4">
               <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
@@ -236,7 +208,6 @@
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Categoría</p><p id="det_categoria" class="font-semibold">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">IVA</p><p id="det_iva" class="font-semibold text-orange-dk">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Unidad</p><p id="det_medida" class="font-semibold">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Costo</p><p id="det_costo" class="font-black text-navy-dark">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Stock (Act / Mín)</p><p id="det_stock" class="font-bold">—</p></div>
           <div class="col-span-2"><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Descripción</p><p id="det_descripcion" class="font-semibold text-gray-600">—</p></div>
@@ -270,7 +241,6 @@
       document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
       document.getElementById('det_categoria').textContent = data.nombre_categoria || '—';
       document.getElementById('det_iva').textContent = (data.porcentaje_iva || '—') + '%';
-      document.getElementById('det_medida').textContent = data.nombre_medida || '—';
       document.getElementById('det_costo').textContent = '$' + parseFloat(data.costo).toFixed(2);
       document.getElementById('det_stock').textContent = data.stock_actual + ' / ' + data.stock_minimo;
       document.getElementById('det_descripcion').textContent = data.descripcion || '—';
@@ -287,12 +257,10 @@
         document.getElementById('edit_id').value = data.codigo_producto;
         document.getElementById('edit_nombre').value = data.nombre_producto;
         document.getElementById('edit_categoria').value = data.codigo_categoria;
-        document.getElementById('edit_medida').value = data.codigo_medida;
         document.getElementById('edit_iva').value = data.codigo_iva;
         document.getElementById('edit_descripcion').value = data.descripcion;
         document.getElementById('edit_stock_actual').value = data.stock_actual;
         document.getElementById('edit_stock_minimo').value = data.stock_minimo;
-        document.getElementById('edit_costo').value = data.costo;
         document.getElementById('edit_estado').checked = (data.estado == 1);
         document.getElementById('modalEditProduct').classList.remove('hidden');
     }

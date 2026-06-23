@@ -41,13 +41,13 @@
               <th class="px-6 py-4">Teléfono</th>
               <th class="px-6 py-4">Rol</th>
               <th class="px-6 py-4">Estado</th>
-              <th class="px-6 py-4 text-center">Ver Detalles</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
             <?php if(!empty($usuarios)): foreach ($usuarios as $u): ?>
               <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4 font-black text-navy-dark"><?= $u['cedula_usuario'] ?></td>
+                <td class="px-6 py-4 font-black text-navy-dark">V-<?= $u['cedula_usuario'] ?></td>
                 <td class="px-6 py-4 uppercase font-bold text-navy-light"><?= htmlspecialchars($u['nombre_usuario']) ?></td>
                 <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($u['telefono']) ?></td>
                 <td class="px-6 py-4"><span class="bg-navy/5 text-navy px-2 py-1 rounded text-xs font-black uppercase"><?= $u['nombre_rol'] ?></span></td>
@@ -58,7 +58,7 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <button type="button" onclick='viewDetails(<?= json_encode($u, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
                 </td>
@@ -82,7 +82,10 @@
         </div>
         <div class="p-6 space-y-4">
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cédula</label>
-          <input type="number" name="cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+          <div class="flex gap-0">
+            <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
+            <input type="text" inputmode="numeric" name="cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+          </div></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de Usuario</label>
           <input type="text" name="nombre_usuario" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono</label>
@@ -113,7 +116,10 @@
         </div>
         <div class="p-6 space-y-4">
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cédula</label>
-          <input type="number" name="cedula" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+          <div class="flex gap-0">
+            <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
+            <input type="text" inputmode="numeric" name="cedula" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+          </div></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre</label>
           <input type="text" name="nombre_usuario" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono</label>
@@ -164,7 +170,7 @@
 
     function viewDetails(data) {
       currentRecord = data;
-      document.getElementById('det_cedula').textContent = data.cedula_usuario;
+      document.getElementById('det_cedula').textContent = 'V-' + data.cedula_usuario;
       document.getElementById('det_nombre').textContent = data.nombre_usuario;
       document.getElementById('det_telefono').textContent = data.telefono || '—';
       document.getElementById('det_rol').textContent = data.nombre_rol || '—';

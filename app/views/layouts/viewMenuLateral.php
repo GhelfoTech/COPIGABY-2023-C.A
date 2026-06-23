@@ -123,13 +123,13 @@ function navIconClass(bool $active): string {
         </svg>
       </button>
       <div class="dropdown-menu flex flex-col bg-slate-950/50">
-        <a href="?url=user" class="<?= navSubClass('user', $currentUrl) ?>">Usuarios</a>
         <a href="?url=rol" class="<?= navSubClass('rol', $currentUrl) ?>">Rol</a>
         <a href="?url=metodopago" class="<?= navSubClass('metodopago', $currentUrl) ?>">Método de Pago</a>
         <a href="?url=moneda" class="<?= navSubClass('moneda', $currentUrl) ?>">Moneda</a>
         <a href="?url=iva" class="<?= navSubClass('iva', $currentUrl) ?>">IVA</a>
         <a href="?url=empresa" class="<?= navSubClass('empresa', $currentUrl) ?>">Empresa</a>
         <a href="?url=medida" class="<?= navSubClass('medida', $currentUrl) ?>">Unidad de Medida</a>
+        <a href="?url=user" class="<?= navSubClass('user', $currentUrl) ?>">Usuarios</a>
       </div>
     </div>
 

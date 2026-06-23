@@ -54,5 +54,4 @@
     $productos = $object->getAllProducts();
     $categorias = $object->getCategories();
     $ivas = $object->getIvas();
-    $medidas = $object->getMedidas();
     include 'app/views/productos/viewProducto.php';

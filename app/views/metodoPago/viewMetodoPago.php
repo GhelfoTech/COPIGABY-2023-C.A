@@ -39,7 +39,7 @@
               <th class="px-6 py-4">Código</th>
               <th class="px-6 py-4">Nombre del Método</th>
               <th class="px-6 py-4">Estado</th>
-              <th class="px-6 py-4 text-center">Ver Detalles</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">

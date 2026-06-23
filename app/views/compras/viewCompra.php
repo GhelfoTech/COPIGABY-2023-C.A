@@ -42,7 +42,7 @@
               <th class="px-6 py-4">Fecha</th>
               <th class="px-6 py-4 text-right">Monto Total</th>
               <th class="px-6 py-4 text-center">Estado</th>
-              <th class="px-6 py-4 text-center">Ver Detalles</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
@@ -241,7 +241,7 @@
           </div>
         </div>
         <div class="modal-footer bg-gray-50 px-8 py-4 flex justify-end gap-3 border-t">
-          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Anular</button>
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
           <button type="button" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
         </div>

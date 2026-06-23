@@ -40,7 +40,7 @@
               <th class="px-6 py-4">Contacto</th>
               <th class="px-6 py-4">Dirección</th>
               <th class="px-6 py-4 text-center">Logo</th>
-              <th class="px-6 py-4 text-center">Acciones</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
           <tbody class="text-gray-700 font-semibold text-sm divide-y">
