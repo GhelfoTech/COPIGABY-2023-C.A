@@ -77,7 +77,7 @@
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Nueva Compra a Proveedor</h3>
+          <h3 class="text-xl font-black text-navy-dark">Nueva Compra</h3>
           <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form id="formCompra" action="?url=compra&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
