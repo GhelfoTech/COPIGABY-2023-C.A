@@ -302,7 +302,7 @@
           </div>
         </div>
         <div class="modal-footer bg-gray-50 px-8 py-4 flex justify-end gap-3 border-t">
-          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Anular</button>
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
           <button type="button" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
         </div>
@@ -739,13 +739,13 @@
 
     function confirmDelete(id) {
       Swal.fire({
-        title: '¿Anular pedido?',
+        title: '¿Eliminar pedido?',
         text: 'Se revertirá el inventario y el pedido quedará inactivo. Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, anular',
+        confirmButtonText: 'Sí, Eliminar',
         cancelButtonText: 'Cancelar',
       }).then(result => {
         if (!result.isConfirmed) return;
