@@ -73,9 +73,14 @@
             }
 
             $datos = [
-                'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
-                'cedula_usuario' => $_SESSION['user_id'],
-                'codigo_IVA'     => (int) $_POST['codigo_IVA'],
+                'cedula_cliente'  => trim((string) $_POST['codigo_cliente']),
+                'cedula_usuario'  => $_SESSION['user_id'],
+                'codigo_IVA'      => (int) $_POST['codigo_IVA'],
+                'subtotal'        => $_POST['subtotal'] ?? null,
+                'monto_iva'       => $_POST['monto_iva'] ?? null,
+                'porcentaje_iva'  => $_POST['porcentaje_iva'] ?? null,
+                'monto_total'     => $_POST['monto_total'] ?? null,
+                'tasa_actual'     => $_POST['tasa_actual'] ?? null,
             ];
 
             $pago = [
@@ -136,9 +141,14 @@
                 }
 
                 $result = $object->updatePedido((int) $_POST['codigo_pedido'], [
-                    'cedula_cliente' => trim((string) $_POST['codigo_cliente']),
-                    'estado'         => isset($_POST['estado']) ? (int) $_POST['estado'] : 1,
-                    'codigo_IVA'     => (int) $_POST['codigo_IVA'],
+                    'cedula_cliente'  => trim((string) $_POST['codigo_cliente']),
+                    'estado'          => isset($_POST['estado']) ? (int) $_POST['estado'] : 1,
+                    'codigo_IVA'      => (int) $_POST['codigo_IVA'],
+                    'subtotal'        => $_POST['subtotal'] ?? null,
+                    'monto_iva'       => $_POST['monto_iva'] ?? null,
+                    'porcentaje_iva'  => $_POST['porcentaje_iva'] ?? null,
+                    'monto_total'     => $_POST['monto_total'] ?? null,
+                    'tasa_actual'     => $_POST['tasa_actual'] ?? null,
                 ], $items, $pago);
 
                 if ($isAjax) {

@@ -30,7 +30,7 @@
 
       <div class="flex justify-between items-center mb-8">
         <div>
-          <h1 class="text-2xl font-[900] text-gray-800">Módulo de Ventas</h1>
+          <h1 class="text-2xl font-[900] text-gray-800">Módulo de Pedidos</h1>
           <p class="text-gray-500 text-sm font-semibold">Registro de pedidos de productos y servicios</p>
           <?php if (!empty($monedaActiva)): ?>
           <p class="text-xs font-bold text-orange-dk mt-2">
@@ -68,8 +68,9 @@
                 <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario'] ?? '—') ?></td>
                 <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
                 <td class="px-6 py-4 text-right">
-                  <div class="font-black text-navy-dark text-[1rem]"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?><?= number_format($ped['monto_total'], 2) ?></div>
-                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format($ped['monto_total'] * $tasaActual, 2) ?> Bs</div>
+                  <?php $tasaPed = (float) ($ped['tasa_cambio'] ?? $tasaActual); ?>
+                  <div class="font-black text-navy-dark text-[1rem]"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?><?= number_format((float) ($ped['monto_total'] ?? 0), 2) ?></div>
+                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format((float) ($ped['monto_total'] ?? 0) * $tasaPed, 2) ?> Bs</div>
                 </td>
                 <td class="px-6 py-4 text-xs font-bold text-gray-500 uppercase"><?= htmlspecialchars($ped['nombre_metodo'] ?? '—') ?></td>
                 <td class="px-6 py-4 text-center">
@@ -79,7 +80,7 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                   <button type="button" onclick="viewDetails(<?= $ped['codigo_pedido'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver Detalle">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
                 </td>
@@ -109,6 +110,11 @@
           <input type="hidden" name="items" id="itemsJson">
           <input type="hidden" name="codigo_pedido" id="codigoPedidoEdit" value="">
           <input type="hidden" name="ajax" value="1">
+          <input type="hidden" name="subtotal" id="inputSubtotal" value="0.00">
+          <input type="hidden" name="monto_iva" id="inputMontoIva" value="0.00">
+          <input type="hidden" name="porcentaje_iva" id="inputPorcentajeIva" value="0.00">
+          <input type="hidden" name="monto_total" id="inputMontoTotal" value="0.00">
+          <input type="hidden" name="tasa_actual" id="inputTasaActual" value="<?= number_format($tasaActual, 2, '.', '') ?>">
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -129,7 +135,7 @@
                   Tasa: <span id="tasaActualLabel"><?= number_format($tasaActual, 2) ?></span> Bs 
                 </span>
               </div>
-              <input type="hidden" id="tasaActualInput" value="<?= $tasaActual ?>">
+              <input type="hidden" id="tasaActualInput" value="<?= number_format($tasaActual, 2, '.', '') ?>">
             </div>
           </div>
 
@@ -298,6 +304,7 @@
               <p class="text-xs text-gray-400 font-bold mb-1">Subtotal: <span id="det_subtotal">$0.00</span></p>
               <span class="text-xs font-black text-gray-400 uppercase mr-4">Total del Pedido</span>
               <span class="text-3xl font-black text-navy-dark" id="det_total">$0.00</span>
+              <div class="text-sm font-bold text-orange-dk mt-1" id="det_total_bs">0.00 Bs</div>
             </div>
           </div>
         </div>
@@ -337,14 +344,55 @@
     const wrapBanco = document.getElementById('wrapBanco');
     const wrapReferencia = document.getElementById('wrapReferencia');
     const selectIva = document.getElementById('selectIva');
+    const inputSubtotal = document.getElementById('inputSubtotal');
+    const inputMontoIva = document.getElementById('inputMontoIva');
+    const inputPorcentajeIva = document.getElementById('inputPorcentajeIva');
+    const inputMontoTotal = document.getElementById('inputMontoTotal');
+    const inputTasaActual = document.getElementById('inputTasaActual');
 
     let itemCounter = 0;
     let editMode = false;
+
+    function roundMoney(value) {
+      const num = parseFloat(value);
+      if (isNaN(num)) return 0;
+      return Math.round(num * 100) / 100;
+    }
+
+    function formatMoney(value) {
+      return roundMoney(value).toFixed(2);
+    }
+
+    function getTasaFormulario() {
+      const tasaInput = document.getElementById('tasaActualInput');
+      const tasa = parseFloat(tasaInput ? tasaInput.value : tasaActual);
+      return isNaN(tasa) ? parseFloat(tasaActual) : tasa;
+    }
+
+    function syncHiddenFinancialFields(subtotal, iva, porcentajeIva, total) {
+      if (inputSubtotal) inputSubtotal.value = formatMoney(subtotal);
+      if (inputMontoIva) inputMontoIva.value = formatMoney(iva);
+      if (inputPorcentajeIva) inputPorcentajeIva.value = formatMoney(porcentajeIva);
+      if (inputMontoTotal) inputMontoTotal.value = formatMoney(total);
+      if (inputTasaActual) inputTasaActual.value = formatMoney(getTasaFormulario());
+    }
 
     function getPorcentajeIvaSeleccionado() {
       if (!selectIva || selectIva.selectedIndex < 0) return 0;
       const option = selectIva.options[selectIva.selectedIndex];
       return parseFloat(option.getAttribute('data-porcentaje') || '0');
+    }
+
+    function computeFinancialTotals() {
+      let subtotal = 0;
+      itemsBody.querySelectorAll('tr[data-item]').forEach(row => {
+        subtotal += parseFloat(row.dataset.subtotal || 0);
+      });
+      subtotal = roundMoney(subtotal);
+      const porcentajeIva = getPorcentajeIvaSeleccionado();
+      const iva = roundMoney(subtotal * (porcentajeIva / 100));
+      const total = roundMoney(subtotal + iva);
+      return { subtotal, porcentajeIva, iva, total };
     }
 
     function setIvaSeleccionado(codigoIva) {
@@ -372,13 +420,15 @@
       modalPedidoTitulo.textContent = 'Nuevo Pedido';
       btnSubmitPedido.textContent = 'Registrar Pedido';
       formPedido.reset();
-      document.getElementById('tasaActualInput').value = tasaActual;
+      document.getElementById('tasaActualInput').value = formatMoney(tasaActual);
+      if (inputTasaActual) inputTasaActual.value = formatMoney(tasaActual);
       setIvaSeleccionado(ivaDefaultCodigo);
       itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
       subtotalGeneral.textContent = simboloMoneda + '0.00';
       montoIva.textContent = simboloMoneda + '0.00';
       totalGeneral.textContent = simboloMoneda + '0.00';
       totalBs.textContent = '0.00 Bs';
+      syncHiddenFinancialFields(0, 0, getPorcentajeIvaSeleccionado(), 0);
       toggleCamposBanco();
     }
 
@@ -398,8 +448,6 @@
       document.getElementById('referenciaPago').required = requiere;
     }
 
-    selectMetodo.addEventListener('change', toggleCamposBanco);
-
     function buildOptions(tipo) {
       const list = tipo === 'producto' ? productos : servicios;
       let html = '<option value="">— Seleccionar —</option>';
@@ -409,25 +457,20 @@
         const precio = tipo === 'producto' ? item.costo : item.precio;
         const stock = tipo === 'producto' ? item.stock_actual : '';
         const extra = stock !== '' ? ` data-stock="${stock}"` : '';
-        html += `<option value="${id}" data-precio="${precio}"${extra}>${nombre}</option>`;
+        html += `<option value="${id}" data-precio="${parseFloat(precio)}"${extra}>${nombre}</option>`;
       });
       return html;
     }
 
     function recalcTotal() {
-      let subtotal = 0;
-      itemsBody.querySelectorAll('tr[data-item]').forEach(row => {
-        subtotal += parseFloat(row.dataset.subtotal || 0);
-      });
-      subtotal = Math.round(subtotal * 100) / 100;
-      const porcentajeIva = getPorcentajeIvaSeleccionado();
-      const iva = Math.round(subtotal * (porcentajeIva / 100) * 100) / 100;
-      const total = Math.round((subtotal + iva) * 100) / 100;
+      const { subtotal, porcentajeIva, iva, total } = computeFinancialTotals();
+      const tasa = getTasaFormulario();
 
-      subtotalGeneral.textContent = simboloMoneda + subtotal.toFixed(2);
-      montoIva.textContent = simboloMoneda + iva.toFixed(2);
-      totalGeneral.textContent = simboloMoneda + total.toFixed(2);
-      totalBs.textContent = (total * parseFloat(tasaActual)).toFixed(2) + ' Bs';
+      subtotalGeneral.textContent = simboloMoneda + formatMoney(subtotal);
+      montoIva.textContent = simboloMoneda + formatMoney(iva);
+      totalGeneral.textContent = simboloMoneda + formatMoney(total);
+      totalBs.textContent = formatMoney(total * tasa) + ' Bs';
+      syncHiddenFinancialFields(subtotal, iva, porcentajeIva, total);
     }
 
     function normalizeCantidad(input) {
@@ -440,9 +483,9 @@
     function updateRowSubtotal(row) {
       const cantidad = normalizeCantidad(row.querySelector('.item-cantidad'));
       const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
-      const subtotal = cantidad * precio;
-      row.querySelector('.item-subtotal').textContent = '$' + subtotal.toFixed(2);
-      row.dataset.subtotal = subtotal.toFixed(2);
+      const subtotal = roundMoney(cantidad * precio);
+      row.querySelector('.item-subtotal').textContent = simboloMoneda + formatMoney(subtotal);
+      row.dataset.subtotal = String(subtotal);
       recalcTotal();
     }
 
@@ -450,7 +493,7 @@
       const tipo = row.querySelector('.item-tipo').value;
       row.querySelector('.item-select').innerHTML = buildOptions(tipo);
       row.querySelector('.item-precio').value = '';
-      row.querySelector('.item-subtotal').textContent = '$0.00';
+      row.querySelector('.item-subtotal').textContent = simboloMoneda + '0.00';
       row.dataset.subtotal = '0';
       recalcTotal();
     }
@@ -509,7 +552,7 @@
         <td class="px-4 py-3">
           <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
         </td>
-        <td class="px-4 py-3 text-right font-black text-navy-dark item-subtotal">$0.00</td>
+        <td class="px-4 py-3 text-right font-black text-navy-dark item-subtotal">${simboloMoneda}0.00</td>
         <td class="px-4 py-3 text-center">
           <button type="button" class="btn-remove text-red-400 hover:text-red-600 p-1" title="Quitar">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -526,7 +569,7 @@
         const selectVal = prefill.tipo === 'producto' ? prefill.codigo_producto : prefill.codigo_servicio;
         tr.querySelector('.item-select').value = String(selectVal);
         tr.querySelector('.item-cantidad').value = String(parseInt(prefill.cantidad, 10));
-        tr.querySelector('.item-precio').value = parseFloat(prefill.precio_venta).toFixed(2);
+        tr.querySelector('.item-precio').value = formatMoney(prefill.precio_venta);
         updateRowSubtotal(tr);
       } else {
         tr.querySelector('.item-select').innerHTML = buildOptions('producto');
@@ -550,7 +593,7 @@
         if (!id) return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
         if (isNaN(precio) || precio < 0) return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
 
-        const item = { tipo, cantidad, precio_venta: precio };
+        const item = { tipo, cantidad, precio_venta: roundMoney(precio) };
         if (tipo === 'producto') {
           item.codigo_producto = parseInt(id, 10);
           const option = selectItem.options[selectItem.selectedIndex];
@@ -580,8 +623,22 @@
         return;
       }
 
+      recalcTotal();
+      const totals = computeFinancialTotals();
+
       const formData = new FormData(formPedido);
       formData.set('items', JSON.stringify(collected.items));
+      formData.set('codigo_IVA', selectIva ? selectIva.value : String(ivaDefaultCodigo));
+      formData.set('subtotal', formatMoney(totals.subtotal));
+      formData.set('monto_iva', formatMoney(totals.iva));
+      formData.set('porcentaje_iva', formatMoney(totals.porcentajeIva));
+      formData.set('monto_total', formatMoney(totals.total));
+      formData.set('tasa_actual', formatMoney(getTasaFormulario()));
+      formData.set('codigo_metodo', selectMetodo.value);
+      if (selectMetodo.value && METODOS_CON_BANCO.includes(parseInt(selectMetodo.value, 10))) {
+        formData.set('codigo_banco', document.getElementById('selectBanco').value);
+        formData.set('referencia_pago', document.getElementById('referenciaPago').value.trim());
+      }
       itemsJsonInput.value = JSON.stringify(collected.items);
 
       const originalLabel = btnSubmitPedido.textContent;
@@ -630,19 +687,22 @@
           document.getElementById('det_telefono').innerText = 'Tel: ' + (h.telefono_cliente || '—');
           document.getElementById('det_usuario').innerText = h.nombre_usuario || '—';
 
-          const subtotalDet = parseFloat(h.subtotal ?? h.monto_total ?? 0);
+          const subtotalDet = parseFloat(h.subtotal ?? 0);
           const totalDet = parseFloat(h.monto_total ?? 0);
-          const ivaDet = parseFloat(h.monto_iva ?? Math.max(0, totalDet - subtotalDet));
+          const ivaDet = parseFloat(h.monto_iva ?? 0);
+          const pctIvaDet = parseFloat(h.porcentaje_iva ?? 0);
 
-          document.getElementById('det_subtotal').innerText = '$' + subtotalDet.toFixed(2);
-          document.getElementById('det_total').innerText = '$' + totalDet.toFixed(2);
-          document.getElementById('det_iva').innerText = '$' + ivaDet.toFixed(2) + ' (' + (h.porcentaje_iva ?? getPorcentajeIvaSeleccionado()) + '%)';
+          document.getElementById('det_subtotal').innerText = simboloMoneda + formatMoney(subtotalDet);
+          document.getElementById('det_total').innerText = simboloMoneda + formatMoney(totalDet);
+          const tasaDet = parseFloat(h.tasa_actual ?? h.tasa_cambio ?? tasaActual) || parseFloat(tasaActual);
+          document.getElementById('det_total_bs').innerText = formatMoney(totalDet * tasaDet) + ' Bs';
+          document.getElementById('det_iva').innerText = simboloMoneda + formatMoney(ivaDet) + ' (' + formatMoney(pctIvaDet) + '%)';
           document.getElementById('det_metodo').innerText = h.nombre_metodo || '—';
 
           const pago = h.pago || null;
           document.getElementById('det_monto_pago').innerText = pago
-            ? '$' + parseFloat(pago.monto).toFixed(2)
-            : '$' + totalDet.toFixed(2);
+            ? simboloMoneda + formatMoney(parseFloat(pago.monto))
+            : simboloMoneda + formatMoney(totalDet);
 
           const bancoWrap = document.getElementById('det_banco_wrap');
           const refWrap = document.getElementById('det_ref_wrap');
@@ -652,9 +712,10 @@
           } else {
             bancoWrap.classList.add('hidden');
           }
-          if (pago && pago.numero_comprobante) {
+          const refPago = pago ? (pago.numero_comprobante || pago.referencia || '') : '';
+          if (refPago) {
             refWrap.classList.remove('hidden');
-            document.getElementById('det_referencia').innerText = pago.numero_comprobante;
+            document.getElementById('det_referencia').innerText = refPago;
           } else {
             refWrap.classList.add('hidden');
           }
@@ -668,8 +729,8 @@
                 <td class="px-4 py-3 uppercase">${nombre}</td>
                 <td class="px-4 py-3 text-center text-xs uppercase text-gray-500">${it.tipo}</td>
                 <td class="px-4 py-3 text-center">${parseFloat(it.cantidad)}</td>
-                <td class="px-4 py-3 text-right">$${parseFloat(it.precio_venta).toFixed(2)}</td>
-                <td class="px-4 py-3 text-right font-black text-orange-dk">$${parseFloat(it.subtotal).toFixed(2)}</td>
+                <td class="px-4 py-3 text-right">${simboloMoneda}${formatMoney(parseFloat(it.precio_venta))}</td>
+                <td class="px-4 py-3 text-right font-black text-orange-dk">${simboloMoneda}${formatMoney(parseFloat(it.subtotal))}</td>
               </tr>`;
           });
 
@@ -709,6 +770,11 @@
           document.getElementById('selectCliente').value = String(h.cedula_cliente);
           setIvaSeleccionado(h.codigo_IVA || ivaDefaultCodigo);
 
+          const tasaPed = parseFloat(h.tasa_actual ?? h.tasa_cambio ?? tasaActual);
+          document.getElementById('tasaActualInput').value = formatMoney(tasaPed);
+          if (inputTasaActual) inputTasaActual.value = formatMoney(tasaPed);
+          document.getElementById('tasaActualLabel').textContent = formatMoney(tasaPed);
+
           items.forEach(it => {
             addItemRow({
               tipo: it.tipo,
@@ -728,9 +794,21 @@
           if (pago && pago.codigo_banco) {
             document.getElementById('selectBanco').value = String(pago.codigo_banco);
           }
-          if (pago && pago.numero_comprobante) {
-            document.getElementById('referenciaPago').value = pago.numero_comprobante;
+          const refEdit = pago ? (pago.numero_comprobante || pago.referencia || '') : '';
+          if (refEdit) {
+            document.getElementById('referenciaPago').value = refEdit;
           }
+
+          const subtotalH = parseFloat(h.subtotal ?? 0);
+          const ivaH = parseFloat(h.monto_iva ?? 0);
+          const pctH = parseFloat(h.porcentaje_iva ?? getPorcentajeIvaSeleccionado());
+          const totalH = parseFloat(h.monto_total ?? 0);
+
+          subtotalGeneral.textContent = simboloMoneda + formatMoney(subtotalH);
+          montoIva.textContent = simboloMoneda + formatMoney(ivaH);
+          totalGeneral.textContent = simboloMoneda + formatMoney(totalH);
+          totalBs.textContent = formatMoney(totalH * tasaPed) + ' Bs';
+          syncHiddenFinancialFields(subtotalH, ivaH, pctH, totalH);
 
           modalPedido.classList.remove('hidden');
         })
@@ -739,13 +817,13 @@
 
     function confirmDelete(id) {
       Swal.fire({
-        title: '¿Eliminar pedido?',
+        title: '¿Anular pedido?',
         text: 'Se revertirá el inventario y el pedido quedará inactivo. Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, Eliminar',
+        confirmButtonText: 'Sí, anular',
         cancelButtonText: 'Cancelar',
       }).then(result => {
         if (!result.isConfirmed) return;
