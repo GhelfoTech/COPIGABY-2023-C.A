@@ -18,6 +18,9 @@
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Configuración</h2>
+      <div class="flex items-center">
+        <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
+      </div>
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">

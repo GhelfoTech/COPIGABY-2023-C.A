@@ -18,6 +18,9 @@
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestión de Productos</h2>
+      <div class="flex items-center">
+        <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
+      </div>
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">
@@ -126,7 +129,8 @@
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" value="0" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+              <input type="number" name="stock_actual" id="new_stock_actual" value="0" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
+              <span class="text-[0.65rem] font-bold text-gray-400">Solo se modifica desde Compras</span>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
@@ -183,7 +187,8 @@
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" id="edit_stock_actual" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+              <input type="number" name="stock_actual" id="edit_stock_actual" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
+              <span class="text-[0.65rem] font-bold text-gray-400">Solo se modifica desde Compras</span>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>

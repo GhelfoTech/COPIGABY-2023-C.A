@@ -112,4 +112,44 @@ class userModel extends ConectDB {
             return null;
         }
     }
+
+    public function updateCredentials(string $currentUsername, string $passwordActual, ?string $nuevoNombre, ?string $nuevaPassword, ?string $confirmarPassword) {
+        try {
+            $user = $this->login($currentUsername, $passwordActual);
+            if (!$user) {
+                return ["status" => "error", "message" => "La contraseña actual es incorrecta."];
+            }
+
+            if (empty($nuevoNombre) && empty($nuevaPassword)) {
+                return ["status" => "error", "message" => "Debe ingresar al menos un dato a modificar."];
+            }
+
+            if (!empty($nuevaPassword)) {
+                if ($nuevaPassword !== $confirmarPassword) {
+                    return ["status" => "error", "message" => "La confirmación de la nueva contraseña no coincide."];
+                }
+            }
+
+            $fields = [];
+            $params = [':id' => $user['cedula_usuario']];
+
+            if (!empty($nuevoNombre)) {
+                $fields[] = 'nombre_usuario = :nuevo_nombre';
+                $params[':nuevo_nombre'] = trim($nuevoNombre);
+            }
+
+            if (!empty($nuevaPassword)) {
+                $fields[] = 'password = :nueva_password';
+                $params[':nueva_password'] = trim($nuevaPassword);
+            }
+
+            $query = "UPDATE usuario SET " . implode(', ', $fields) . " WHERE cedula_usuario = :id";
+            $stmt = $this->getConnection()->prepare($query);
+            $stmt->execute($params);
+
+            return ["status" => "success", "message" => "Credenciales actualizadas correctamente."];
+        } catch (PDOException $e) {
+            return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
 }

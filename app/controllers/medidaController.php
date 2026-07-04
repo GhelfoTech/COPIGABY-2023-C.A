@@ -15,7 +15,8 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre'])) {
-                $object->addMedida($_POST['nombre']);
+                $abreviatura = trim($_POST['abreviatura'] ?? '');
+                $object->addMedida($_POST['nombre'], $abreviatura ?: null);
                 header("Location: ?url=medida");
                 exit();
             }
@@ -26,7 +27,8 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_media'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMedida((int) $_POST['codigo_media'], $_POST['nombre'], $estado);
+                $abreviatura = trim($_POST['abreviatura'] ?? '');
+                $object->updateMedida((int) $_POST['codigo_media'], $_POST['nombre'], $abreviatura ?: null, $estado);
                 header("Location: ?url=medida");
                 exit();
             }

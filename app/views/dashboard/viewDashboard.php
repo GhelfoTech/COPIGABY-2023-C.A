@@ -24,11 +24,8 @@
           <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">CopiGaby 2023</h2>
       </div>
 
-      <div class="flex items-center gap-3">
-          <span class="text-xs font-black text-navy/40 uppercase tracking-widest">Bienvenido, <?= $_SESSION['username'] ?></span>
-          <div class="h-8 w-8 bg-orange/20 rounded-full border-2 border-orange flex items-center justify-center text-orange-dk font-black text-xs">
-              <?= substr($_SESSION['username'], 0, 1) ?>
-          </div>
+      <div class="flex items-center">
+        <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
       </div>
     </header>
 

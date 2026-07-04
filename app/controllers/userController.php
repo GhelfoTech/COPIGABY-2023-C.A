@@ -48,6 +48,29 @@
                 die();
             }
         }
+
+        elseif ($_GET['type'] == 'credenciales') {
+            header('Content-Type: application/json');
+            $passwordActual = trim((string)($_POST['password_actual'] ?? ''));
+            $nuevoNombre = trim((string)($_POST['nuevo_nombre'] ?? ''));
+            $nuevaPassword = trim((string)($_POST['nueva_password'] ?? ''));
+            $confirmarPassword = trim((string)($_POST['confirmar_password'] ?? ''));
+
+            $result = $object->updateCredentials(
+                $_SESSION['username'],
+                $passwordActual,
+                $nuevoNombre,
+                $nuevaPassword,
+                $confirmarPassword
+            );
+
+            if ($result['status'] === 'success') {
+                $_SESSION['username'] = $nuevoNombre ?: $_SESSION['username'];
+            }
+
+            echo json_encode($result);
+            die();
+        }
     }
 
     // Carga de datos común para la vista (se ejecuta si no hubo redirección o die)
