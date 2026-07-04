@@ -8,9 +8,6 @@ use PDOException;
 
 class userModel extends ConectDB {
 
-    /**
-     * Obtiene la lista de usuarios.
-     */
     public function getAllUsers() {
         try {
             $query = "SELECT u.cedula_usuario, u.telefono, u.nombre_usuario, u.estado, u.codigo_rol, r.nombre_rol 
@@ -24,10 +21,6 @@ class userModel extends ConectDB {
         }
     }
 
-    /**
-     * Registra un nuevo usuario en el sistema.
-     * @param int $rol Por defecto se asigna el rol con código 2 (usualmente Adminstrador/Vendedor).
-     */
     public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol = 2) {
         try {
             $query = "INSERT INTO usuario (cedula_usuario, telefono, nombre_usuario, codigo_rol, password, estado) 
@@ -35,7 +28,7 @@ class userModel extends ConectDB {
             $stmt = $this->getConnection()->prepare($query);
             $stmt->bindParam(':cedula', $cedula);
             $stmt->bindParam(':telefono', $telefono);
-            $stmt->bindParam(':nombre', trim($nombre_usuario)); // Limpiamos espacios
+            $stmt->bindParam(':nombre', trim($nombre_usuario));
             $stmt->bindParam(':rol', $rol);
             $stmt->bindParam(':pass', $password);
             
@@ -48,9 +41,6 @@ class userModel extends ConectDB {
         }
     }
 
-    /**
-     * Actualiza un usuario existente.
-     */
     public function updateUser($id, $cedula, $nombre, $telefono, $rol, $estado) {
         try {
             $query = "UPDATE usuario SET cedula_usuario = :cedula, nombre_usuario = :nombre, 
@@ -73,9 +63,6 @@ class userModel extends ConectDB {
         }
     }
 
-    /**
-     * Eliminación lógica (desactivación).
-     */
     public function deleteUser($id) {
         try {
             $query = "UPDATE usuario SET estado = 0 WHERE cedula_usuario = :id";
@@ -87,13 +74,8 @@ class userModel extends ConectDB {
         }
     }
 
-    /**
-     * Verifica las credenciales de acceso de un usuario.
-     * Retorna los datos del usuario si es válido y está activo, de lo contrario retorna false.
-     */
     public function login($username, $password) {
         try {
-            // Limpiamos entradas para evitar espacios accidentales
             $username = trim((string)$username);
             $password = trim((string)$password);
 
@@ -107,25 +89,19 @@ class userModel extends ConectDB {
             
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user && (int)$user['estado'] === 1) { // Verifica existencia y estado activo
-                // Comprueba si la contraseña coincide (hashed o texto plano)
+            if ($user && (int)$user['estado'] === 1) {
                 if ($password === $user['password']) {
-                    // Si coincide, elimina la contraseña del array por seguridad y retorna el usuario
                     unset($user['password']);
                     return $user;
                 }
             }
             return false;
         } catch (PDOException $e) {
-            // Log PDO exceptions for server-side debugging
             error_log("PDOException during login for user '{$username}': " . $e->getMessage());
             return false;
         }
     }
 
-    /**
-     * Obtiene el RIF de la empresa desde la base de datos.
-     */
     public function getEmpresaRIF() {
         try {
             $query = "SELECT rif FROM empresa LIMIT 1";

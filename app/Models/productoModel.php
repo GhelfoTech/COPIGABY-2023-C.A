@@ -14,18 +14,24 @@ class productoModel extends ConectDB {
         $this->conex = $this->getConnection();
     }
 
-    /**
-     * Obtiene todos los productos con sus relaciones.
-     */
     public function getAllProducts() {
         try {
-            $query = "SELECT p.*, c.nombre_categoria, i.porcentaje_iva,
-                             (SELECT dc.costo_unitario FROM detalle_compra dc 
-                              WHERE dc.codigo_producto = p.codigo_producto 
-                              ORDER BY dc.codigo_compra DESC LIMIT 1) AS costo
-                      FROM producto_insumo p
-                      INNER JOIN categoria c ON p.codigo_categoria = c.codigo_categoria
-                      INNER JOIN iva i ON p.codigo_IVA = i.codigo_IVA";
+            $query = "SELECT p.*, c.nombre_categoria,
+                COALESCE(p.costo, 0) AS costo,
+                COALESCE(
+                    (SELECT dc.costo_unitario FROM detalle_compra dc
+                     WHERE dc.codigo_producto = p.codigo_producto
+                     ORDER BY dc.codigo_compra DESC LIMIT 1),
+                    0) AS costo_compra,
+                COALESCE(p.porcentaje_ganancia, 0) AS porcentaje_ganancia,
+                ROUND(COALESCE(
+                    (SELECT dc.costo_unitario FROM detalle_compra dc
+                     WHERE dc.codigo_producto = p.codigo_producto
+                     ORDER BY dc.codigo_compra DESC LIMIT 1),
+                    p.costo, 0) * (1 + COALESCE(p.porcentaje_ganancia, 0) / 100), 2) AS precio
+                FROM producto_insumo p
+                LEFT JOIN categoria c ON p.codigo_categoria = c.codigo_categoria";
+
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -34,9 +40,12 @@ class productoModel extends ConectDB {
         }
     }
 
-    /**
-     * Obtiene categorías activas para el select.
-     */
+    public function calculatePrice($costo, $porcentajeGanancia) {
+        $costo = floatval($costo);
+        $porcentajeGanancia = floatval($porcentajeGanancia);
+        return round($costo * (1 + $porcentajeGanancia / 100), 2);
+    }
+
     public function getCategories() {
         try {
             $stmt = $this->conex->prepare("SELECT codigo_categoria, nombre_categoria FROM categoria WHERE estado = 1");
@@ -45,32 +54,19 @@ class productoModel extends ConectDB {
         } catch (PDOException $e) { return []; }
     }
 
-    /**
-     * Obtiene IVAs para el select.
-     */
-    public function getIvas() {
-        try {
-            $stmt = $this->conex->prepare("SELECT codigo_IVA, porcentaje_iva FROM iva WHERE estado = 1");
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) { return []; }
-    }
-
-    /**
-     * Registra un nuevo producto.
-     */
     public function addProduct($datos) {
         try {
-            $query = "INSERT INTO producto_insumo (nombre_producto, codigo_IVA, codigo_categoria, descripcion, stock_actual, stock_minimo, estado) 
-                      VALUES (?, ?, ?, ?, ?, ?, 1)";
+            $query = "INSERT INTO producto_insumo (nombre_producto, codigo_categoria, descripcion, porcentaje_ganancia, stock_actual, stock_minimo, estado)
+                VALUES (?, ?, ?, ?, ?, ?, 1)";
+
             $stmt = $this->conex->prepare($query);
             $stmt->execute([
                 $datos['nombre_producto'],
-                $datos['codigo_IVA'],
                 $datos['codigo_categoria'],
                 $datos['descripcion'],
-                $datos['stock_actual'],
-                $datos['stock_minimo']
+                floatval($datos['porcentaje_ganancia'] ?? 0),
+                intval($datos['stock_actual'] ?? 0),
+                intval($datos['stock_minimo'] ?? 0)
             ]);
             return ["status" => "success"];
         } catch (PDOException $e) {
@@ -78,22 +74,19 @@ class productoModel extends ConectDB {
         }
     }
 
-    /**
-     * Actualiza un producto.
-     */
     public function updateProduct($id, $datos) {
         try {
-            $query = "UPDATE producto_insumo SET nombre_producto = ?, codigo_IVA = ?, codigo_categoria = ?, descripcion = ?, 
-                      stock_actual = ?, stock_minimo = ?, estado = ? WHERE codigo_producto = ?";
+            $query = "UPDATE producto_insumo SET nombre_producto = ?, codigo_categoria = ?, descripcion = ?, porcentaje_ganancia = ?, stock_actual = ?, stock_minimo = ?, estado = ? WHERE codigo_producto = ?";
+
             $stmt = $this->conex->prepare($query);
             $stmt->execute([
                 $datos['nombre_producto'],
-                $datos['codigo_IVA'],
                 $datos['codigo_categoria'],
                 $datos['descripcion'],
-                $datos['stock_actual'],
-                $datos['stock_minimo'],
-                $datos['estado'],
+                floatval($datos['porcentaje_ganancia'] ?? 0),
+                intval($datos['stock_actual'] ?? 0),
+                intval($datos['stock_minimo'] ?? 0),
+                intval($datos['estado'] ?? 1),
                 $id
             ]);
             return ["status" => "success"];
@@ -102,9 +95,6 @@ class productoModel extends ConectDB {
         }
     }
 
-    /**
-     * Borrado lógico.
-     */
     public function deleteProduct($id) {
         try {
             $stmt = $this->conex->prepare("UPDATE producto_insumo SET estado = 0 WHERE codigo_producto = ?");

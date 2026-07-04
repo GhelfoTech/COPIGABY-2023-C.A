@@ -15,6 +15,8 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_producto'])) {
+                $_POST['porcentaje_ganancia'] = $_POST['porcentaje_ganancia'] ?? 0;
+                $_POST['costo'] = $_POST['costo'] ?? 0;
                 $object->addProduct($_POST);
                 header("Location: ?url=producto");
                 exit();
@@ -26,6 +28,8 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idproducto'])) {
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
+                $_POST['porcentaje_ganancia'] = $_POST['porcentaje_ganancia'] ?? 0;
+                $_POST['costo'] = $_POST['costo'] ?? 0;
                 $object->updateProduct((int) $_POST['idproducto'], $_POST);
                 header("Location: ?url=producto");
                 exit();
@@ -53,5 +57,4 @@
 
     $productos = $object->getAllProducts();
     $categorias = $object->getCategories();
-    $ivas = $object->getIvas();
     include 'app/views/productos/viewProducto.php';
