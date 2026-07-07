@@ -82,7 +82,7 @@
         <form action="?url=iva&type=register" method="POST" class="p-6">
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%) <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" name="porcentaje_iva" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="number" step="0.01" name="porcentaje_iva" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="16">
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -105,7 +105,7 @@
           <input type="hidden" name="codigo_IVA" id="edit_codigo">
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%) <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" name="porcentaje_iva" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="number" step="0.01" name="porcentaje_iva" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="16">
           </div>
           <div class="flex items-center gap-2 mb-4">
               <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

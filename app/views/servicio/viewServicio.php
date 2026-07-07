@@ -87,17 +87,17 @@
         <div class="p-6 space-y-4">
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_servicio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_servicio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Impresión a color">
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio ($) <span class="text-red-500">*</span></label>
-               <input type="number" step="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+                <input type="number" step="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
             </div>
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-            <textarea name="descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold h-24"></textarea>
+             <textarea name="descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -121,15 +121,15 @@
         <div class="p-6 space-y-4">
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_servicio" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_servicio" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Impresión a color">
           </div>
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio <span class="text-red-500">*</span></label>
-             <input type="number" step="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="number" step="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-            <textarea name="descripcion" id="edit_descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold h-24"></textarea>
+             <textarea name="descripcion" id="edit_descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
           </div>
           <div class="flex items-center gap-2">
             <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

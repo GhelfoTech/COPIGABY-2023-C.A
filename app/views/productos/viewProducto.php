@@ -101,7 +101,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
-               <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+                <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Papel Bond A4">
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
@@ -113,7 +113,7 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
-               <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+                <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>
@@ -125,7 +125,7 @@
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción / Notas</label>
-              <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
+               <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
@@ -159,7 +159,7 @@
           <div class="grid grid-cols-2 gap-4">
              <div class="col-span-2">
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
-               <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+                <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Papel Bond A4">
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
@@ -171,7 +171,7 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
-               <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+                <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>
@@ -183,7 +183,7 @@
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-              <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold"></textarea>
+               <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>

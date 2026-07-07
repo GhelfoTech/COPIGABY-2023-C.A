@@ -103,7 +103,7 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Factura # <span class="text-red-500">*</span></label>
-            <input type="text" name="numero_factura_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" maxlength="10" placeholder="Ej: F-1002">
+             <input type="text" name="numero_factura_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" maxlength="10" placeholder="1002">
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Fecha de Compra <span class="text-red-500">*</span></label>

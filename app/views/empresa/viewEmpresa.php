@@ -92,41 +92,47 @@
   <div id="modalEmpresa" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Nueva Empresa</h3>
           <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-        <form action="?url=empresa&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
-          <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa <span class="text-red-500">*</span></label>
-            <input type="text" name="nombre_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
-            <input type="text" name="rif_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="J-12345678-9">
-          </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-            <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
-          <div class="col-span-2">
-             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
-            <input type="email" name="correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección Física</label>
-            <textarea name="direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></textarea>
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">URL del Logo (Opcional)</label>
-            <input type="text" name="logo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: assets/img/logo.png">
-          </div>
-          <div class="col-span-2 flex justify-end gap-3 mt-4">
-            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
-          </div>
-        </form>
+         <form action="?url=empresa&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
+           <div class="col-span-2">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa <span class="text-red-500">*</span></label>
+             <input type="text" name="nombre_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="CopiGaby C.A.">
+           </div>
+           <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
+              <div class="flex gap-0">
+                <select name="rif_tipo" class="px-3 py-2 bg-gray-50 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark outline-none focus:border-orange">
+                  <option value="J-">J-</option>
+                  <option value="V-">V-</option>
+                </select>
+                <input type="tel" inputmode="numeric" pattern="[0-9]*" name="rif_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold text-sm" placeholder="123456789">
+              </div>
+            </div>
+           <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
+              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="04121234567">
+           </div>
+           <div class="col-span-2">
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
+             <input type="email" name="correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="contacto@empresa.com">
+           </div>
+           <div class="col-span-2">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección Física</label>
+             <textarea name="direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Calle Principal, Edificio X, Piso 1"></textarea>
+           </div>
+           <div class="col-span-2">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">URL del Logo (Opcional)</label>
+             <input type="text" name="logo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="assets/img/logo.png">
+           </div>
+           <div class="col-span-2 flex justify-end gap-3 mt-4">
+             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
+           </div>
+         </form>
       </div>
     </div>
   </div>
@@ -134,7 +140,7 @@
   <div id="modalEditEmpresa" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
+      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Editar Empresa</h3>
           <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
@@ -145,13 +151,19 @@
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa <span class="text-red-500">*</span></label>
             <input type="text" name="nombre_empresa" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
+           <div>
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
+             <div class="flex gap-0">
+               <select name="rif_tipo" id="edit_rif_tipo" class="px-3 py-2 bg-gray-50 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark outline-none focus:border-orange">
+                 <option value="J-">J-</option>
+                 <option value="V-">V-</option>
+               </select>
+               <input type="tel" inputmode="numeric" pattern="[0-9]*" name="rif_empresa" id="edit_rif" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+             </div>
+           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
-            <input type="text" name="rif_empresa" id="edit_rif" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-            <input type="text" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
+             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo <span class="text-red-500">*</span></label>
@@ -177,46 +189,22 @@
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-sm" onclick="closeDetalleModal()"></div>
-      <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
-        <div class="p-8">
-          <div class="flex justify-between items-start border-b pb-6 mb-6">
-            <div>
-              <h3 class="text-2xl font-black text-navy-dark uppercase tracking-tighter" id="det_nombre">NOMBRE EMPRESA</h3>
-              <p class="text-gray-400 font-bold text-sm" id="det_rif">RIF: --</p>
-            </div>
-            <div class="text-right">
-               <img id="det_logo_img" src="" alt="Logo" class="h-16 w-16 object-contain ml-auto hidden">
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-6 mb-8">
-            <div>
-              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Teléfono de Contacto</p>
-              <p class="font-bold text-navy-dark" id="det_telefono">--</p>
-            </div>
-            <div>
-              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Correo Electrónico</p>
-              <p class="font-bold text-navy-dark" id="det_correo">--</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Dirección Física</p>
-              <p class="font-bold text-navy-dark" id="det_direccion">--</p>
-            </div>
-          </div>
-
-          <div class="flex justify-between items-center border-t pt-6">
-            <div class="flex gap-2">
-              <button onclick="handleEditFromDetail()" class="bg-blue-500 text-white font-black px-6 py-2 rounded-lg text-xs uppercase hover:bg-blue-600 transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                Modificar
-              </button>
-              <button onclick="handleDeleteFromDetail()" class="bg-red-500 text-white font-black px-6 py-2 rounded-lg text-xs uppercase hover:bg-red-600 transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Eliminar
-              </button>
-            </div>
-            <button onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
-          </div>
+      <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Detalle de Empresa</h3>
+          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Nombre</p><p id="det_nombre" class="font-black text-navy-dark uppercase">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">RIF</p><p id="det_rif" class="font-bold text-navy-dark">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Teléfono</p><p id="det_telefono" class="font-bold text-navy-dark">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Correo Electrónico</p><p id="det_correo" class="font-bold text-navy-dark">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Dirección Física</p><p id="det_direccion" class="font-bold text-navy-dark">—</p></div>
+        </div>
+        <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
+          <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
+          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
@@ -238,12 +226,24 @@
         currentEmpresa = data;
         document.getElementById('edit_codigo').value = data.codigo_empresa;
         document.getElementById('edit_nombre').value = data.nombre_empresa;
-        document.getElementById('edit_rif').value = data.rif_empresa;
+        const rif = String(data.rif_empresa || '').trim();
+        const rifTipo = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(0, 2) : 'J-';
+        const rifNumero = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(2) : rif;
+        const rifTipoSelect = document.getElementById('edit_rif_tipo');
+        if (rifTipoSelect) rifTipoSelect.value = rifTipo;
+        document.getElementById('edit_rif').value = rifNumero;
         document.getElementById('edit_telefono').value = data.telefono;
         document.getElementById('edit_correo').value = data.correo;
         document.getElementById('edit_direccion').value = data.direccion;
         document.getElementById('edit_logo').value = data.logo;
         document.getElementById('modalEditEmpresa').classList.remove('hidden');
+    }
+
+    function setRifForEmpresa(form) {
+        const rifTipo = (form.querySelector('#edit_rif_tipo') || {}).value || 'J-';
+        const rifNumero = (form.querySelector('#edit_rif') || {}).value || '';
+        const rifInput = form.querySelector('input[name="rif_empresa"]');
+        if (rifInput) rifInput.value = rifTipo + rifNumero;
     }
 
     function viewDetails(id) {
@@ -252,22 +252,24 @@
       .then(data => {
           currentEmpresa = data;
           document.getElementById('det_nombre').innerText = data.nombre_empresa;
-          document.getElementById('det_rif').innerText = `RIF: ${data.rif_empresa}`;
+          document.getElementById('det_rif').innerText = data.rif_empresa;
           document.getElementById('det_telefono').innerText = data.telefono;
           document.getElementById('det_correo').innerText = data.correo;
           document.getElementById('det_direccion').innerText = data.direccion;
-          
-          const img = document.getElementById('det_logo_img');
-          if(data.logo) {
-            img.src = data.logo;
-            img.classList.remove('hidden');
-          } else {
-            img.classList.add('hidden');
-          }
-          
           document.getElementById('modalDetalle').classList.remove('hidden');
       });
     }
+
+    document.getElementById('btnDetalleEditar').addEventListener('click', function() {
+        if (!currentEmpresa) return;
+        closeDetalleModal();
+        openEditModal(currentEmpresa);
+    });
+
+    document.getElementById('btnDetalleEliminar').addEventListener('click', function() {
+        if (!currentEmpresa) return;
+        confirmDelete(currentEmpresa.codigo_empresa);
+    });
 
     function handleEditFromDetail() {
         if(!currentEmpresa) return;
@@ -296,6 +298,21 @@
         });
       }
     }
+
+    function setRifForEmpresa(form) {
+        const rifTipo = (form.querySelector('select[name="rif_tipo"]') || {}).value || 'J-';
+        const rifNumero = (form.querySelector('input[name="rif_empresa"]') || {}).value || '';
+        const rifInput = form.querySelector('input[name="rif_empresa"]');
+        if (rifInput) rifInput.value = rifTipo + rifNumero;
+    }
+
+    document.getElementById('modalEmpresa').addEventListener('submit', function(e) {
+      setRifForEmpresa(this);
+    });
+
+    document.getElementById('modalEditEmpresa').addEventListener('submit', function(e) {
+      setRifForEmpresa(this);
+    });
   </script>
 </body>
 </html>

@@ -104,12 +104,13 @@ class userModel extends ConectDB {
 
     public function getEmpresaRIF() {
         try {
-            $query = "SELECT rif FROM empresa LIMIT 1";
+            $query = "SELECT nombre_empresa, rif FROM empresa LIMIT 1";
             $stmt = $this->getConnection()->prepare($query);
             $stmt->execute();
-            return $stmt->fetchColumn();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ?: ['nombre_empresa' => null, 'rif' => null];
         } catch (PDOException $e) {
-            return null;
+            return ['nombre_empresa' => null, 'rif' => null];
         }
     }
 

@@ -25,7 +25,10 @@
 
     <main class="p-8 flex-1 animate-fade-up">
       <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-[900] text-gray-800">Lista de Categorías</h1>
+        <div>
+          <h1 class="text-2xl font-[900] text-gray-800">Lista de Categorías</h1>
+          <p class="text-xs font-semibold text-gray-500">Mini-descripción del módulo de categorías</p>
+        </div>
         <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
           AÑADIR CATEGORÍA
@@ -85,7 +88,7 @@
         <form action="?url=categoria&type=register" method="POST" class="p-6 text-left">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold text-sm" placeholder="Papelería">
           </div>
           <div class="flex justify-end gap-3 mt-6">
             <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModal">Cancelar</button>
@@ -108,7 +111,7 @@
           <input type="hidden" name="idcategoria" id="edit_id">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_categoria" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_categoria" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Papelería">
           </div>
           <div class="mb-6 flex items-center gap-3">
              <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

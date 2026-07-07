@@ -133,15 +133,15 @@
         <form action="?url=moneda&type=register" method="POST" class="p-6">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_moneda" required maxlength="15" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: Dólar">
+              <input type="text" name="nombre_moneda" required maxlength="15" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Dólar">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Símbolo <span class="text-red-500">*</span></label>
-             <input type="text" name="simbolo" required maxlength="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: $">
+              <input type="text" name="simbolo" required maxlength="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="$">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs) <span class="text-red-500">*</span></label>
-             <input type="number" step="0.01" min="0.01" name="tasa_cambio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="number" step="0.01" min="0.01" name="tasa_cambio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="36.50">
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -165,15 +165,15 @@
           <input type="hidden" name="idmoneda" id="edit_id">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_moneda" id="edit_nombre" required maxlength="15" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_moneda" id="edit_nombre" required maxlength="15" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Dólar">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Símbolo <span class="text-red-500">*</span></label>
-             <input type="text" name="simbolo" id="edit_simbolo" required maxlength="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="simbolo" id="edit_simbolo" required maxlength="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="$">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Tasa de Cambio (Bs) <span class="text-red-500">*</span></label>
-             <input type="number" step="0.01" min="0.01" name="tasa_cambio" id="edit_tasa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="number" step="0.01" min="0.01" name="tasa_cambio" id="edit_tasa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="36.50">
           </div>
           <div class="mb-4 flex items-center gap-2">
             <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

@@ -82,7 +82,7 @@
         </div>
         <div class="p-6">
            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Método <span class="text-red-500">*</span></label>
-          <input type="text" name="nombre_metodo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: Zelle">
+           <input type="text" name="nombre_metodo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Zelle">
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
@@ -104,7 +104,7 @@
         <div class="p-6">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-            <input type="text" name="nombre_metodo" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="text" name="nombre_metodo" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Zelle">
           </div>
           <div class="flex items-center gap-2">
             <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

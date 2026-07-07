@@ -19,7 +19,7 @@
       <div class="logo-badge">
         <img src="assets/img/logo.jpeg" alt="Logo CopiGaby">
       </div>
-      <div class="logo-name">Copi<span>Gaby</span> 2023</div>
+      <div class="logo-name"><?= htmlspecialchars($nombreEmpresa ?? 'CopiGaby') ?> <span>2023</span></div>
       <div class="logo-tagline">¡Somos la diferencia!</div>
     </div>
 
@@ -65,7 +65,7 @@
     </form>
 
     <div class="card-footer">
-      CopiGaby 2023 C.A &nbsp;·&nbsp; RIF <?= htmlspecialchars($rifEmpresa ?? 'J-504149357') ?>
+      <?= htmlspecialchars($nombreEmpresa ?? 'CopiGaby') ?> 2023 C.A &nbsp;·&nbsp; RIF <?= htmlspecialchars($rifEmpresa ?? 'J-504149357') ?>
     </div>
   </div>
 

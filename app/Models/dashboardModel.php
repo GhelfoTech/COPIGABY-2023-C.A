@@ -21,7 +21,27 @@ class dashboardModel extends ConectDB {
         try {
             $stmt = $this->conex->prepare("SELECT COUNT(*) FROM producto_insumo WHERE estado = 1");
             $stmt->execute();
-            return $stmt->fetchColumn();
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public function getTotalClientes() {
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM cliente WHERE estado = 1");
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+
+    public function getTotalMedidas() {
+        try {
+            $stmt = $this->conex->prepare("SELECT COUNT(*) FROM medida WHERE estado = 1");
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
             return 0;
         }
@@ -54,14 +74,15 @@ class dashboardModel extends ConectDB {
     }
 
     /**
-     * Calcula el monto total de ventas del mes actual basado en los subtotales de los detalles.
+     * Calcula el monto total de ventas del mes actual.
      */
     public function getVentasMesActual() {
         try {
-            $query = "SELECT COALESCE(SUM(dp.subtotal), 0) 
-                      FROM pedido p 
-                      INNER JOIN detalle_pedido dp ON p.codigo_pedido = dp.codigo_pedido 
-                      WHERE p.estado = 1 AND MONTH(p.fecha_pedido) = MONTH(CURRENT_DATE()) AND YEAR(p.fecha_pedido) = YEAR(CURRENT_DATE())";
+            $query = "SELECT COALESCE(SUM(monto_total), 0)
+                      FROM pedido
+                      WHERE estado = 1
+                        AND MONTH(fecha_pedido) = MONTH(CURRENT_DATE())
+                        AND YEAR(fecha_pedido) = YEAR(CURRENT_DATE())";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
             return $stmt->fetchColumn();

@@ -84,21 +84,21 @@
           <h3 class="text-xl font-black text-navy-dark">Nuevo Usuario</h3>
         </div>
         <div class="p-6 space-y-4">
-          <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cédula</label>
-          <div class="flex gap-0">
-            <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
-            <input type="text" inputmode="numeric" name="cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
-          </div></div>
+           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cédula</label>
+           <div class="flex gap-0">
+             <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
+              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner text-sm" placeholder="12345678">
+           </div></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de Usuario <span class="text-red-500">*</span></label>
-          <input type="text" name="nombre_usuario" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
-          <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
-          <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+                     <input type="text" name="nombre_usuario" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="juan.perez"></div>
+           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
+                       <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
           <select name="codigo_rol" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             <?php foreach($roles as $r): ?> <option value="<?= $r['codigo_rol'] ?>"><?= $r['nombre_rol'] ?></option> <?php endforeach; ?>
           </select></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Contraseña <span class="text-red-500">*</span></label>
-          <input type="password" name="password" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+                     <input type="password" name="password" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Mínimo 6 caracteres"></div>
           <div class="flex justify-end gap-3 pt-4">
             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
@@ -121,12 +121,12 @@
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cédula</label>
           <div class="flex gap-0">
             <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
-            <input type="text" inputmode="numeric" name="cedula" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+            <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
           </div></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
           <input type="text" name="nombre_usuario" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
-          <input type="text" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
           <select name="codigo_rol" id="edit_rol" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             <?php foreach($roles as $r): ?> <option value="<?= $r['codigo_rol'] ?>"><?= $r['nombre_rol'] ?></option> <?php endforeach; ?>

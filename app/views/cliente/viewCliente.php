@@ -77,22 +77,25 @@
           <h3 class="text-xl font-black text-navy-dark">Nuevo Cliente</h3>
           <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-        <form action="?url=cliente&type=register" method="POST" class="p-6">
-          <div class="mb-4">
-             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula <span class="text-red-500">*</span></label>
-             <input type="number" name="cedula_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
+         <form action="?url=cliente&type=register" method="POST" class="p-6">
+           <div class="mb-4">
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula <span class="text-red-500">*</span></label>
+              <div class="flex gap-0">
+                <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
+                 <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner text-sm" placeholder="12345678">
+              </div>
+           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre Completo <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Juan Pérez">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-             <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico</label>
-            <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="correo@cliente.com">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección</label>
@@ -117,17 +120,20 @@
         </div>
         <form action="?url=cliente&type=update" method="POST" class="p-6">
           <input type="hidden" name="id_actual" id="edit_id_actual">
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula</label>
-            <input type="number" name="cedula_cliente" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
+           <div class="mb-4">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula</label>
+             <div class="flex gap-0">
+               <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
+               <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+             </div>
+           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre Completo <span class="text-red-500">*</span></label>
              <input type="text" name="nombre" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-             <input type="text" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo</label>

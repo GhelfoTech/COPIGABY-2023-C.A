@@ -85,11 +85,11 @@
         <div class="p-6">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_rol" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: Vendedor">
+              <input type="text" name="nombre_rol" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Vendedor">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción <span class="text-red-500">*</span></label>
-             <textarea name="descripcion" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Especifique el alcance..."></textarea>
+             <textarea name="descripcion" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Acceso a pedidos y clientes"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -112,11 +112,11 @@
         <div class="p-6">
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre_rol" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <input type="text" name="nombre_rol" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Vendedor">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción <span class="text-red-500">*</span></label>
-             <textarea name="descripcion" id="edit_descripcion" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></textarea>
+             <textarea name="descripcion" id="edit_descripcion" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Acceso a pedidos y clientes"></textarea>
           </div>
           <div class="flex items-center gap-2">
             <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

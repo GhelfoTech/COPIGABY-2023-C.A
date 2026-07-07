@@ -68,6 +68,8 @@
                 $error = "Por favor, llene todos los campos.";
             }
         }
-        $rifEmpresa = $object->getEmpresaRIF();
+        $empresa = $object->getEmpresaRIF();
+        $rifEmpresa = $empresa['rif'] ?? 'J-504149357';
+        $nombreEmpresa = $empresa['nombre_empresa'] ?? 'CopiGaby';
         include 'app/views/login/viewLogin.php';
     }
