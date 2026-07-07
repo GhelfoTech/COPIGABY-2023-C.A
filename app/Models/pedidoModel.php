@@ -326,11 +326,10 @@ class pedidoModel extends ConectDB {
             $stmt = $this->conex->prepare(
                 'SELECT p.codigo_producto, p.nombre_producto, p.stock_actual,
                         COALESCE(
-                            (SELECT dc.costo_unitario FROM detalle_compra dc
-                             WHERE dc.codigo_producto = p.codigo_producto
-                             ORDER BY dc.codigo_detalle_compra DESC LIMIT 1),
+                            (SELECT p2.precio FROM producto_insumo p2
+                             WHERE p2.codigo_producto = p.codigo_producto),
                             0
-                        ) AS costo
+                        ) AS precio
                  FROM producto_insumo p WHERE p.estado = 1 ORDER BY p.nombre_producto ASC'
             );
             $stmt->execute();

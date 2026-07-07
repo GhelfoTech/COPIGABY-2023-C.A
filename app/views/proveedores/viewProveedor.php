@@ -95,20 +95,20 @@
         </div>
         <form action="?url=proveedor&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Razón Social</label>
-            <input type="text" name="razon_social" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Razón Social <span class="text-red-500">*</span></label>
+             <input type="text" name="razon_social" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF</label>
-            <input type="text" name="rif_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="V-12345678-9">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
+             <input type="text" name="rif_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="V-12345678-9">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono</label>
-            <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
+             <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico</label>
-            <input type="email" name="correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
+             <input type="email" name="correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección Física</label>

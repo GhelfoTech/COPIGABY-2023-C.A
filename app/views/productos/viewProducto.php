@@ -100,20 +100,20 @@
         <form action="?url=producto&type=register" method="POST" class="p-6">
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
-              <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
+               <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
-              <select name="codigo_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
+               <select name="codigo_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
                 <?php foreach($categorias as $c): ?>
                   <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia</label>
-              <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
+               <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>
@@ -157,21 +157,21 @@
         <form action="?url=producto&type=update" method="POST" class="p-6">
           <input type="hidden" name="idproducto" id="edit_id">
           <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto</label>
-              <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <div class="col-span-2">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
+               <input type="text" name="nombre_producto" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría</label>
-              <select name="codigo_categoria" id="edit_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
+               <select name="codigo_categoria" id="edit_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
                 <?php foreach($categorias as $c): ?>
                   <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia</label>
-              <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
+               <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>

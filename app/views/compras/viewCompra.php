@@ -88,8 +88,8 @@
           <input type="hidden" name="monto_total" id="inputTotal">
           
           <div class="col-span-2 flex gap-2 items-end">
-            <div class="flex-1">
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor</label>
+              <div class="flex-1">
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor <span class="text-red-500">*</span></label>
               <select name="codigo_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
                 <?php foreach($proveedores as $p): ?>
                   <option value="<?= $p['codigo_proveedor'] ?>"><?= $p['razon_social'] ?></option>
@@ -102,11 +102,11 @@
             </a>
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Factura #</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Factura # <span class="text-red-500">*</span></label>
             <input type="text" name="numero_factura_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" maxlength="10" placeholder="Ej: F-1002">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Fecha de Compra</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Fecha de Compra <span class="text-red-500">*</span></label>
             <input type="date" name="fecha_compra" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" value="<?= date('Y-m-d') ?>">
           </div>
 

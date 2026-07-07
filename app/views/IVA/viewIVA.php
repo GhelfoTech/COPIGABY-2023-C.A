@@ -81,7 +81,7 @@
         </div>
         <form action="?url=iva&type=register" method="POST" class="p-6">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%)</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%) <span class="text-red-500">*</span></label>
             <input type="number" step="0.01" name="porcentaje_iva" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="flex justify-end gap-3 mt-8">
@@ -104,7 +104,7 @@
         <form action="?url=iva&type=update" method="POST" class="p-6">
           <input type="hidden" name="codigo_IVA" id="edit_codigo">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%)</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje (%) <span class="text-red-500">*</span></label>
             <input type="number" step="0.01" name="porcentaje_iva" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="flex items-center gap-2 mb-4">

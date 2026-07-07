@@ -120,9 +120,9 @@
           <input type="hidden" name="tasa_actual" id="inputTasaActual" value="<?= number_format($tasaActual, 2, '.', '') ?>">
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</label>
-              <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+             <div>
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente <span class="text-red-500">*</span></label>
+               <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
                 <option value="">— Seleccione un cliente —</option>
                 <?php foreach ($clientes as $cli): ?>
                   <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
@@ -457,7 +457,7 @@
       list.forEach(item => {
         const id = tipo === 'producto' ? item.codigo_producto : item.codigo_servicio;
         const nombre = tipo === 'producto' ? item.nombre_producto : item.nombre_servicio;
-        const precio = tipo === 'producto' ? item.costo : item.precio;
+        const precio = tipo === 'producto' ? item.precio : item.precio;
         const stock = tipo === 'producto' ? item.stock_actual : '';
         const extra = stock !== '' ? ` data-stock="${stock}"` : '';
         html += `<option value="${id}" data-precio="${parseFloat(precio)}"${extra}>${nombre}</option>`;

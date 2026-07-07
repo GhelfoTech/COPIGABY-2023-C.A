@@ -81,7 +81,7 @@
         </div>
         <form action="?url=medida&type=register" method="POST" class="p-6">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre (ej: Kilos, Litros, Unidad)</label>
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre (ej: Kilos, Litros, Unidad) <span class="text-red-500">*</span></label>
             <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="mb-4">
@@ -108,7 +108,7 @@
         <form action="?url=medida&type=update" method="POST" class="p-6">
           <input type="hidden" name="codigo_media" id="edit_codigo">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre</label>
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre <span class="text-red-500">*</span></label>
             <input type="text" name="nombre" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="mb-4">

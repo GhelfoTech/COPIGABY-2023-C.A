@@ -86,13 +86,13 @@
         </div>
         <div class="p-6 space-y-4">
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre</label>
-            <input type="text" name="nombre_servicio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
+             <input type="text" name="nombre_servicio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio ($)</label>
-              <input type="number" step="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio ($) <span class="text-red-500">*</span></label>
+               <input type="number" step="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             </div>
           </div>
           <div>
@@ -120,12 +120,12 @@
         </div>
         <div class="p-6 space-y-4">
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre</label>
-            <input type="text" name="nombre_servicio" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
+             <input type="text" name="nombre_servicio" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio</label>
-            <input type="number" step="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio <span class="text-red-500">*</span></label>
+             <input type="number" step="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>

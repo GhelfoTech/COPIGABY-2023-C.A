@@ -99,19 +99,19 @@
         </div>
         <form action="?url=empresa&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa <span class="text-red-500">*</span></label>
             <input type="text" name="nombre_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
             <input type="text" name="rif_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="J-12345678-9">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
             <input type="text" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico</label>
+             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
             <input type="email" name="correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
@@ -142,19 +142,19 @@
         <form action="?url=empresa&type=update" method="POST" class="p-6 grid grid-cols-2 gap-4">
           <input type="hidden" name="codigo_empresa" id="edit_codigo">
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre de la Empresa <span class="text-red-500">*</span></label>
             <input type="text" name="nombre_empresa" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">RIF <span class="text-red-500">*</span></label>
             <input type="text" name="rif_empresa" id="edit_rif" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
             <input type="text" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo</label>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo <span class="text-red-500">*</span></label>
             <input type="email" name="correo" id="edit_correo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2">

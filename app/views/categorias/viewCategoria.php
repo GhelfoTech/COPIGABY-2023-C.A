@@ -84,8 +84,8 @@
         </div>
         <form action="?url=categoria&type=register" method="POST" class="p-6 text-left">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría</label>
-            <input type="text" name="nombre_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría <span class="text-red-500">*</span></label>
+             <input type="text" name="nombre_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
           </div>
           <div class="flex justify-end gap-3 mt-6">
             <button type="button" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg closeModal">Cancelar</button>
@@ -107,8 +107,8 @@
         <form action="?url=categoria&type=update" method="POST" class="p-6 text-left">
           <input type="hidden" name="idcategoria" id="edit_id">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría</label>
-            <input type="text" name="nombre_categoria" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de la Categoría <span class="text-red-500">*</span></label>
+             <input type="text" name="nombre_categoria" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="mb-6 flex items-center gap-3">
              <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

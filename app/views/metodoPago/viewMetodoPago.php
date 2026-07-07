@@ -81,7 +81,7 @@
           <button type="button" onclick="toggleModal('modalRegister')" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6">
-          <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Método</label>
+           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Método <span class="text-red-500">*</span></label>
           <input type="text" name="nombre_metodo" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="Ej: Zelle">
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -103,7 +103,7 @@
         </div>
         <div class="p-6">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre</label>
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
             <input type="text" name="nombre_metodo" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="flex items-center gap-2">
