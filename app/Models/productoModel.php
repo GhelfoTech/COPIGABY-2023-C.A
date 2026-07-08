@@ -106,11 +106,9 @@ class productoModel extends ConectDB {
         }
     }
 
-    /**
-     * Calcula el precio de venta (costo de la última compra o costo manual
-     * multiplicado por (1 + porcentaje_ganancia/100)) y lo guarda en la
-     * columna precio del producto para que otros módulos lo consulten directo.
-     */
+    // Calcula el precio de venta (costo de la última compra o costo manual
+    // multiplicado por (1 + porcentaje_ganancia/100)) y lo guarda en la
+    // columna precio del producto para que otros módulos lo consulten directo.
     public function calcularYGuardarPrecio(int $codigoProducto): void {
         try {
             $stmt = $this->conex->prepare(
@@ -128,9 +126,7 @@ class productoModel extends ConectDB {
         }
     }
 
-    /**
-     * Recalcula y guarda el precio de varios productos a la vez.
-     */
+    // Recalcula y guarda el precio de varios productos a la vez.
     public function recalcularPrecios(array $codigosProducto): void {
         foreach (array_unique($codigosProducto) as $codigo) {
             $this->calcularYGuardarPrecio((int) $codigo);

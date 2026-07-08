@@ -101,7 +101,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
-                <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Papel Bond A4">
+                <input type="text" name="nombre_producto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Papel Bond ">
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
@@ -116,7 +116,7 @@
                 <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case"> Se carga desde compra</span></label>
               <input type="number" step="0.01" min="0" name="costo" id="new_costo" readonly class="w-full px-4 py-2 bg-gray-100 border rounded-lg text-navy-dark font-bold cursor-not-allowed" value="0.00">
             </div>
             <div class="col-span-2">
@@ -174,7 +174,7 @@
                 <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
-              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case">— Se carga desde última compra</span></label>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) </label>
               <input type="number" step="0.01" min="0" name="costo" id="edit_costo" readonly class="w-full px-4 py-2 bg-gray-100 border rounded-lg text-navy-dark font-bold cursor-not-allowed" value="0.00">
             </div>
             <div class="col-span-2">
@@ -201,7 +201,7 @@
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar Producto</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar Producto </button>
           </div>
         </form>
       </div>

@@ -571,6 +571,41 @@ class pedidoModel extends ConectDB {
             if ($stmtStock->rowCount() === 0) {
                 throw new PDOException("Stock insuficiente para el producto en la línea {$linea}");
             }
+            return;
+        }
+
+        if ($tipo === 'servicio' && $codigoServicio) {
+            $materiales = $this->getMaterialesByServicio((int) $codigoServicio);
+            $stmtStock = $this->conex->prepare(
+                'UPDATE producto_insumo SET stock_actual = stock_actual - ?
+                 WHERE codigo_producto = ? AND stock_actual >= ?'
+            );
+
+            foreach ($materiales as $mat) {
+                $cantidadNecesaria = (float) $mat['cantidad_usada'] * $cantidad;
+                if ($cantidadNecesaria <= 0) {
+                    continue;
+                }
+                $stmtStock->execute([(int) $cantidadNecesaria, (int) $mat['codigo_producto'], (int) $cantidadNecesaria]);
+                if ($stmtStock->rowCount() === 0) {
+                    throw new PDOException("Stock insuficiente del material #{$mat['codigo_producto']} para el servicio en la línea {$linea}");
+                }
+            }
+        }
+    }
+
+    private function getMaterialesByServicio(int $codigoServicio): array {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_producto, cantidad_usada
+                 FROM servicio_material
+                 WHERE codigo_servicio = ?'
+            );
+            $stmt->execute([$codigoServicio]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logPdoError('getMaterialesByServicio', $e);
+            return [];
         }
     }
 
@@ -579,11 +614,21 @@ class pedidoModel extends ConectDB {
         $stmtSumar = $this->conex->prepare('UPDATE producto_insumo SET stock_actual = stock_actual + ? WHERE codigo_producto = ?');
 
         foreach ($items as $item) {
-            if ($item['tipo'] !== 'producto') {
+            $cantidad = (float) $item['cantidad'];
+            if ($item['tipo'] === 'producto') {
+                $stmtSumar->execute([(int) $cantidad, (int) $item['codigo_producto']]);
                 continue;
             }
-            $cantidad = (float) $item['cantidad'];
-            $stmtSumar->execute([(int) $cantidad, (int) $item['codigo_producto']]);
+
+            if ($item['tipo'] === 'servicio' && !empty($item['codigo_servicio'])) {
+                $materiales = $this->getMaterialesByServicio((int) $item['codigo_servicio']);
+                foreach ($materiales as $mat) {
+                    $cantidadRestaurar = (float) $mat['cantidad_usada'] * $cantidad;
+                    if ($cantidadRestaurar > 0) {
+                        $stmtSumar->execute([(int) $cantidadRestaurar, (int) $mat['codigo_producto']]);
+                    }
+                }
+            }
         }
     }
 

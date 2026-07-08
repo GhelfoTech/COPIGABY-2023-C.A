@@ -228,7 +228,7 @@
               </div>
               <div id="wrapReferencia" class="hidden">
                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Referencia / Comprobante</label>
-                <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia">
+                <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia (solo números)">
               </div>
             </div>
           </div>

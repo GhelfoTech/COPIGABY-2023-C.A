@@ -29,7 +29,7 @@
           <h1 class="text-2xl font-[900] text-gray-800">Catálogo de Servicios</h1>
           <p class="text-gray-500 text-sm font-semibold">Gestione los servicios y sus requerimientos técnicos</p>
         </div>
-        <button onclick="toggleModal('modalRegister')" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+          <button onclick="abrirModalRegistro()" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
           AÑADIR SERVICIO
         </button>
@@ -95,14 +95,39 @@
                 <input type="number" step="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-             <textarea name="descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
-          </div>
-          <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
-          </div>
+           <div>
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
+              <textarea name="descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
+           </div>
+
+           <div class="border-t border-gray-100 pt-4 mt-2">
+             <div class="flex items-center justify-between mb-2">
+               <label class="text-xs font-black text-gray-400 uppercase tracking-widest">Materiales / Insumos que consume</label>
+               <span class="text-[0.65rem] font-bold text-gray-400 italic">Opcional</span>
+             </div>
+             <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
+               <select id="selProducto_register" class="flex-1 min-w-[200px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+                 <option value="">Seleccione un producto / insumo…</option>
+                 <?php foreach ($productos as $p): ?>
+                   <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
+                     <?= htmlspecialchars($p['nombre_producto']) ?> (Stock: <?= (int)($p['stock_actual'] ?? 0) ?>)
+                   </option>
+                 <?php endforeach; ?>
+               </select>
+               <input type="number" id="cantProducto_register" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
+               <button type="button" onclick="agregarMaterial('register')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                 Agregar
+               </button>
+             </div>
+             <div id="listaMateriales_register" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+             <input type="hidden" name="materiales" id="materiales_register" value="[]">
+           </div>
+
+           <div class="flex justify-end gap-3 mt-8">
+             <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
+           </div>
         </div>
       </form>
     </div>
@@ -127,18 +152,43 @@
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio <span class="text-red-500">*</span></label>
              <input type="number" step="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
           </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-             <textarea name="descripcion" id="edit_descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
-            <label class="text-sm font-bold text-navy-dark uppercase tracking-widest">Activo</label>
-          </div>
-          <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal('modalEdit')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
-          </div>
+           <div>
+             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
+              <textarea name="descripcion" id="edit_descripcion" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm h-24" placeholder="Incluye diseño básico y 100 unidades"></textarea>
+           </div>
+
+           <div class="border-t border-gray-100 pt-4 mt-2">
+             <div class="flex items-center justify-between mb-2">
+               <label class="text-xs font-black text-gray-400 uppercase tracking-widest">Materiales / Insumos que consume</label>
+               <span class="text-[0.65rem] font-bold text-gray-400 italic">Opcional</span>
+             </div>
+             <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
+               <select id="selProducto_edit" class="flex-1 min-w-[200px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+                 <option value="">Seleccione un producto / insumo…</option>
+                 <?php foreach ($productos as $p): ?>
+                   <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
+                     <?= htmlspecialchars($p['nombre_producto']) ?> (Stock: <?= (int)($p['stock_actual'] ?? 0) ?>)
+                   </option>
+                 <?php endforeach; ?>
+               </select>
+               <input type="number" id="cantProducto_edit" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
+               <button type="button" onclick="agregarMaterial('edit')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                 Agregar
+               </button>
+             </div>
+             <div id="listaMateriales_edit" class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+             <input type="hidden" name="materiales" id="materiales_edit" value="[]">
+           </div>
+
+           <div class="flex items-center gap-2">
+             <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
+             <label class="text-sm font-bold text-navy-dark uppercase tracking-widest">Activo</label>
+           </div>
+           <div class="flex justify-end gap-3 mt-8">
+             <button type="button" onclick="toggleModal('modalEdit')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
+           </div>
         </div>
       </form>
     </div>
@@ -158,7 +208,11 @@
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Nombre</p><p id="det_nombre" class="font-bold text-navy-light uppercase">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Precio</p><p id="det_precio" class="font-black text-orange-dk">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Descripción</p><p id="det_descripcion" class="font-semibold text-gray-500 text-sm">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
+           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
+           <div>
+             <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Materiales / Insumos</p>
+             <div id="det_materiales" class="space-y-2"></div>
+           </div>
         </div>
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
@@ -173,6 +227,90 @@
     const toggleModal = (id) => document.getElementById(id).classList.toggle('hidden');
 
     let currentRecord = null;
+    let materialesRegister = [];
+    let materialesEdit = [];
+
+    function abrirModalRegistro() {
+      materialesRegister = [];
+      renderMateriales('register');
+      toggleModal('modalRegister');
+    }
+
+    function agregarMaterial(mode) {
+      const sel = document.getElementById('selProducto_' + mode);
+      const cant = document.getElementById('cantProducto_' + mode);
+      const codigo = sel.value;
+      if (!codigo) { alert('Seleccione un producto o insumo.'); return; }
+
+      const nombre = sel.options[sel.selectedIndex].dataset.nombre;
+      const stockDisp = parseInt(sel.options[sel.selectedIndex].dataset.stock || '0', 10);
+      const cantidadRaw = parseFloat(cant.value);
+      const cantidad = isNaN(cantidadRaw) ? 0 : cantidadRaw;
+
+      const arr = mode === 'register' ? materialesRegister : materialesEdit;
+      const existente = arr.find(m => String(m.codigo_producto) === String(codigo));
+      if (existente) {
+        existente.cantidad_usada += cantidad;
+      } else {
+        arr.push({ codigo_producto: codigo, nombre: nombre, cantidad_usada: cantidad, stock: stockDisp });
+      }
+
+      renderMateriales(mode);
+      sel.value = '';
+      cant.value = 1;
+    }
+
+    function quitarMaterial(mode, codigo) {
+      if (mode === 'register') {
+        materialesRegister = materialesRegister.filter(m => String(m.codigo_producto) !== String(codigo));
+      } else {
+        materialesEdit = materialesEdit.filter(m => String(m.codigo_producto) !== String(codigo));
+      }
+      renderMateriales(mode);
+    }
+
+    function renderMateriales(mode) {
+      const arr = mode === 'register' ? materialesRegister : materialesEdit;
+      const lista = document.getElementById('listaMateriales_' + mode);
+      const hidden = document.getElementById('materiales_' + mode);
+      lista.innerHTML = '';
+
+      if (arr.length === 0) {
+        lista.innerHTML = '<p class="col-span-full text-xs text-gray-400 italic">Sin materiales asignados. Puede guardar el servicio sin materiales.</p>';
+      } else {
+        arr.forEach(m => {
+          const card = document.createElement('div');
+          card.className = 'flex items-center justify-between gap-2 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm';
+          card.innerHTML =
+            '<div class="min-w-0">' +
+              '<p class="font-bold text-navy-dark text-sm truncate">' + m.nombre + '</p>' +
+              '<p class="text-[0.65rem] text-gray-400">Stock disponible: ' + (m.stock ?? '—') + '</p>' +
+            '</div>' +
+            '<div class="flex items-center gap-2 shrink-0">' +
+              '<span class="text-xs font-black text-orange-dk bg-orange/10 px-2 py-1 rounded-lg">Usa: ' + m.cantidad_usada + '</span>' +
+              '<button type="button" onclick="quitarMaterial(\'' + mode + '\', ' + m.codigo_producto + ')" class="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Quitar">' +
+                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>' +
+              '</button>' +
+            '</div>';
+          lista.appendChild(card);
+        });
+      }
+
+      const limpios = arr
+        .filter(m => parseFloat(m.cantidad_usada) > 0)
+        .map(m => ({ codigo_producto: m.codigo_producto, cantidad_usada: m.cantidad_usada }));
+      hidden.value = JSON.stringify(limpios);
+    }
+
+    function cargarMaterialesServicio(codigo, callback) {
+      const f = new FormData();
+      f.append('getMaterials', 'true');
+      f.append('idservicio', codigo);
+      fetch('?url=servicio&type=main', { method: 'POST', body: f })
+        .then(r => r.json())
+        .then(d => { if (typeof callback === 'function') callback(d); })
+        .catch(() => { if (typeof callback === 'function') callback([]); });
+    }
 
     function viewDetails(data) {
       currentRecord = data;
@@ -181,6 +319,24 @@
       document.getElementById('det_precio').textContent = '$' + parseFloat(data.precio).toFixed(2);
       document.getElementById('det_descripcion').textContent = data.descripcion || '—';
       document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
+      const cont = document.getElementById('det_materiales');
+      cont.innerHTML = '<p class="text-xs text-gray-400 italic">Cargando…</p>';
+      cargarMaterialesServicio(data.codigo_servicio, (mats) => {
+        if (!mats || mats.length === 0) {
+          cont.innerHTML = '<p class="text-xs text-gray-400 italic">Sin materiales asignados.</p>';
+          return;
+        }
+        cont.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2';
+        cont.innerHTML = '';
+        mats.forEach(m => {
+          const card = document.createElement('div');
+          card.className = 'flex items-center justify-between gap-2 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm';
+          card.innerHTML =
+            '<p class="font-bold text-navy-dark text-sm truncate">' + (m.nombre_producto || ('Prod. #' + m.codigo_producto)) + '</p>' +
+            '<span class="text-xs font-black text-orange-dk bg-orange/10 px-2 py-1 rounded-lg shrink-0">Usa: ' + (m.cantidad_usada ?? 0) + '</span>';
+          cont.appendChild(card);
+        });
+      });
       document.getElementById('btnDetalleEditar').onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
       document.getElementById('btnDetalleEliminar').onclick = () => eliminar(currentRecord.codigo_servicio);
       document.getElementById('modalDetalle').classList.remove('hidden');
@@ -196,6 +352,14 @@
       document.getElementById('edit_precio').value = data.precio;
       document.getElementById('edit_descripcion').value = data.descripcion;
       document.getElementById('edit_estado').checked = data.estado == 1;
+      materialesEdit = [];
+      renderMateriales('edit');
+      cargarMaterialesServicio(data.codigo_servicio, (mats) => {
+        (mats || []).forEach(m => {
+          materialesEdit.push({ codigo_producto: m.codigo_producto, nombre: m.nombre_producto || ('Prod. #' + m.codigo_producto), cantidad_usada: parseFloat(m.cantidad_usada) });
+        });
+        renderMateriales('edit');
+      });
       toggleModal('modalEdit');
     }
 
