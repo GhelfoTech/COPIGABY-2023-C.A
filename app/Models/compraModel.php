@@ -62,6 +62,8 @@ class compraModel extends ConectDB {
                            WHERE codigo_producto = ?";
             $stmtStock = $this->conex->prepare($queryStock);
 
+            $productoModel = new productoModel();
+
             foreach ($items as $item) {
                 $subtotal = $item['cantidad'] * $item['costo'];
                 
@@ -79,6 +81,9 @@ class compraModel extends ConectDB {
                     $item['cantidad'],
                     $item['codigo_producto']
                 ]);
+
+                // Recalcular y guardar el precio de venta del producto afectado
+                $productoModel->calcularYGuardarPrecio((int) $item['codigo_producto']);
             }
 
             $this->conex->commit();

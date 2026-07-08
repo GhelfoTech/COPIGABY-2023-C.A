@@ -68,6 +68,7 @@ class productoModel extends ConectDB {
                 intval($datos['stock_actual'] ?? 0),
                 intval($datos['stock_minimo'] ?? 0)
             ]);
+            $this->calcularYGuardarPrecio((int) $this->conex->lastInsertId());
             return ["status" => "success"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
@@ -89,6 +90,7 @@ class productoModel extends ConectDB {
                 intval($datos['estado'] ?? 1),
                 $id
             ]);
+            $this->calcularYGuardarPrecio($id);
             return ["status" => "success"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
@@ -101,6 +103,37 @@ class productoModel extends ConectDB {
             return ["status" => $stmt->execute([$id]) ? "success" : "error"];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Calcula el precio de venta (costo de la última compra o costo manual
+     * multiplicado por (1 + porcentaje_ganancia/100)) y lo guarda en la
+     * columna precio del producto para que otros módulos lo consulten directo.
+     */
+    public function calcularYGuardarPrecio(int $codigoProducto): void {
+        try {
+            $stmt = $this->conex->prepare(
+                "UPDATE producto_insumo p
+                    SET precio = ROUND(COALESCE(
+                            (SELECT dc.costo_unitario FROM detalle_compra dc
+                             WHERE dc.codigo_producto = p.codigo_producto
+                             ORDER BY dc.codigo_compra DESC LIMIT 1),
+                            p.costo, 0) * (1 + COALESCE(p.porcentaje_ganancia, 0) / 100), 2)
+                 WHERE codigo_producto = ?"
+            );
+            $stmt->execute([$codigoProducto]);
+        } catch (PDOException $e) {
+            // Si falla el recálculo, se ignora para no bloquear la operación principal
+        }
+    }
+
+    /**
+     * Recalcula y guarda el precio de varios productos a la vez.
+     */
+    public function recalcularPrecios(array $codigosProducto): void {
+        foreach (array_unique($codigosProducto) as $codigo) {
+            $this->calcularYGuardarPrecio((int) $codigo);
         }
     }
 }
