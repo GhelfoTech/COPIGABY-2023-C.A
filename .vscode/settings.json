@@ -1,7 +1,18 @@
 {
-    "css.lint.unknownAtRules": "ignore",
-    "tailwindCSS.includeLanguages": {
-      "plaintext": "html",
-      "php": "html"
-    }
-  }
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html",
+    "html": "html",
+    "php": "html"
+  },
+  "files.associations": {
+    "*.php": "php"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["class=\\s*\"([^\"]*)\"", "([^\\s]+)"],
+    ["class=\\s*'([^']*)'", "([^\\s]+)"]
+  ],
+  "html.validate.styles": false,
+  "html.validate.scripts": false
+}
