@@ -6,8 +6,7 @@
   <title>CopiGaby — Gestión de Pedidos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/dist.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
