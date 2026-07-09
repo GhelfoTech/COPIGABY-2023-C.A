@@ -7,3 +7,9 @@
   --color-orange: #f5a623;
   --color-orange-dk: #d4891a;
 }
+
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--color-gray-200); /* Usa el gris clásico o el de tu tema */
+  }
+}
