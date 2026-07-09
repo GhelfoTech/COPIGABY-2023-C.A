@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
-<body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
+<body class="font-[Nunito] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
   <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
@@ -25,16 +25,16 @@
     <main class="p-8 flex-1 animate-fade-up">
       <div class="flex justify-between items-center mb-8">
         <div>
-          <h1 class="text-2xl font-[900] text-gray-800">Clientes</h1>
+          <h1 class="text-2xl font-black text-gray-800">Clientes</h1>
           <p class="text-gray-500 text-sm font-semibold">Administración de datos de contacto para facturación</p>
         </div>
-        <button id="btnOpenModal" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+        <button id="btnOpenModal" class="flex items-center gap-2 bg-linear-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
           AÑADIR CLIENTE
         </button>
       </div>
 
-      <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
+      <div class="bg-white rounded-[14px] shadow-sm overflow-hidden border border-gray-100">
         <table class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
@@ -68,10 +68,10 @@
     </main>
   </div>
 
-  <div id="modalCliente" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+  <div id="modalCliente" class="fixed inset-0 z-150 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Nuevo Cliente</h3>
           <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
@@ -81,24 +81,24 @@
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula <span class="text-red-500">*</span></label>
               <div class="flex gap-0">
                 <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
-                 <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner text-sm" placeholder="12345678">
+                 <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-hidden font-bold no-spinner text-sm" placeholder="12345678">
               </div>
            </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre Completo <span class="text-red-500">*</span></label>
-              <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Juan Pérez">
+              <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="Juan Pérez">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567">
+              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="04121234567">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico</label>
-             <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="correo@cliente.com">
+             <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="correo@cliente.com">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección</label>
-            <textarea name="direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></textarea>
+            <textarea name="direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -109,10 +109,10 @@
     </div>
   </div>
 
-  <div id="modalEditCliente" class="fixed inset-0 z-[150] hidden overflow-y-auto">
+  <div id="modalEditCliente" class="fixed inset-0 z-150 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Editar Cliente</h3>
           <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
@@ -123,24 +123,24 @@
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula</label>
              <div class="flex gap-0">
                <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
-               <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+               <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" id="edit_cedula" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-hidden font-bold no-spinner">
              </div>
            </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre Completo <span class="text-red-500">*</span></label>
-             <input type="text" name="nombre" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="text" name="nombre" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold">
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo</label>
-            <input type="email" name="correo" id="edit_correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            <input type="email" name="correo" id="edit_correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold">
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección</label>
-            <textarea name="direccion" id="edit_direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></textarea>
+            <textarea name="direccion" id="edit_direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -152,10 +152,10 @@
   </div>
 
   <!-- Modal Ver Detalle -->
-  <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
+  <div id="modalDetalle" class="fixed inset-0 z-160 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
-      <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
+      <div class="relative bg-white shadow-2xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Detalle del Cliente</h3>
           <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
