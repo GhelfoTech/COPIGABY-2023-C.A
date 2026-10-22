@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-06-2026 a las 22:13:11
+-- Tiempo de generación: 10-09-2026 a las 06:57:53
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -55,7 +55,6 @@ INSERT INTO `banco` (`codigo_banco`, `nombre_banco`, `estado`) VALUES
 CREATE TABLE `categoria` (
   `codigo_categoria` int(11) NOT NULL,
   `nombre_categoria` varchar(50) NOT NULL,
-  `porcentaje_ganancia` decimal(10,0) NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -63,10 +62,12 @@ CREATE TABLE `categoria` (
 -- Volcado de datos para la tabla `categoria`
 --
 
-INSERT INTO `categoria` (`codigo_categoria`, `nombre_categoria`, `porcentaje_ganancia`, `estado`) VALUES
-(101, 'PAPELERIA', 0, 1),
-(102, 'MERCERIA', 0, 1),
-(103, 'BISUTERIA', 0, 1);
+INSERT INTO `categoria` (`codigo_categoria`, `nombre_categoria`, `estado`) VALUES
+(101, 'PAPELERIA', 1),
+(102, 'MERCERIA', 1),
+(103, 'BISUTERIA', 1),
+(104, 'JUGUETES', 1),
+(105, 'ELECTRONICA', 1);
 
 -- --------------------------------------------------------
 
@@ -88,12 +89,13 @@ CREATE TABLE `cliente` (
 --
 
 INSERT INTO `cliente` (`cedula_cliente`, `nombre`, `telefono`, `correo`, `direccion`, `estado`) VALUES
+(19908765, 'Lucas Mendez', '04120583967', 'mlucas@gmail.com', 'Barquisimeto', 1),
 (23456654, 'MICHELLE', '04245555555', 'MICHELLE@gmail.com', 'BASIL', 1),
 (32137731, 'Yeilyn', '04228690511', 'Yeilyn32gmail.com', 'Andres Eloy', 1),
-(32345654, 'JUAN GOMEZ', '04245555555', 'JUAN@gmail.com', 'NICARAGUA', 1),
+(32345650, 'JUAN GOMEZ', '04245555555', 'JUAN@gmail.com', 'NICARAGUA', 1),
 (32456432, 'VICTORIA', '04245678976', 'VICTORIA@gmail.com', 'LA VICTORIA', 1),
-(123454321, 'RAMON', '04245555555', 'RAMON@gmail.com', 'ARGENTINA', 1),
-(342123344, 'CAROLINA', '04245678976', 'CAROLINA@gmail.com', 'MERIDA');
+(33234543, 'Juan Perez', '04245555555', 'Juanperez@gmail.com', 'Pueblo nuevo', 1),
+(123454321, 'RAMON', '04245555555', 'RAMON@gmail.com', 'ARGENTINA', 1);
 
 -- --------------------------------------------------------
 
@@ -116,13 +118,24 @@ CREATE TABLE `compra` (
 --
 
 INSERT INTO `compra` (`codigo_compra`, `codigo_proveedor`, `cedula_usuario`, `numero_factura_proveedor`, `fecha_compra`, `monto_total`, `estado`) VALUES
-(512, 317317661, 2121212121, '00512', '2026-03-04', 43563.00, 1),
 (518, 317317661, 323232323, '', '2026-06-25', 0.50, 1),
 (519, 317317661, 323232323, '', '2026-06-25', 1.00, 1),
 (520, 317317661, 323232323, '', '2026-06-25', 0.80, 1),
 (521, 317317661, 323232323, '', '2026-06-25', 3.10, 1),
 (522, 317317661, 323232323, '', '2026-06-25', 0.15, 1),
-(523, 317317661, 323232323, '', '2026-06-25', 0.20, 1);
+(523, 317317661, 323232323, '', '2026-06-25', 0.20, 1),
+(524, 317317661, 323232323, '00510', '2026-07-04', 5.75, 1),
+(525, 317317661, 323232323, '00511', '2026-07-04', 24.00, 1),
+(526, 317317661, 323232323, '00511', '2026-07-05', 6.00, 1),
+(527, 317317661, 323232323, '00510', '2026-07-07', 4.50, 1),
+(530, 317317661, 323232323, '00510', '2026-07-07', 4.50, 1),
+(532, 317317661, 323232323, 'TEST-17834', '2026-07-07', 3.00, 0),
+(533, 317317661, 323232323, '00510', '2026-07-07', 2.00, 1),
+(538, 988760998, 323232323, '00510', '2026-07-07', 2.00, 1),
+(540, 988760998, 323232323, '00510', '2026-07-07', 2.00, 1),
+(541, 317317661, 323232323, '', '2026-07-07', 0.20, 1),
+(542, 317317661, 323232323, '00510', '2026-07-07', 0.20, 1),
+(548, 317317661, 323232323, '00511', '2026-07-08', 2.00, 1);
 
 -- --------------------------------------------------------
 
@@ -144,10 +157,6 @@ CREATE TABLE `detalle_compra` (
 --
 
 INSERT INTO `detalle_compra` (`codigo_detalle_compra`, `codigo_compra`, `codigo_producto`, `cantidad`, `costo_unitario`, `subtotal`) VALUES
-(5568, 512, 759160, 12.00, 1500.00, 17000.00),
-(5976, 512, 759765, 5.00, 2500.00, 12500.00),
-(8845, 512, 759199, 8.00, 2600.00, 12000.00),
-(87653, 512, 759765, 12.00, 2600.00, 12600.00),
 (87657, 518, 7654, 1.00, 0.50, 0.50),
 (87658, 519, 76543, 2.00, 0.50, 1.00),
 (87659, 520, 759767, 1.00, 0.30, 0.30),
@@ -155,7 +164,33 @@ INSERT INTO `detalle_compra` (`codigo_detalle_compra`, `codigo_compra`, `codigo_
 (87661, 521, 759160, 1.00, 3.00, 3.00),
 (87662, 521, 759199, 1.00, 0.10, 0.10),
 (87663, 522, 759765, 1.00, 0.15, 0.15),
-(87664, 523, 98765, 1.00, 0.20, 0.20);
+(87664, 523, 98765, 1.00, 0.20, 0.20),
+(87665, 524, 7654, 1.00, 0.50, 0.50),
+(87666, 524, 76543, 1.00, 0.50, 0.50),
+(87667, 524, 98765, 1.00, 0.20, 0.20),
+(87668, 524, 759160, 1.00, 3.00, 3.00),
+(87669, 524, 759199, 1.00, 0.10, 0.10),
+(87670, 524, 759765, 1.00, 0.15, 0.15),
+(87671, 524, 759766, 1.00, 0.50, 0.50),
+(87672, 524, 759766, 1.00, 0.50, 0.50),
+(87673, 524, 759767, 1.00, 0.30, 0.30),
+(87674, 525, 759768, 12.00, 2.00, 24.00),
+(87675, 526, 759160, 2.00, 3.00, 6.00),
+(87676, 527, 759160, 1.00, 3.00, 3.00),
+(87677, 527, 759769, 1.00, 1.50, 1.50),
+(87679, 530, 759160, 1.00, 3.00, 3.00),
+(87680, 530, 759769, 1.00, 1.50, 1.50),
+(87681, 532, 759160, 1.00, 3.00, 3.00),
+(87682, 533, 7654, 1.00, 0.50, 0.50),
+(87683, 533, 759769, 1.00, 1.50, 1.50),
+(87689, 538, 7654, 1.00, 0.50, 0.50),
+(87690, 538, 759769, 1.00, 1.50, 1.50),
+(87692, 540, 7654, 1.00, 0.50, 0.50),
+(87693, 540, 759769, 1.00, 1.50, 1.50),
+(87694, 541, 98765, 1.00, 0.20, 0.20),
+(87695, 542, 98765, 1.00, 0.20, 0.20),
+(87702, 548, 759769, 1.00, 1.50, 1.50),
+(87703, 548, 7654, 1.00, 0.50, 0.50);
 
 -- --------------------------------------------------------
 
@@ -171,17 +206,6 @@ CREATE TABLE `detalle_pago` (
   `monto` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `detalle_pago`
---
-
-INSERT INTO `detalle_pago` (`codigo_detalle_pago`, `codigo_pago`, `codigo_moneda`, `codigo_metodo`, `monto`) VALUES
-(582, 580, 510, 562, 140.36),
-(587, 585, 510, 561, 10.44),
-(599, 597, 510, 564, 5901.18),
-(600, 598, 510, 561, 0.70),
-(601, 599, 510, 562, 69.60);
-
 -- --------------------------------------------------------
 
 --
@@ -193,24 +217,11 @@ CREATE TABLE `detalle_pedido` (
   `codigo_pedido` int(11) NOT NULL,
   `codigo_producto` int(11) DEFAULT NULL,
   `codigo_servicio` int(11) DEFAULT NULL,
-  `codigo_media` int(11) DEFAULT NULL,
   `cantidad` decimal(10,2) NOT NULL,
   `precio_venta` decimal(10,2) NOT NULL,
+  `codigo_unidad_medida` int(11) NOT NULL,
   `subtotal` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `detalle_pedido`
---
-
-INSERT INTO `detalle_pedido` (`codigo_detalle_pedido`, `codigo_pedido`, `codigo_producto`, `codigo_servicio`, `codigo_media`, `cantidad`, `precio_venta`, `subtotal`) VALUES
-(587, 571, 76543, NULL, 21, 2.00, 0.50, 1.00),
-(588, 571, NULL, 7, NULL, 3.00, 40.00, 120.00),
-(593, 576, 759160, NULL, 21, 3.00, 3.00, 9.00),
-(608, 581, 759766, NULL, 21, 2.00, 0.50, 1.00),
-(609, 581, NULL, 8, NULL, 2.00, 2500.00, 5000.00),
-(610, 580, 759765, NULL, 21, 4.00, 0.15, 0.60),
-(611, 582, NULL, 9, NULL, 2.00, 30.00, 60.00);
 
 -- --------------------------------------------------------
 
@@ -224,13 +235,6 @@ CREATE TABLE `detalle_transferencia` (
   `codigo_banco` int(11) NOT NULL,
   `codigo_referencia` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `detalle_transferencia`
---
-
-INSERT INTO `detalle_transferencia` (`codigo_detalle_transferencia`, `codigo_detalle_pago`, `codigo_banco`, `codigo_referencia`) VALUES
-(589, 599, 102, '2345');
 
 -- --------------------------------------------------------
 
@@ -285,7 +289,7 @@ CREATE TABLE `empresa` (
 --
 
 INSERT INTO `empresa` (`codigo_empresa`, `rif_empresa`, `nombre_empresa`, `telefono`, `correo`, `direccion`, `logo`) VALUES
-(1111, 'J504149357', 'COPI GABY 2023 C.A', '04120583967', 'Inpresionescopigaby@gmail.com', 'PUEBLO NUEVO', 'LOGOOOOOOOOO');
+(1111, 'J-504149358', 'COPI GABY 2023 C.A.', '04120583967', 'Inpresionescopigaby@gmail.com', 'PUEBLO NUEVO', 'LOGO');
 
 -- --------------------------------------------------------
 
@@ -306,7 +310,8 @@ CREATE TABLE `iva` (
 
 INSERT INTO `iva` (`codigo_IVA`, `porcentaje_iva`, `fecha`, `estado`) VALUES
 (1, 16.00, '2025-02-12', 1),
-(2, 18.00, '2026-06-09', 1);
+(2, 18.00, '2026-06-09', 1),
+(3, 14.00, '2026-07-06', 1);
 
 -- --------------------------------------------------------
 
@@ -350,28 +355,8 @@ CREATE TABLE `moneda` (
 --
 
 INSERT INTO `moneda` (`codigo_moneda`, `nombre_moneda`, `simbolo`, `codigo_tasa`, `estado`, `activa`) VALUES
-(510, 'DOLARES', '$', 109, 1, 1),
+(510, 'DOLAR', '$', 112, 1, 1),
 (511, 'EURO', '€', 107, 1, 0);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `movimientos`
---
-
-CREATE TABLE `movimientos` (
-  `codigo_movimiento` int(11) NOT NULL,
-  `fecha` datetime NOT NULL,
-  `cedula_usuario` int(11) NOT NULL,
-  `tipo` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `movimientos`
---
-
-INSERT INTO `movimientos` (`codigo_movimiento`, `fecha`, `cedula_usuario`, `tipo`) VALUES
-(8732, '2026-06-12 03:20:20', 2121212121, 1);
 
 -- --------------------------------------------------------
 
@@ -386,17 +371,6 @@ CREATE TABLE `pagos` (
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `pagos`
---
-
-INSERT INTO `pagos` (`codigo_pago`, `codigo_pedido`, `fecha_pago`, `estado`) VALUES
-(580, 571, '2026-06-28 15:35:48', 1),
-(585, 576, '2026-06-28 15:45:11', 1),
-(597, 581, '2026-06-28 16:08:20', 0),
-(598, 580, '2026-06-28 16:08:30', 1),
-(599, 582, '2026-06-28 16:10:07', 1);
-
 -- --------------------------------------------------------
 
 --
@@ -408,24 +382,13 @@ CREATE TABLE `pedido` (
   `cedula_cliente` int(12) NOT NULL,
   `cedula_usuario` int(11) NOT NULL,
   `fecha_pedido` datetime NOT NULL,
-  `estado` tinyint(1) NOT NULL,
   `subtotal` decimal(10,2) DEFAULT NULL,
   `monto_iva` decimal(10,2) DEFAULT NULL,
   `porcentaje_iva` decimal(5,2) DEFAULT NULL,
   `monto_total` decimal(10,2) DEFAULT NULL,
-  `tasa_cambio` decimal(10,2) DEFAULT NULL
+  `tasa_cambio` decimal(10,2) DEFAULT NULL,
+  `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `pedido`
---
-
-INSERT INTO `pedido` (`codigo_pedido`, `cedula_cliente`, `cedula_usuario`, `fecha_pedido`, `estado`, `subtotal`, `monto_iva`, `porcentaje_iva`, `monto_total`, `tasa_cambio`) VALUES
-(571, 123454321, 323232323, '2026-06-28 15:34:00', 1, 121.00, 19.36, 16.00, 140.36, 450.00),
-(576, 23456654, 323232323, '2026-06-28 15:45:11', 1, 9.00, 1.44, 16.00, 10.44, 450.00),
-(580, 32345654, 323232323, '2026-06-28 16:05:26', 1, 0.60, 0.10, 16.00, 0.70, 450.00),
-(581, 123454321, 323232323, '2026-06-28 16:07:32', 0, 5001.00, 900.18, 18.00, 5901.18, 450.00),
-(582, 32137731, 323232323, '2026-06-28 16:10:07', 1, 60.00, 9.60, 16.00, 69.60, 450.00);
 
 -- --------------------------------------------------------
 
@@ -437,26 +400,30 @@ CREATE TABLE `producto_insumo` (
   `codigo_producto` int(11) NOT NULL,
   `nombre_producto` varchar(50) NOT NULL,
   `codigo_categoria` int(11) NOT NULL,
-  `codigo_IVA` int(11) NOT NULL,
   `descripcion` text NOT NULL,
+  `porcentaje_ganancia` decimal(10,0) NOT NULL,
+  `precio` decimal(10,2) NOT NULL DEFAULT 0.00,
   `stock_actual` int(11) NOT NULL,
   `stock_minimo` int(11) NOT NULL,
-  `estado` tinyint(1) NOT NULL
+  `estado` tinyint(1) NOT NULL,
+  `costo` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `producto_insumo`
 --
 
-INSERT INTO `producto_insumo` (`codigo_producto`, `nombre_producto`, `codigo_categoria`, `codigo_IVA`, `descripcion`, `stock_actual`, `stock_minimo`, `estado`) VALUES
-(7654, 'Lapiz', 101, 2, 'xxxxxxxxxxxxxxxxxxxx', 3, 6, 1),
-(76543, 'CINTA', 102, 2, 'XXXXXXXXXXXXXXXXXXX', 54, 10, 1),
-(98765, 'PULSERA', 103, 2, 'XXXXXXXXXXXXXXXXX', 14, 2, 1),
-(759160, 'BLOCK', 101, 1, 'TTTTT', 17, 2, 1),
-(759199, 'HOJAS CARTA', 101, 1, 'XXXXXXXXXXXXXXXXX', 21, 2, 1),
-(759765, 'HOJAS OFICIO', 101, 1, 'XXXXXXXXXXXXXXXXXXXXXXXXXXX', 13, 2, 1),
-(759766, 'Borra', 101, 1, 'Borra', 11, 2, 1),
-(759767, 'lapicero', 101, 1, 'mmmmmmmmmm', 2, 5, 1);
+INSERT INTO `producto_insumo` (`codigo_producto`, `nombre_producto`, `codigo_categoria`, `descripcion`, `porcentaje_ganancia`, `precio`, `stock_actual`, `stock_minimo`, `estado`, `costo`) VALUES
+(7654, 'Lapiz', 101, 'Mongol', 100, 1.00, 7, 6, 1, 0.50),
+(76543, 'CINTA', 102, 'XXXXXXXXXXXXXXXXXXX', 100, 1.00, 52, 10, 1, 0.00),
+(98765, 'PULSERA', 103, 'XXXXXXXXXXXXXXXXX', 20, 0.24, 16, 2, 1, 0.00),
+(759160, 'BLOCK', 101, 'TTTTT', 50, 4.50, 0, 2, 1, 0.00),
+(759199, 'HOJAS CARTA', 101, 'XXXXXXXXXXXXXXXXX', 100, 0.20, 21, 2, 1, 0.00),
+(759765, 'HOJAS OFICIO', 101, 'XXXXXXXXXXXXXXXXXXXXXXXXXXX', 10, 0.17, 13, 2, 1, 0.00),
+(759766, 'Borra', 101, 'Borra', 15, 0.58, 12, 2, 1, 0.00),
+(759767, 'lapicero', 101, 'mmmmmmmmmm', 20, 0.36, 2, 5, 1, 0.00),
+(759768, 'Cuaderno', 101, 'doble linea', 200, 6.00, 11, 5, 1, 0.00),
+(759769, 'Colores', 101, 'xxxxxxx', 100, 0.00, 6, 3, 1, 0.00);
 
 -- --------------------------------------------------------
 
@@ -480,7 +447,7 @@ CREATE TABLE `proveedor` (
 
 INSERT INTO `proveedor` (`codigo_proveedor`, `rif_proveedor`, `razon_social`, `telefono`, `correo`, `direccion`, `estado`) VALUES
 (317317661, 'J317317661', 'INVERSIONES BURBUJA', '04245555555', 'BURBUJA@gmail.com', 'calle carrera', 1),
-(988760998, '54924', 'POINTER', '04228690511', 'mprende@gmail.com', 'calle 6 valencia', 0);
+(988760998, '54924', 'POINTER', '04228690511', 'mpointer@gmail.com', 'calle 6 \r\n', 1);
 
 -- --------------------------------------------------------
 
@@ -499,6 +466,8 @@ CREATE TABLE `referencia` (
 
 INSERT INTO `referencia` (`referencia`, `numero_comprobante`) VALUES
 ('2345', '2345'),
+('2347', '2347'),
+('3345', '3345'),
 ('6789', '6789'),
 ('77777', '8888888'),
 ('7890', '7890'),
@@ -552,7 +521,10 @@ INSERT INTO `servicio` (`codigo_servicio`, `nombre_servicio`, `descripcion`, `pr
 (7, 'IMPRESION ', 'XXXXXXXXXXXXXXXXXX', 40.00, 1),
 (8, 'PLASTIFICACION', 'XXXXXXXXXX', 2500.00, 1),
 (9, 'Copia - B&N', 'Blanco y negro', 30.00, 1),
-(10, 'Copia - Color', 'Color', 50.00, 1);
+(10, 'Copia - Color.', 'Color.', 50.00, 1),
+(11, 'Empastado', 'hhhhhhhhh', 5.00, 1),
+(12, 'Encuadernado', '', 6.00, 1),
+(13, 'Copia - Color', '', 0.70, 1);
 
 -- --------------------------------------------------------
 
@@ -572,7 +544,7 @@ CREATE TABLE `servicio_material` (
 --
 
 INSERT INTO `servicio_material` (`codigo_servicio_material`, `codigo_producto`, `codigo_servicio`, `cantidad_usada`) VALUES
-(7, 759765, 7, 3);
+(9, 7654, 12, 1);
 
 -- --------------------------------------------------------
 
@@ -595,7 +567,10 @@ INSERT INTO `tasa_cambio` (`codigo_tasa`, `fecha`, `monto_bolivares`) VALUES
 (106, '2026-06-17 00:02:28', 450.00),
 (107, '2026-06-17 00:02:34', 600.00),
 (108, '2026-06-24 01:11:09', 450.00),
-(109, '2026-06-24 01:11:21', 450.00);
+(109, '2026-06-24 01:11:21', 450.00),
+(110, '2026-07-06 22:04:19', 470.00),
+(111, '2026-07-06 22:17:20', 500.00),
+(112, '2026-07-06 22:34:00', 500.00);
 
 -- --------------------------------------------------------
 
@@ -606,8 +581,8 @@ INSERT INTO `tasa_cambio` (`codigo_tasa`, `fecha`, `monto_bolivares`) VALUES
 CREATE TABLE `unidad_medida` (
   `codigo_media` int(11) NOT NULL,
   `nombre` varchar(15) NOT NULL,
-  `abreviatura` varchar(10) DEFAULT NULL,
-  `cantidad_unidad` int(11) NOT NULL DEFAULT 1,
+  `abreviatura` varchar(4) NOT NULL,
+  `cantidad_unidad` int(11) NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -616,10 +591,8 @@ CREATE TABLE `unidad_medida` (
 --
 
 INSERT INTO `unidad_medida` (`codigo_media`, `nombre`, `abreviatura`, `cantidad_unidad`, `estado`) VALUES
-(21, 'BULTO', 'BLT', 1, 1),
-(22, 'DOCENA', 'DOC', 12, 1),
-(24, 'CAJA', 'CJ', 1, 1),
-(26, 'METRO', 'MT', 1, 1);
+(26, 'METRO', 'M', 1, 1),
+(27, 'Caja', 'C', 12, 1);
 
 -- --------------------------------------------------------
 
@@ -632,7 +605,7 @@ CREATE TABLE `usuario` (
   `telefono` varchar(12) NOT NULL,
   `nombre_usuario` varchar(20) NOT NULL,
   `codigo_rol` int(11) NOT NULL,
-  `password` varchar(15) NOT NULL,
+  `password` varchar(8) NOT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -641,9 +614,8 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`cedula_usuario`, `telefono`, `nombre_usuario`, `codigo_rol`, `password`, `estado`) VALUES
-(222222222, '04245555555', 'empleado', 2, '123', 1),
-(323232323, '04245555555', 'admin', 1, '123', 1),
-(2121212121, '04245555555', 'ADMIN1', 1, '123A', 1);
+(222222222, '04245555555', 'empleado', 2, 'empleado', 1),
+(323232323, '04245555555', 'ADMIN', 1, '1234', 1);
 
 --
 -- Índices para tablas volcadas
@@ -700,7 +672,7 @@ ALTER TABLE `detalle_pedido`
   ADD KEY `codigo_pedido` (`codigo_pedido`),
   ADD KEY `codigo_producto` (`codigo_producto`),
   ADD KEY `codigo_servicio` (`codigo_servicio`),
-  ADD KEY `codigo_media` (`codigo_media`);
+  ADD KEY `codigo_unidad_medida` (`codigo_unidad_medida`);
 
 --
 -- Indices de la tabla `detalle_transferencia`
@@ -751,13 +723,6 @@ ALTER TABLE `moneda`
   ADD KEY `codigo_tasa` (`codigo_tasa`);
 
 --
--- Indices de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD PRIMARY KEY (`codigo_movimiento`),
-  ADD KEY `codigo_usuario` (`cedula_usuario`);
-
---
 -- Indices de la tabla `pagos`
 --
 ALTER TABLE `pagos`
@@ -777,8 +742,7 @@ ALTER TABLE `pedido`
 --
 ALTER TABLE `producto_insumo`
   ADD PRIMARY KEY (`codigo_producto`),
-  ADD KEY `codigo_categoria` (`codigo_categoria`),
-  ADD KEY `codigo_IVA` (`codigo_IVA`);
+  ADD KEY `codigo_categoria` (`codigo_categoria`);
 
 --
 -- Indices de la tabla `proveedor`
@@ -839,37 +803,37 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `categoria`
 --
 ALTER TABLE `categoria`
-  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
+  MODIFY `codigo_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT de la tabla `compra`
 --
 ALTER TABLE `compra`
-  MODIFY `codigo_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=524;
+  MODIFY `codigo_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=550;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_compra`
 --
 ALTER TABLE `detalle_compra`
-  MODIFY `codigo_detalle_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87665;
+  MODIFY `codigo_detalle_compra` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87705;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pago`
 --
 ALTER TABLE `detalle_pago`
-  MODIFY `codigo_detalle_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=602;
+  MODIFY `codigo_detalle_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=627;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
 --
 ALTER TABLE `detalle_pedido`
-  MODIFY `codigo_detalle_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=612;
+  MODIFY `codigo_detalle_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=668;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_transferencia`
 --
 ALTER TABLE `detalle_transferencia`
-  MODIFY `codigo_detalle_transferencia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=590;
+  MODIFY `codigo_detalle_transferencia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=593;
 
 --
 -- AUTO_INCREMENT de la tabla `empresa`
@@ -881,7 +845,7 @@ ALTER TABLE `empresa`
 -- AUTO_INCREMENT de la tabla `iva`
 --
 ALTER TABLE `iva`
-  MODIFY `codigo_IVA` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `codigo_IVA` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `metodo_pago`
@@ -896,28 +860,22 @@ ALTER TABLE `moneda`
   MODIFY `codigo_moneda` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=983;
 
 --
--- AUTO_INCREMENT de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  MODIFY `codigo_movimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8733;
-
---
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
-  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=600;
+  MODIFY `codigo_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=625;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `codigo_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=583;
+  MODIFY `codigo_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=626;
 
 --
 -- AUTO_INCREMENT de la tabla `producto_insumo`
 --
 ALTER TABLE `producto_insumo`
-  MODIFY `codigo_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=759768;
+  MODIFY `codigo_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=759770;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedor`
@@ -935,25 +893,25 @@ ALTER TABLE `rol`
 -- AUTO_INCREMENT de la tabla `servicio`
 --
 ALTER TABLE `servicio`
-  MODIFY `codigo_servicio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `codigo_servicio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_material`
 --
 ALTER TABLE `servicio_material`
-  MODIFY `codigo_servicio_material` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `codigo_servicio_material` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `tasa_cambio`
 --
 ALTER TABLE `tasa_cambio`
-  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `codigo_tasa` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT de la tabla `unidad_medida`
 --
 ALTER TABLE `unidad_medida`
-  MODIFY `codigo_media` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `codigo_media` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Restricciones para tablas volcadas
@@ -988,7 +946,7 @@ ALTER TABLE `detalle_pedido`
   ADD CONSTRAINT `detalle_pedido_ibfk_1` FOREIGN KEY (`codigo_pedido`) REFERENCES `pedido` (`codigo_pedido`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `detalle_pedido_ibfk_2` FOREIGN KEY (`codigo_producto`) REFERENCES `producto_insumo` (`codigo_producto`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `detalle_pedido_ibfk_3` FOREIGN KEY (`codigo_servicio`) REFERENCES `servicio` (`codigo_servicio`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `detalle_pedido_ibfk_4` FOREIGN KEY (`codigo_media`) REFERENCES `unidad_medida` (`codigo_media`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `detalle_pedido_ibfk_4` FOREIGN KEY (`codigo_unidad_medida`) REFERENCES `unidad_medida` (`codigo_media`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `detalle_transferencia`
@@ -1012,12 +970,6 @@ ALTER TABLE `moneda`
   ADD CONSTRAINT `moneda_ibfk_1` FOREIGN KEY (`codigo_tasa`) REFERENCES `tasa_cambio` (`codigo_tasa`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD CONSTRAINT `movimientos_ibfk_1` FOREIGN KEY (`cedula_usuario`) REFERENCES `usuario` (`cedula_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
@@ -1034,8 +986,7 @@ ALTER TABLE `pedido`
 -- Filtros para la tabla `producto_insumo`
 --
 ALTER TABLE `producto_insumo`
-  ADD CONSTRAINT `producto_insumo_ibfk_1` FOREIGN KEY (`codigo_categoria`) REFERENCES `categoria` (`codigo_categoria`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `producto_insumo_ibfk_2` FOREIGN KEY (`codigo_IVA`) REFERENCES `iva` (`codigo_IVA`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `producto_insumo_ibfk_1` FOREIGN KEY (`codigo_categoria`) REFERENCES `categoria` (`codigo_categoria`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `servicio_material`

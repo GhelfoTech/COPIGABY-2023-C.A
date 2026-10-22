@@ -15,7 +15,8 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_categoria'])) {
-                $object->addCategory(trim($_POST['nombre_categoria']));
+                $result = $object->addCategory(trim($_POST['nombre_categoria']));
+                $_SESSION['flash_message'] = $result;
                 header("Location: ?url=categoria");
                 exit();
             }
@@ -26,11 +27,12 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idcategoria'], $_POST['nombre_categoria'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateCategory(
+                $result = $object->updateCategory(
                     (int) $_POST['idcategoria'],
                     trim($_POST['nombre_categoria']),
                     $estado
                 );
+                $_SESSION['flash_message'] = $result;
                 header("Location: ?url=categoria");
                 exit();
             }

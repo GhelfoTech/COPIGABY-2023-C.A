@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\ProductosTrait;
 use PDO;
 use PDOException;
 
 class productoModel extends ConectDB {
+    use ProductosTrait;
     private $conex;
 
     private $codigo_producto;
@@ -67,6 +69,11 @@ class productoModel extends ConectDB {
     }
 
     public function addProduct($datos) {
+        $validacion = $this->validarProducto(array_merge($datos, ['stock_actual' => $datos['stock_actual'] ?? 0, 'stock_minimo' => $datos['stock_minimo'] ?? 0]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $checkMedia = $this->conex->prepare("SHOW COLUMNS FROM producto_insumo LIKE 'codigo_media'");
             $checkMedia->execute();
@@ -107,6 +114,12 @@ class productoModel extends ConectDB {
     }
 
     public function updateProduct($id, $datos) {
+        $datos['codigo_producto'] = $id;
+        $validacion = $this->validarProducto(array_merge($datos, ['stock_actual' => $datos['stock_actual'] ?? 0, 'stock_minimo' => $datos['stock_minimo'] ?? 0]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $checkMedia = $this->conex->prepare("SHOW COLUMNS FROM producto_insumo LIKE 'codigo_media'");
             $checkMedia->execute();

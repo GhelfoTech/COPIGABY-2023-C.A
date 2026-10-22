@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\MetodoPagoTrait;
 use PDO;
 use PDOException;
 
 class metodopagoModel extends ConectDB {
+    use MetodoPagoTrait;
     private $conex;
 
     private $codigo_metodo;
@@ -29,6 +31,11 @@ class metodopagoModel extends ConectDB {
     }
 
     public function addMetodo($nombre) {
+        $validacion = $this->validarMetodoPago(['nombre_metodo' => $nombre, 'estado' => 1]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "INSERT INTO metodo_pago (nombre_metodo, estado) VALUES (?, 1)";
             $stmt = $this->conex->prepare($query);
@@ -39,6 +46,11 @@ class metodopagoModel extends ConectDB {
     }
 
     public function updateMetodo($id, $nombre, $estado) {
+        $validacion = $this->validarMetodoPago(['nombre_metodo' => $nombre, 'estado' => $estado, 'codigo_metodo' => $id]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE metodo_pago SET nombre_metodo = ?, estado = ? WHERE codigo_metodo = ?";
             $stmt = $this->conex->prepare($query);

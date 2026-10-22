@@ -10,7 +10,6 @@
         private $conex;
 
         public function __construct() {
-            // Llamar al método para establecer la conexión a la base de datos
             $this->getConnection();
         }
 
@@ -20,11 +19,9 @@
                 return $this->conex;
             }
             try {
-                // Agregamos charset=utf8 para evitar errores de comparación de caracteres
-                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby;charset=utf8", "root", "");
+                $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby1;charset=utf8", "root", "");
                 $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
-                // Si hay un error, se lanza una excepción y se muestra un mensaje de error
                 die('ERROR DE CONEXIÓN: No se ha podido conectar con la base de datos. ' . $e->getMessage());
             }
 

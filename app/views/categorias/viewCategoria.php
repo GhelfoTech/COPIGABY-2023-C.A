@@ -23,6 +23,22 @@
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">
+      <?php if (isset($_SESSION['flash_message'])): $flash = $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
+        <?php if (is_array($flash) && isset($flash['status'])): ?>
+          <div id="flashMessage" class="mb-6 flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm border
+            <?= $flash['status'] === 'success'
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-red-50 text-red-700 border-red-200' ?>">
+            <span class="w-8 h-8 flex items-center justify-center rounded-full shrink-0
+              <?= $flash['status'] === 'success' ? 'bg-green-100' : 'bg-red-100' ?>">
+              <?= $flash['status'] === 'success' ? '✔' : '✖' ?>
+            </span>
+            <span><?= htmlspecialchars($flash['message'] ?? ($flash['status'] === 'success' ? 'Operación realizada con éxito' : 'No se pudo completar la operación')) ?></span>
+            <button type="button" onclick="this.parentElement.remove()" class="ml-auto text-lg opacity-50 hover:opacity-100">&times;</button>
+          </div>
+        <?php endif; ?>
+      <?php endif; ?>
+
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-[900] text-gray-800">Lista de Categorías</h1>
@@ -197,7 +213,7 @@
         fetch('?url=categoria&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar');
+          else alert(d.message || 'No se pudo procesar');
         });
       }
     }

@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\EmpresaTrait;
 use PDO;
 use PDOException;
 
 class empresaModel extends ConectDB {
+    use EmpresaTrait;
     private $conex;
 
     private $codigo_empresa;
@@ -56,6 +58,11 @@ class empresaModel extends ConectDB {
      * Registra una nueva empresa.
      */
     public function addEmpresa($datos) {
+        $validacion = $this->validarEmpresa($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "INSERT INTO empresa (rif_empresa, nombre_empresa, telefono, correo, direccion, logo)
                       VALUES (?, ?, ?, ?, ?, ?)";
@@ -80,6 +87,12 @@ class empresaModel extends ConectDB {
      * Actualiza los datos de una empresa existente.
      */
     public function updateEmpresa($id, $datos) {
+        $datos['codigo_empresa'] = $id;
+        $validacion = $this->validarEmpresa($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE empresa SET rif_empresa = ?, nombre_empresa = ?, telefono = ?,
                       correo = ?, direccion = ?, logo = ? WHERE codigo_empresa = ?";

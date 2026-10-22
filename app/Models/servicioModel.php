@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\ServiciosTrait;
 use PDO;
 use PDOException;
 
 class servicioModel extends ConectDB {
+    use ServiciosTrait;
     private $conex;
 
     private $codigo_servicio;
@@ -31,6 +33,11 @@ class servicioModel extends ConectDB {
     }
 
     public function addServicio($datos, $materiales = []) {
+        $validacion = $this->validarServicio(array_merge($datos, ['estado' => 1]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $this->conex->beginTransaction();
 
@@ -61,6 +68,12 @@ class servicioModel extends ConectDB {
     }
 
     public function updateServicio($id, $datos, $materiales = []) {
+        $datos['codigo_servicio'] = $id;
+        $validacion = $this->validarServicio($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $this->conex->beginTransaction();
 

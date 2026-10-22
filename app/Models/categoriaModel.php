@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\CategoriaTrait;
 use PDO;
 use PDOException;
 
 class categoriaModel extends ConectDB {
+    use CategoriaTrait;
     private $codigo_categoria;
     private $nombre_categoria;
     private $estado;
@@ -34,6 +36,11 @@ class categoriaModel extends ConectDB {
      * Registra una nueva categoría.
      */
     public function addCategory(string $nombre) {
+        $validacion = $this->validarCategoria(['nombre_categoria' => $nombre, 'porcentaje_ganancia' => 0]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "INSERT INTO categoria (nombre_categoria, estado) VALUES (?, 1)";
             $stmt = $this->conex->prepare($query);
@@ -52,6 +59,15 @@ class categoriaModel extends ConectDB {
      * Actualiza una categoría existente.
      */
     public function updateCategory(int $id, string $nombre, int $estado) {
+        $validacion = $this->validarCategoria([
+            'nombre_categoria' => $nombre,
+            'porcentaje_ganancia' => 0,
+            'codigo_categoria' => $id,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE categoria SET nombre_categoria = ?, estado = ? WHERE codigo_categoria = ?";
             $stmt = $this->conex->prepare($query);

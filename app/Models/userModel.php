@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\UsuariosTrait;
 use PDO;
 use PDOException;
 
 class userModel extends ConectDB {
+    use UsuariosTrait;
 
     private $conex;
 
@@ -36,16 +38,29 @@ class userModel extends ConectDB {
     }
 
     public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol = 2) {
+        $validacion = $this->validarUsuario([
+            'cedula_usuario' => $cedula,
+            'telefono'       => $telefono,
+            'nombre_usuario' => $nombre_usuario,
+            'codigo_rol'     => $rol,
+            'password'       => $password,
+            'estado'         => 1,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
-            $query = "INSERT INTO usuario (cedula_usuario, telefono, nombre_usuario, codigo_rol, password, estado) 
+            $query = "INSERT INTO usuario (cedula_usuario, telefono, nombre_usuario, codigo_rol, password, estado)
                       VALUES (:cedula, :telefono, :nombre, :rol, :pass, 1)";
             $stmt = $this->conex->prepare($query);
             $stmt->bindParam(':cedula', $cedula);
             $stmt->bindParam(':telefono', $telefono);
-            $stmt->bindParam(':nombre', trim($nombre_usuario));
+            $nombreLimpio = trim($nombre_usuario);
+            $stmt->bindParam(':nombre', $nombreLimpio);
             $stmt->bindParam(':rol', $rol);
             $stmt->bindParam(':pass', $password);
-            
+
             if ($stmt->execute()) {
                 return ["status" => "success", "message" => "Usuario registrado con éxito."];
             }
@@ -56,6 +71,19 @@ class userModel extends ConectDB {
     }
 
     public function updateUser($id, $cedula, $nombre, $telefono, $rol, $estado) {
+        $validacion = $this->validarUsuario([
+            'cedula_usuario'        => $cedula,
+            'telefono'              => $telefono,
+            'nombre_usuario'        => $nombre,
+            'codigo_rol'            => $rol,
+            'password'              => '0000',
+            'estado'                => $estado,
+            'cedula_usuario_actual' => $id,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE usuario SET cedula_usuario = :cedula, nombre_usuario = :nombre, 
                       telefono = :telefono, codigo_rol = :rol, estado = :estado 
@@ -78,6 +106,12 @@ class userModel extends ConectDB {
     }
 
     public function deleteUser($id) {
+        // El usuario administrador no puede ser eliminado ni desactivado
+        $validacionAdmin = $this->validarAdminNoEliminable($id);
+        if ($validacionAdmin !== true) {
+            return $validacionAdmin;
+        }
+
         try {
             $query = "UPDATE usuario SET estado = 0 WHERE cedula_usuario = :id";
             $stmt = $this->conex->prepare($query);

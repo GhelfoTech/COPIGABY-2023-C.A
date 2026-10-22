@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\MedidaTrait;
 use PDO;
 use PDOException;
 
 class medidaModel extends ConectDB {
+    use MedidaTrait;
     private $conex;
 
     private $codigo_media;
@@ -82,8 +84,13 @@ class medidaModel extends ConectDB {
             $abreviatura = $abreviatura !== null ? trim((string) $abreviatura) : null;
             $cantidadUnidad = (int) $cantidadUnidad;
 
-            if ($nombre === '') {
-                return ['status' => 'error', 'message' => 'El nombre es obligatorio'];
+            $validacion = $this->validarMedida([
+                'nombre'          => $nombre,
+                'abreviatura'     => $abreviatura ?? '',
+                'cantidad_unidad' => $cantidadUnidad,
+            ]);
+            if ($validacion !== true) {
+                return $validacion;
             }
 
             $query = 'INSERT INTO unidad_medida (nombre, abreviatura, cantidad_unidad, estado) VALUES (?, ?, ?, 1)';
@@ -117,6 +124,16 @@ class medidaModel extends ConectDB {
     }
 
     public function updateMedida($id, $nombre, $abreviatura = null, $cantidadUnidad = 1, $estado) {
+        $validacion = $this->validarMedida([
+            'nombre'          => $nombre,
+            'abreviatura'     => $abreviatura ?? '',
+            'cantidad_unidad' => $cantidadUnidad,
+            'codigo_media'    => $id,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE unidad_medida SET nombre = ?, abreviatura = ?, cantidad_unidad = ?, estado = ? WHERE codigo_media = ?";
             $stmt = $this->conex->prepare($query);

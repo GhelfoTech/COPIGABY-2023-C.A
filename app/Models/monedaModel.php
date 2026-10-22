@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\MonedaTrait;
 use PDO;
 use PDOException;
 
 class monedaModel extends ConectDB {
+    use MonedaTrait;
     private $conex;
 
     private $codigo_moneda;
@@ -170,11 +172,14 @@ class monedaModel extends ConectDB {
         $simbolo = trim((string) ($datos['simbolo'] ?? ''));
         $tasa = (float) ($datos['tasa_cambio'] ?? 0);
 
-        if ($nombre === '' || $simbolo === '') {
-            return ['status' => 'error', 'message' => 'Nombre y símbolo son obligatorios'];
-        }
-        if ($tasa <= 0) {
-            return ['status' => 'error', 'message' => 'La tasa de cambio debe ser mayor a cero'];
+        $validacion = $this->validarMoneda([
+            'nombre_moneda' => $nombre,
+            'simbolo'       => $simbolo,
+            'tasa_cambio'   => $tasa,
+            'estado'        => 1,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
         }
 
         try {
@@ -231,11 +236,15 @@ class monedaModel extends ConectDB {
         $tasa = (float) ($datos['tasa_cambio'] ?? 0);
         $estado = (int) ($datos['estado'] ?? 1) ? 1 : 0;
 
-        if ($nombre === '' || $simbolo === '') {
-            return ['status' => 'error', 'message' => 'Nombre y símbolo son obligatorios'];
-        }
-        if ($tasa <= 0) {
-            return ['status' => 'error', 'message' => 'La tasa de cambio debe ser mayor a cero'];
+        $validacion = $this->validarMoneda([
+            'nombre_moneda' => $nombre,
+            'simbolo'       => $simbolo,
+            'tasa_cambio'   => $tasa,
+            'estado'        => $estado,
+            'codigo_moneda' => $id,
+        ]);
+        if ($validacion !== true) {
+            return $validacion;
         }
 
         try {

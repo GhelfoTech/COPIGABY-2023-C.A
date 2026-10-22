@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\IvaTrait;
 use PDO;
 use PDOException;
 
 class ivaModel extends ConectDB {
+    use IvaTrait;
     private $conex;
 
     private $codigo_iva;
@@ -36,6 +38,11 @@ class ivaModel extends ConectDB {
      * Registra un nuevo porcentaje de IVA.
      */
     public function addIva($porcentaje_iva) {
+        $validacion = $this->validarIva(['porcentaje_iva' => $porcentaje_iva, 'estado' => 1]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "INSERT INTO iva (porcentaje_iva, fecha, estado) VALUES (?, NOW(), 1)";
             $stmt = $this->conex->prepare($query);
@@ -49,6 +56,11 @@ class ivaModel extends ConectDB {
      * Actualiza un registro de IVA existente.
      */
     public function updateIva($id, $porcentaje_iva, $estado) {
+        $validacion = $this->validarIva(['porcentaje_iva' => $porcentaje_iva, 'estado' => $estado]);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE iva SET porcentaje_iva = ?, estado = ? WHERE codigo_IVA = ?";
             $stmt = $this->conex->prepare($query);

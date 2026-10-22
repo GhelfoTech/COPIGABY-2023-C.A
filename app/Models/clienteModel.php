@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\ClientesTrait;
 use PDO;
 use PDOException;
 
 class clienteModel extends ConectDB {
+    use ClientesTrait;
     private $conex;
 
     private $cedula_cliente;
@@ -38,8 +40,16 @@ class clienteModel extends ConectDB {
      * Registra un nuevo cliente.
      */
     public function addCliente($datos) {
+        $validacion = $this->validarCliente(array_merge($datos, ['estado' => 1]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+        if ($this->cedulaClienteDuplicada(trim((string) $datos['cedula_cliente']))) {
+            return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
+        }
+
         try {
-            $query = "INSERT INTO cliente (cedula_cliente, nombre, telefono, correo, direccion, estado) 
+            $query = "INSERT INTO cliente (cedula_cliente, nombre, telefono, correo, direccion, estado)
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
             return $stmt->execute([
@@ -58,6 +68,14 @@ class clienteModel extends ConectDB {
      * Actualiza la información de un cliente.
      */
     public function updateCliente($idActual, $datos) {
+        $validacion = $this->validarCliente($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+        if ($this->cedulaClienteDuplicada(trim((string) $datos['cedula_cliente']), $idActual)) {
+            return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
+        }
+
         try {
             $query = "UPDATE cliente SET cedula_cliente = ?, nombre = ?, telefono = ?, correo = ?, direccion = ?, estado = ? 
                       WHERE cedula_cliente = ?";

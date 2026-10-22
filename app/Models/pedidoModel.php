@@ -3,10 +3,13 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\PedidosTrait;
 use PDO;
 use PDOException;
 
 class pedidoModel extends ConectDB {
+    use PedidosTrait;
+
     private $conex;
 
     private $codigo_pedido;
@@ -24,7 +27,6 @@ class pedidoModel extends ConectDB {
     private $monedaModel;
 
     /** Métodos que requieren banco y referencia */
-    private const METODOS_CON_BANCO = [563, 564];
 
     public function __construct() {
         parent::__construct();
@@ -70,31 +72,19 @@ class pedidoModel extends ConectDB {
      * Registra un pedido completo: cabecera, detalle, pago e inventario.
      */
     public function addPedido(array $datos, array $items, array $pago) {
-        if (empty($items)) {
-            return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
+        $validacion = $this->validarPedido($datos, $items, $pago);
+        if ($validacion !== true) {
+            return $validacion;
         }
 
         $cedulaUsuario = $datos['cedula_usuario'] ?? '';
         $cedulaCliente = $datos['cedula_cliente'] ?? '';
-
-        if (empty($cedulaUsuario) || empty($cedulaCliente)) {
-            return ['status' => 'error', 'message' => 'Cliente o usuario no válido para registrar el pedido'];
-        }
-
-        $validacionPago = $this->validarDatosPago($pago);
-        if ($validacionPago !== true) {
-            return $validacionPago;
-        }
 
         $subtotal      = $this->formatearMonto((float) ($datos['subtotal'] ?? 0));
         $montoIva      = $this->formatearMonto((float) ($datos['monto_iva'] ?? 0));
         $porcentajeIva = $this->formatearMonto((float) ($datos['porcentaje_iva'] ?? 0));
         $montoTotal    = $this->formatearMonto((float) ($datos['monto_total'] ?? 0));
         $tasaCambio    = $this->formatearMonto((float) ($datos['tasa_actual'] ?? $this->getTasaActual()));
-
-        if ($montoTotal <= 0) {
-            return ['status' => 'error', 'message' => 'El total del pedido debe ser mayor a cero'];
-        }
 
         try {
             $this->conex->beginTransaction();
@@ -538,27 +528,6 @@ class pedidoModel extends ConectDB {
      * Métodos privados de soporte transaccional
      * ------------------------------------------------------------------ */
 
-    private function validarDatosPago(array $pago) {
-        $codigoMetodo = (int) ($pago['codigo_metodo'] ?? 0);
-        if ($codigoMetodo <= 0) {
-            return ['status' => 'error', 'message' => 'Debe seleccionar un método de pago'];
-        }
-
-        if ($this->metodoRequiereBanco($codigoMetodo)) {
-            if (empty($pago['codigo_banco'])) {
-                return ['status' => 'error', 'message' => 'Debe seleccionar el banco para este método de pago'];
-            }
-            if (empty(trim((string) ($pago['referencia'] ?? '')))) {
-                return ['status' => 'error', 'message' => 'Debe indicar la referencia del pago'];
-            }
-        }
-        return true;
-    }
-
-    private function metodoRequiereBanco(int $codigoMetodo): bool {
-        return in_array($codigoMetodo, self::METODOS_CON_BANCO, true);
-    }
-
     private function insertarDetallesYDescontarStock(int $codigoPedido, array $items): float {
         $checkStmt = $this->conex->prepare("SHOW COLUMNS FROM detalle_pedido LIKE 'codigo_unidad_medida'");
         $checkStmt->execute();
@@ -601,13 +570,6 @@ class pedidoModel extends ConectDB {
             $montoTotal += $subtotal;
 
             $codigoMedia = $item['codigo_unidad_medida'] ?? null;
-            if ($hasCodigoMedia && !empty($codigoMedia)) {
-                $stmtCheck = $this->conex->prepare('SELECT 1 FROM unidad_medida WHERE codigo_media = ?');
-                $stmtCheck->execute([(int) $codigoMedia]);
-                if (!$stmtCheck->fetchColumn()) {
-                    $codigoMedia = null;
-                }
-            }
             if ($hasCodigoMedia && !empty($codigoMedia)) {
                 $stmtCheck = $this->conex->prepare('SELECT 1 FROM unidad_medida WHERE codigo_media = ?');
                 $stmtCheck->execute([(int) $codigoMedia]);

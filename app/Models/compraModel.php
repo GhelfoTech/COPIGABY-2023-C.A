@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\ComprasTrait;
 use PDO;
 use PDOException;
 
 class compraModel extends ConectDB {
+    use ComprasTrait;
     private $conex;
 
     private $codigo_compra;
@@ -44,11 +46,16 @@ class compraModel extends ConectDB {
      * Registra una compra completa con sus detalles y actualiza stock.
      */
     public function addCompra($datos, $items) {
+        $validacion = $this->validarCompra($datos, $items);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $this->conex->beginTransaction();
 
             // 1. Insertar Cabecera usando cedula_usuario
-            $query = "INSERT INTO compra (codigo_proveedor, cedula_usuario, numero_factura_proveedor, fecha_compra, monto_total, estado) 
+            $query = "INSERT INTO compra (codigo_proveedor, cedula_usuario, numero_factura_proveedor, fecha_compra, monto_total, estado)
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
             $stmt->execute([
@@ -62,11 +69,11 @@ class compraModel extends ConectDB {
             $codigoCompra = $this->conex->lastInsertId();
 
             // 2. Insertar Detalles y Actualizar Stock
-            $queryDetalle = "INSERT INTO detalle_compra (codigo_compra, codigo_producto, cantidad, costo_unitario, subtotal) 
+            $queryDetalle = "INSERT INTO detalle_compra (codigo_compra, codigo_producto, cantidad, costo_unitario, subtotal)
                              VALUES (?, ?, ?, ?, ?)";
             $stmtDetalle = $this->conex->prepare($queryDetalle);
 
-            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual + ? 
+            $queryStock = "UPDATE producto_insumo SET stock_actual = stock_actual + ?
                            WHERE codigo_producto = ?";
             $stmtStock = $this->conex->prepare($queryStock);
 
@@ -74,7 +81,7 @@ class compraModel extends ConectDB {
 
             foreach ($items as $item) {
                 $subtotal = $item['cantidad'] * $item['costo'];
-                
+
                 // Guardar detalle
                 $stmtDetalle->execute([
                     $codigoCompra,
@@ -106,6 +113,11 @@ class compraModel extends ConectDB {
      * Actualiza los datos modificables de una compra.
      */
     public function updateCompra(int $id, array $datos) {
+        $validacion = $this->validarCompra(array_merge($datos, ['codigo_compra' => $id]), []);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE compra SET codigo_proveedor = ?, numero_factura_proveedor = ?,
                       fecha_compra = ?, monto_total = ?, estado = ?

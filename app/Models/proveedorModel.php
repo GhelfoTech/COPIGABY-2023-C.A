@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\ProveedoresTrait;
 use PDO;
 use PDOException;
 
 class proveedorModel extends ConectDB {
+    use ProveedoresTrait;
     private $conex;
 
     private $codigo_proveedor;
@@ -39,8 +41,13 @@ class proveedorModel extends ConectDB {
      * Registra un nuevo proveedor.
      */
     public function addProveedor($datos) {
+        $validacion = $this->validarProveedor(array_merge($datos, ['estado' => 1]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
-            $query = "INSERT INTO proveedor (rif_proveedor, razon_social, telefono, correo, direccion, estado) 
+            $query = "INSERT INTO proveedor (rif_proveedor, razon_social, telefono, correo, direccion, estado)
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
             return $stmt->execute([
@@ -59,6 +66,11 @@ class proveedorModel extends ConectDB {
      * Actualiza un proveedor existente.
      */
     public function updateProveedor($id, $datos) {
+        $validacion = $this->validarProveedor($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE proveedor SET rif_proveedor = ?, razon_social = ?, telefono = ?, correo = ?, direccion = ?, estado = ? 
                       WHERE codigo_proveedor = ?";

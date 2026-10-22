@@ -1,8 +1,10 @@
 <?php
+require_once __DIR__ . '/../../../herpers/auth.php';
+
 $currentUrl = $_REQUEST['url'] ?? '';
-$pedidoOpen = in_array($currentUrl, ['pedido', 'cliente'], true);
-$productoOpen = in_array($currentUrl, ['producto', 'categoria'], true);
-$configOpen = in_array($currentUrl, ['user', 'rol', 'metodopago', 'moneda', 'iva', 'medida', 'empresa'], true);
+$pedidoOpen = in_array($currentUrl, ['pedido', 'cliente'], true) && puedeVerModulo('pedido');
+$productoOpen = in_array($currentUrl, ['producto', 'categoria'], true) && puedeVerModulo('producto');
+$configOpen = in_array($currentUrl, ['user', 'rol', 'metodopago', 'moneda', 'iva', 'medida', 'empresa'], true) && esAdmin();
 
 function navItemClass(string $url, string $current): string {
     $base = 'group flex items-center gap-3 mx-2 my-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out border-l-4';
@@ -74,12 +76,14 @@ function navIconClass(bool $active): string {
       </div>
     </div>
 
+    <?php if (puedeVerModulo('compra')): ?>
     <a href="?url=compra" class="<?= navItemClass('compra', $currentUrl) ?>">
       <svg class="<?= navIconClass($currentUrl === 'compra') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
       </svg>
       Compras
     </a>
+    <?php endif; ?>
 
     <div class="dropdown-parent<?= $productoOpen ? ' open' : '' ?>">
       <button type="button" class="<?= navToggleClass($productoOpen, in_array($currentUrl, ['producto', 'categoria'], true)) ?>">
@@ -105,13 +109,16 @@ function navIconClass(bool $active): string {
       Servicios
     </a>
 
+    <?php if (puedeVerModulo('proveedor')): ?>
     <a href="?url=proveedor" class="<?= navItemClass('proveedor', $currentUrl) ?>">
       <svg class="<?= navIconClass($currentUrl === 'proveedor') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
       </svg>
       Proveedores
     </a>
+    <?php endif; ?>
 
+    <?php if (esAdmin()): ?>
     <div class="dropdown-parent<?= $configOpen ? ' open' : '' ?>">
       <button type="button" class="<?= navToggleClass($configOpen, $configOpen) ?>">
         <svg class="<?= navIconClass($configOpen) ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -132,13 +139,16 @@ function navIconClass(bool $active): string {
         <a href="?url=user" class="<?= navSubClass('user', $currentUrl) ?>">Usuarios</a>
       </div>
     </div>
+    <?php endif; ?>
 
+    <?php if (esAdmin()): ?>
     <a href="?url=reporte" class="<?= navItemClass('reporte', $currentUrl) ?>">
       <svg class="<?= navIconClass($currentUrl === 'reporte') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
       </svg>
       Reporte
     </a>
+    <?php endif; ?>
   </nav>
 
   <footer class="mt-auto border-t border-white/10 p-4">

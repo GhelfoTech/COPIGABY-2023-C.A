@@ -3,10 +3,12 @@
 namespace App\models;
 
 use App\config\ConectDB;
+use App\traits\RolTrait;
 use PDO;
 use PDOException;
 
 class rolModel extends ConectDB {
+    use RolTrait;
     private $conex;
 
     private $codigo_rol;
@@ -30,6 +32,11 @@ class rolModel extends ConectDB {
     }
 
     public function addRol($datos) {
+        $validacion = $this->validarRol(array_merge($datos, ['estado' => 1]));
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "INSERT INTO rol (nombre_rol, descripcion, estado) VALUES (?, ?, 1)";
             $stmt = $this->conex->prepare($query);
@@ -43,6 +50,12 @@ class rolModel extends ConectDB {
     }
 
     public function updateRol($id, $datos) {
+        $datos['codigo_rol'] = $id;
+        $validacion = $this->validarRol($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
         try {
             $query = "UPDATE rol SET nombre_rol = ?, descripcion = ?, estado = ? WHERE codigo_rol = ?";
             $stmt = $this->conex->prepare($query);
