@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1a2340;
+  --color-navy-light: #243050;
+  --color-navy-dark: #111827;
+  --color-orange: #f5a623;
+  --color-orange-dk: #d4891a;
+}
+
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--color-gray-200); /* Usa el gris clásico o el de tu tema */
+  }
+}

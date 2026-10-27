@@ -1,0 +1,11 @@
+{
+    "name": "copigaby/sistema-informacion",
+    "description": "Sistema de información para CopiGaby 2023 C.A.",
+    "type": "project",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
