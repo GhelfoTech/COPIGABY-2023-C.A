@@ -4,6 +4,7 @@ namespace App\models;
 
 use App\config\ConectDB;
 use App\traits\PedidosTrait;
+use App\Models\casheaModel;
 use PDO;
 use PDOException;
 
@@ -69,9 +70,10 @@ class pedidoModel extends ConectDB {
     }
 
     /**
-     * Registra un pedido completo: cabecera, detalle, pago e inventario.
+     * Registra un pedido completo: cabecera, detalle, pago e inventario,
+     * y genera automáticamente el crédito en cashea_credito si el método es Cashea.
      */
-    public function addPedido(array $datos, array $items, array $pago) {
+    public function addPedido(array $datos, array $items, array $pago, array $casheaData = []) {
         $validacion = $this->validarPedido($datos, $items, $pago);
         if ($validacion !== true) {
             return $validacion;
@@ -113,12 +115,21 @@ class pedidoModel extends ConectDB {
             $this->insertarDetallesYDescontarStock($codigoPedido, $items);
             $this->registrarPago($codigoPedido, $pago, $montoTotal);
 
+            // Registro automático en cashea_credito si se seleccionó CASHEA
+            $esCashea = !empty($casheaData) || $this->esMetodoCashea((int) ($pago['codigo_metodo'] ?? 0));
+            if ($esCashea) {
+                $this->registrarCreditoCashea($codigoPedido, $montoTotal, $casheaData);
+            }
+
             $this->conex->commit();
 
             return [
                 'status'        => 'success',
-                'message'       => 'Pedido registrado exitosamente',
+                'message'       => $esCashea 
+                    ? 'Pedido registrado exitosamente y crédito Cashea generado.' 
+                    : 'Pedido registrado exitosamente',
                 'codigo_pedido' => $codigoPedido,
+                'es_cashea'     => $esCashea,
             ];
         } catch (PDOException $e) {
             if ($this->conex->inTransaction()) {
@@ -234,8 +245,12 @@ class pedidoModel extends ConectDB {
             $stmtPago = $this->conex->prepare('UPDATE pagos SET estado = 0 WHERE codigo_pedido = ?');
             $stmtPago->execute([$id]);
 
+            // Anular crédito Cashea si existiera
+            $stmtCashea = $this->conex->prepare('UPDATE cashea_credito SET estado = 0 WHERE id_pedido = ?');
+            $stmtCashea->execute([$id]);
+
             $this->conex->commit();
-            return ['status' => 'success', 'message' => 'Pedido annulado correctamente'];
+            return ['status' => 'success', 'message' => 'Pedido anulado correctamente'];
         } catch (PDOException $e) {
             if ($this->conex->inTransaction()) {
                 $this->conex->rollBack();
@@ -270,6 +285,11 @@ class pedidoModel extends ConectDB {
             }
 
             if ($pedido) {
+                // Obtener datos del crédito Cashea si este pedido fue financiado
+                $stmtCashea = $this->conex->prepare('SELECT * FROM cashea_credito WHERE id_pedido = ? LIMIT 1');
+                $stmtCashea->execute([(int) $id]);
+                $pedido['cashea'] = $stmtCashea->fetch(PDO::FETCH_ASSOC) ?: null;
+
                 $pedido['subtotal']       = $this->formatearMonto((float) ($pedido['subtotal'] ?? 0));
                 $pedido['monto_iva']      = $this->formatearMonto((float) ($pedido['monto_iva'] ?? 0));
                 $pedido['porcentaje_iva'] = $this->formatearMonto((float) ($pedido['porcentaje_iva'] ?? 0));
@@ -820,5 +840,68 @@ class pedidoModel extends ConectDB {
         } catch (PDOException $e) {
             return null;
         }
+    }
+
+    /**
+     * Verifica si un método de pago corresponde a Cashea.
+     */
+    public function esMetodoCashea(int $codigoMetodo): bool {
+        try {
+            $stmt = $this->conex->prepare("SELECT 1 FROM metodo_pago WHERE codigo_metodo = ? AND UPPER(nombre_metodo) LIKE '%CASHEA%' LIMIT 1");
+            $stmt->execute([$codigoMetodo]);
+            return (bool) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Registra automáticamente el crédito Cashea para un pedido.
+     */
+    private function registrarCreditoCashea(int $codigoPedido, float $montoTotal, array $casheaData): void {
+        $nivel = (int) ($casheaData['nivel_cliente'] ?? 2);
+        if ($nivel < 1 || $nivel > 6) {
+            $nivel = 2;
+        }
+
+        $reglas = casheaModel::getNivelesReglas();
+        $regla = $reglas[$nivel] ?? $reglas[2];
+
+        $cuotas = (int) ($casheaData['num_cuotas'] ?? 3);
+        if (!in_array($cuotas, $regla['cuotas_permitidas'], true)) {
+            $cuotas = $regla['cuotas_permitidas'][0] ?? 3;
+        }
+
+        $pctInicial = (float) ($regla['porcentaje_inicial'] ?? 50);
+        $pctFin = (float) ($regla['porcentaje_financiado'] ?? (100 - $pctInicial));
+
+        $montoInicial = isset($casheaData['monto_inicial']) && (float) $casheaData['monto_inicial'] > 0
+            ? (float) $casheaData['monto_inicial']
+            : round($montoTotal * ($pctInicial / 100), 2);
+
+        $montoFinanciado = isset($casheaData['monto_financiado']) && (float) $casheaData['monto_financiado'] > 0
+            ? (float) $casheaData['monto_financiado']
+            : round($montoTotal - $montoInicial, 2);
+
+        $pctFinanciado = isset($casheaData['porcentaje_financiado']) && (int) $casheaData['porcentaje_financiado'] > 0
+            ? (int) $casheaData['porcentaje_financiado']
+            : (int) $pctFin;
+
+        $stmt = $this->conex->prepare("
+            INSERT INTO cashea_credito (
+                id_pedido, monto_inicial_pagado, monto_financiado,
+                porcentaje_financiado, num_cuotas, nivel_cliente,
+                monto_pendiente, fecha, estado
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+        ");
+        $stmt->execute([
+            $codigoPedido,
+            $this->formatearMontoDecimal($montoInicial),
+            $this->formatearMontoDecimal($montoFinanciado),
+            $pctFinanciado,
+            $cuotas,
+            $nivel,
+            $this->formatearMontoDecimal($montoFinanciado)
+        ]);
     }
 }

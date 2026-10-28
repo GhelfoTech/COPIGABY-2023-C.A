@@ -229,7 +229,7 @@
                 <select name="codigo_metodo" id="selectMetodo" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
                   <option value="">— Seleccione —</option>
                   <?php foreach ($metodos as $m): ?>
-                    <option value="<?= $m['codigo_metodo'] ?>"><?= htmlspecialchars($m['nombre_metodo']) ?></option>
+                    <option value="<?= $m['codigo_metodo'] ?>" data-nombre="<?= strtoupper(htmlspecialchars($m['nombre_metodo'])) ?>"><?= htmlspecialchars($m['nombre_metodo']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -246,6 +246,76 @@
                 <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Referencia</label>
                 <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia">
               </div>
+            </div>
+
+            <!-- Panel de Configuración Cashea (visible solo si se selecciona CASHEA) -->
+            <div id="panelCasheaPedido" class="hidden mt-4 pt-4 border-t-2 border-amber-300 bg-amber-50/80 p-4 rounded-xl border border-amber-200 animate-fade-up">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-amber-200">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500 text-white font-black text-xs shadow-sm">C</span>
+                  <div>
+                    <h5 class="text-xs font-black text-amber-950 uppercase tracking-tight">Financiamiento Cashea (Club Cashea Más)</h5>
+                    <p class="text-[0.65rem] text-amber-800 font-semibold">El crédito se creará automáticamente vinculado a este pedido</p>
+                  </div>
+                </div>
+                <span id="badgeNivelCasheaPedido" class="px-2.5 py-1 rounded-full text-[0.65rem] font-black bg-amber-200 text-amber-900 uppercase tracking-wider border border-amber-300">Nivel 2: Raíz (50%)</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label class="block text-xs font-black text-amber-900 uppercase tracking-wider mb-1">Nivel del Cliente Cashea <span class="text-red-500">*</span></label>
+                  <select name="cashea_nivel" id="casheaNivelPedido" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-black text-gray-800 outline-none focus:ring-2 focus:ring-amber-400">
+                    <option value="1">Nivel 1: Semilla (Inicial 60% — 3 cuotas)</option>
+                    <option value="2" selected>Nivel 2: Raíz (Inicial 50% — 3 cuotas)</option>
+                    <option value="3">Nivel 3: Hoja (Inicial 40% — 3 o 6 cuotas)</option>
+                    <option value="4">Nivel 4: Tronco (Inicial 30% — 3, 6 o 9 cuotas)</option>
+                    <option value="5">Nivel 5: Árbol (Inicial 20% — 3 a 12 cuotas)</option>
+                    <option value="6">Nivel 6: Araguaney (Inicial 20% / 0% — hasta 15 cuotas)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-black text-amber-900 uppercase tracking-wider mb-1">Plazo de Cuotas <span class="text-red-500">*</span></label>
+                  <select name="cashea_cuotas" id="casheaCuotasPedido" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-black text-gray-800 outline-none focus:ring-2 focus:ring-amber-400">
+                    <option value="3" selected>3 Cuotas (Cada 14 días / Estándar)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-black text-amber-900 uppercase tracking-wider mb-1">Comprobante QR Cashea (Opcional)</label>
+                  <input type="text" name="cashea_referencia" id="casheaReferenciaPedido" placeholder="Ej. QR #84920" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-gray-800 outline-none focus:ring-2 focus:ring-amber-400">
+                </div>
+              </div>
+
+              <!-- Tarjeta Simulador en Vivo -->
+              <div class="bg-gray-900 text-white rounded-xl p-3.5 shadow-md border border-gray-800">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-center">
+                  <div class="p-2 bg-gray-800/90 rounded-lg border border-gray-700">
+                    <div class="text-[0.62rem] font-bold text-gray-400 uppercase tracking-wider">Total del Pedido</div>
+                    <div id="simTotalPedido" class="text-sm font-black text-white">$0.00</div>
+                  </div>
+                  <div class="p-2 bg-amber-500/20 rounded-lg border border-amber-500/40">
+                    <div class="text-[0.62rem] font-black text-amber-300 uppercase tracking-wider">Inicial en Caja (Hoy)</div>
+                    <div id="simInicialPedido" class="text-sm font-black text-amber-400">$0.00</div>
+                    <div id="simInicialBsPedido" class="text-[0.62rem] font-bold text-amber-200">0.00 Bs</div>
+                  </div>
+                  <div class="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/40">
+                    <div class="text-[0.62rem] font-black text-emerald-300 uppercase tracking-wider">Financiado Cashea</div>
+                    <div id="simFinanciadoPedido" class="text-sm font-black text-emerald-400">$0.00</div>
+                    <div id="simPorcentajeFinanciado" class="text-[0.62rem] font-bold text-emerald-300">50% Saldo</div>
+                  </div>
+                  <div class="p-2 bg-blue-500/20 rounded-lg border border-blue-500/40">
+                    <div class="text-[0.62rem] font-black text-blue-300 uppercase tracking-wider" id="simCuotasLabelPedido">3 Cuotas (14d)</div>
+                    <div id="simCuotaMontoPedido" class="text-sm font-black text-blue-300">$0.00 c/u</div>
+                    <div id="simCuotaMontoBsPedido" class="text-[0.62rem] font-bold text-blue-200">0.00 Bs c/u</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inputs Ocultos de Cashea -->
+              <input type="hidden" name="cashea_inicial" id="casheaInicialInput" value="0.00">
+              <input type="hidden" name="cashea_financiado" id="casheaFinanciadoInput" value="0.00">
+              <input type="hidden" name="cashea_porcentaje" id="casheaPorcentajeInput" value="50">
             </div>
           </div>
 
@@ -312,6 +382,33 @@
             <div id="det_ref_wrap" class="hidden">
               <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Referencia</p>
               <p class="font-bold text-navy-dark" id="det_referencia">—</p>
+            </div>
+
+            <!-- Detalle de Crédito Cashea si aplica -->
+            <div id="det_cashea_wrap" class="hidden col-span-2 bg-amber-50/90 border-2 border-amber-300 rounded-xl p-3.5 mt-1">
+              <div class="flex items-center justify-between mb-2 pb-1 border-b border-amber-200">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-md bg-amber-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs">C</span>
+                  <span class="text-xs font-black text-amber-950 uppercase tracking-tight">Financiamiento Cashea</span>
+                </div>
+                <a href="?url=cashea" target="_blank" class="text-[11px] font-black text-amber-800 hover:text-amber-950 underline flex items-center gap-1">
+                  Gestionar en Módulo Cashea →
+                </a>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="bg-white p-2 rounded-lg border border-amber-200">
+                  <span class="text-[10px] font-bold text-gray-400 block uppercase">Nivel / Cuotas</span>
+                  <span id="det_cashea_nivel" class="font-black text-gray-800">Nivel 2 (3 cuotas)</span>
+                </div>
+                <div class="bg-white p-2 rounded-lg border border-amber-200">
+                  <span class="text-[10px] font-bold text-gray-400 block uppercase">Inicial Pagada</span>
+                  <span id="det_cashea_inicial" class="font-black text-amber-600">$0.00</span>
+                </div>
+                <div class="bg-white p-2 rounded-lg border border-amber-200">
+                  <span class="text-[10px] font-bold text-gray-400 block uppercase">Saldo Pendiente</span>
+                  <span id="det_cashea_pendiente" class="font-black text-emerald-600">$0.00</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -503,6 +600,63 @@
     closeBtns.forEach(btn => btn.onclick = () => { toggleModal(true); resetFormPedido(); });
     overlayPedido.onclick = () => { toggleModal(true); resetFormPedido(); };
 
+    const CASHEA_REGLAS = {
+      1: { nombre: 'Semilla', inicial_min: 60, cuotas: [3] },
+      2: { nombre: 'Raíz', inicial_min: 50, cuotas: [3] },
+      3: { nombre: 'Hoja', inicial_min: 40, cuotas: [3, 6] },
+      4: { nombre: 'Tronco', inicial_min: 30, cuotas: [3, 6, 9] },
+      5: { nombre: 'Árbol', inicial_min: 20, cuotas: [3, 6, 9, 12] },
+      6: { nombre: 'Araguaney', inicial_min: 20, cuotas: [3, 6, 9, 12, 15] }
+    };
+
+    function actualizarSimuladorCasheaPedido() {
+      const panel = document.getElementById('panelCasheaPedido');
+      if (!panel || panel.classList.contains('hidden')) return;
+
+      const nivelSelect = document.getElementById('casheaNivelPedido');
+      const cuotasSelect = document.getElementById('casheaCuotasPedido');
+      if (!nivelSelect || !cuotasSelect) return;
+
+      const nivel = parseInt(nivelSelect.value, 10) || 2;
+      const regla = CASHEA_REGLAS[nivel] || CASHEA_REGLAS[2];
+
+      const cuotasActuales = parseInt(cuotasSelect.value, 10) || 3;
+      let htmlCuotas = '';
+      regla.cuotas.forEach(c => {
+        const sel = c === cuotasActuales ? 'selected' : '';
+        htmlCuotas += `<option value="${c}" ${sel}>${c} Cuotas (Cada 14 días)</option>`;
+      });
+      cuotasSelect.innerHTML = htmlCuotas;
+      const cuotas = parseInt(cuotasSelect.value, 10) || regla.cuotas[0] || 3;
+
+      const { total } = computeFinancialTotals();
+      const pctInicial = regla.inicial_min;
+      const pctFinanciado = 100 - pctInicial;
+
+      const montoInicial = roundMoney(total * (pctInicial / 100));
+      const montoFinanciado = roundMoney(total - montoInicial);
+      const montoCuota = cuotas > 0 ? roundMoney(montoFinanciado / cuotas) : 0;
+      const tasa = getTasaFormulario();
+
+      const badge = document.getElementById('badgeNivelCasheaPedido');
+      if (badge) {
+        badge.textContent = `Nivel ${nivel}: ${regla.nombre} (${pctInicial}% Inicial)`;
+      }
+
+      document.getElementById('simTotalPedido').textContent = simboloMoneda + formatMoney(total);
+      document.getElementById('simInicialPedido').textContent = simboloMoneda + formatMoney(montoInicial);
+      document.getElementById('simInicialBsPedido').textContent = formatMoney(montoInicial * tasa) + ' Bs';
+      document.getElementById('simFinanciadoPedido').textContent = simboloMoneda + formatMoney(montoFinanciado);
+      document.getElementById('simPorcentajeFinanciado').textContent = `${pctFinanciado}% Financiado`;
+      document.getElementById('simCuotasLabelPedido').textContent = `${cuotas} Cuotas (14d)`;
+      document.getElementById('simCuotaMontoPedido').textContent = `${simboloMoneda}${formatMoney(montoCuota)} c/u`;
+      document.getElementById('simCuotaMontoBsPedido').textContent = `${formatMoney(montoCuota * tasa)} Bs c/u`;
+
+      document.getElementById('casheaInicialInput').value = formatMoney(montoInicial);
+      document.getElementById('casheaFinanciadoInput').value = formatMoney(montoFinanciado);
+      document.getElementById('casheaPorcentajeInput').value = String(pctFinanciado);
+    }
+
     function toggleCamposBanco() {
       const metodo = parseInt(selectMetodo.value, 10);
       const requiere = METODOS_CON_BANCO.includes(metodo);
@@ -510,6 +664,19 @@
       wrapReferencia.classList.toggle('hidden', !requiere);
       document.getElementById('selectBanco').required = requiere;
       document.getElementById('referenciaPago').required = requiere;
+
+      // Detección del método Cashea
+      const optSelected = selectMetodo.options[selectMetodo.selectedIndex];
+      const optNombre = (optSelected ? (optSelected.getAttribute('data-nombre') || optSelected.text) : '').toUpperCase();
+      const isCashea = optNombre.includes('CASHEA');
+
+      const panelCashea = document.getElementById('panelCasheaPedido');
+      if (panelCashea) {
+        panelCashea.classList.toggle('hidden', !isCashea);
+        if (isCashea) {
+          actualizarSimuladorCasheaPedido();
+        }
+      }
     }
 
     function buildOptions(tipo) {
@@ -537,6 +704,9 @@
       totalGeneral.textContent = 'Bs ' + formatMoney(total * tasa);
       totalBs.textContent = simboloMoneda + formatMoney(total);
       syncHiddenFinancialFields(subtotal, iva, porcentajeIva, total);
+
+      // Si Cashea está activo, actualizar simulador en vivo
+      actualizarSimuladorCasheaPedido();
     }
 
     function normalizeCantidad(input) {
@@ -776,6 +946,19 @@
         formData.set('codigo_banco', document.getElementById('selectBanco').value);
         formData.set('referencia_pago', document.getElementById('referenciaPago').value.trim());
       }
+
+      // Si el método seleccionado es CASHEA, enviar datos de financiamiento
+      const optSelected = selectMetodo.options[selectMetodo.selectedIndex];
+      const optNombre = (optSelected ? (optSelected.getAttribute('data-nombre') || optSelected.text) : '').toUpperCase();
+      if (optNombre.includes('CASHEA')) {
+        formData.set('cashea_nivel', document.getElementById('casheaNivelPedido').value);
+        formData.set('cashea_cuotas', document.getElementById('casheaCuotasPedido').value);
+        formData.set('cashea_inicial', document.getElementById('casheaInicialInput').value);
+        formData.set('cashea_financiado', document.getElementById('casheaFinanciadoInput').value);
+        formData.set('cashea_porcentaje', document.getElementById('casheaPorcentajeInput').value);
+        formData.set('cashea_referencia', document.getElementById('casheaReferenciaPedido').value.trim());
+      }
+
       itemsJsonInput.value = JSON.stringify(collected.items);
 
       const originalLabel = btnSubmitPedido.textContent;
@@ -855,6 +1038,25 @@
             document.getElementById('det_referencia').innerText = refPago;
           } else {
             refWrap.classList.add('hidden');
+          }
+
+          // Visualización de Crédito Cashea si existe en el pedido
+          const casheaWrap = document.getElementById('det_cashea_wrap');
+          if (casheaWrap) {
+            if (h.cashea) {
+              casheaWrap.classList.remove('hidden');
+              const cNivel = parseInt(h.cashea.nivel_cliente, 10) || 2;
+              const cCuotas = parseInt(h.cashea.num_cuotas, 10) || 3;
+              const cInicial = parseFloat(h.cashea.monto_inicial_pagado || 0);
+              const cPendiente = parseFloat(h.cashea.monto_pendiente || 0);
+              const reglaC = CASHEA_REGLAS[cNivel] || { nombre: 'Raíz' };
+
+              document.getElementById('det_cashea_nivel').innerText = `Nivel ${cNivel}: ${reglaC.nombre} (${cCuotas} cuotas)`;
+              document.getElementById('det_cashea_inicial').innerText = simboloMoneda + formatMoney(cInicial);
+              document.getElementById('det_cashea_pendiente').innerText = simboloMoneda + formatMoney(cPendiente);
+            } else {
+              casheaWrap.classList.add('hidden');
+            }
           }
 
           const tbody = document.querySelector('#tablaDetallesItems tbody');
@@ -985,6 +1187,14 @@
     }
 
     selectMetodo.addEventListener('change', toggleCamposBanco);
+    const selNivelCashea = document.getElementById('casheaNivelPedido');
+    const selCuotasCashea = document.getElementById('casheaCuotasPedido');
+    if (selNivelCashea) {
+      selNivelCashea.addEventListener('change', actualizarSimuladorCasheaPedido);
+    }
+    if (selCuotasCashea) {
+      selCuotasCashea.addEventListener('change', actualizarSimuladorCasheaPedido);
+    }
     if (selectIva) {
       selectIva.addEventListener('change', recalcTotal);
     }

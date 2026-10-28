@@ -86,10 +86,10 @@ function getAccionActual(): string
     $esPost = ($_SERVER['REQUEST_METHOD'] === 'POST');
 
     if ($esPost) {
-        if (isset($_POST['deleteCategory'], $_POST['deleteUser'], $_POST['deleteProduct'], $_POST['deleteCliente'], $_POST['deleteServicio'], $_POST['deleteMetodo'], $_POST['deleteRol'], $_POST['deleteIva'], $_POST['deleteMoneda'], $_POST['deleteMedida'], $_POST['deleteEmpresa'], $_POST['deleteProveedor'], $_POST['deletePedido'], $_POST['deleteCompra'])) {
+        if (isset($_POST['deleteCategory'], $_POST['deleteUser'], $_POST['deleteProduct'], $_POST['deleteCliente'], $_POST['deleteServicio'], $_POST['deleteMetodo'], $_POST['deleteRol'], $_POST['deleteIva'], $_POST['deleteMoneda'], $_POST['deleteMedida'], $_POST['deleteEmpresa'], $_POST['deleteProveedor'], $_POST['deletePedido'], $_POST['deleteCompra'], $_POST['deleteCashea'])) {
             return 'delete';
         }
-        if ($type === 'register') {
+        if ($type === 'register' || $type === 'deposit' || $type === 'abono') {
             return 'add';
         }
         if ($type === 'update') {

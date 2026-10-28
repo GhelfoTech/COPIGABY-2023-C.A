@@ -89,10 +89,22 @@
             $pago = [
                 'codigo_metodo' => (int) $_POST['codigo_metodo'],
                 'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
-                'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
+                'referencia'    => trim((string) ($_POST['referencia_pago'] ?? ($_POST['cashea_referencia'] ?? ''))),
             ];
 
-            $result = $object->addPedido($datos, $items, $pago);
+            $casheaData = [];
+            if (isset($_POST['cashea_nivel'])) {
+                $casheaData = [
+                    'nivel_cliente'         => (int) $_POST['cashea_nivel'],
+                    'num_cuotas'            => (int) ($_POST['cashea_cuotas'] ?? 3),
+                    'monto_inicial'         => (float) ($_POST['cashea_inicial'] ?? 0),
+                    'monto_financiado'      => (float) ($_POST['cashea_financiado'] ?? 0),
+                    'porcentaje_financiado' => (int) ($_POST['cashea_porcentaje'] ?? 50),
+                    'referencia'            => trim((string) ($_POST['cashea_referencia'] ?? '')),
+                ];
+            }
+
+            $result = $object->addPedido($datos, $items, $pago, $casheaData);
 
             if ($isAjax) {
                 header('Content-Type: application/json; charset=utf-8');
