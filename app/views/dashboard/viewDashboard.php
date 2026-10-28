@@ -137,6 +137,49 @@
         </div>
 
       </div>
+
+      <section class="mb-8">
+        <div class="mb-4">
+          <h2 class="text-lg font-black text-navy-dark">Accesos rápidos</h2>
+          <p class="text-sm font-semibold text-gray-400">Continúa con tus tareas más frecuentes</p>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <?php if (puedeVerModulo('pedido')): ?>
+          <a href="?url=pedido" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange/10 text-orange-dk transition-colors group-hover:bg-orange group-hover:text-navy-dark">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Gestionar pedidos</span><span class="block text-xs font-semibold text-gray-400">Ventas y órdenes</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <?php if (puedeVerModulo('compra')): ?>
+          <a href="?url=compra" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Registrar compra</span><span class="block text-xs font-semibold text-gray-400">Actualizar inventario</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <?php if (puedeVerModulo('producto')): ?>
+          <a href="?url=producto" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-500 transition-colors group-hover:bg-purple-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Ver inventario</span><span class="block text-xs font-semibold text-gray-400">Productos e insumos</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <a href="?url=servicio" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 transition-colors group-hover:bg-emerald-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Ver servicios</span><span class="block text-xs font-semibold text-gray-400">Catálogo de servicios</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+        </div>
+      </section>
     </main>
   </div>
   <script>

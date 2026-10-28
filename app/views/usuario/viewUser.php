@@ -78,7 +78,7 @@
   <div id="modalRegister" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal('modalRegister')"></div>
-      <form action="?url=user&type=register" method="POST" class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
+      <form id="formUsuarioRegister" action="?url=user&type=register" method="POST" class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Nuevo Usuario</h3>
         </div>
@@ -93,7 +93,13 @@
            <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
                        <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
-          <select name="codigo_rol" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+          <div class="flex gap-2 mb-2">
+            <input type="search" id="buscarRolRegister" aria-label="Buscar rol por nombre" placeholder="Buscar rol..." class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+            <button type="button" id="btnBuscarRolRegister" aria-label="Buscar rol" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <select name="codigo_rol" id="selectRolRegister" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             <?php foreach($roles as $r): ?> <option value="<?= $r['codigo_rol'] ?>"><?= $r['nombre_rol'] ?></option> <?php endforeach; ?>
           </select></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Contraseña <span class="text-red-500">*</span></label>
@@ -127,6 +133,12 @@
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
           <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
+          <div class="flex gap-2 mb-2">
+            <input type="search" id="buscarRolEdit" aria-label="Buscar rol por nombre" placeholder="Buscar rol..." class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+            <button type="button" id="btnBuscarRolEdit" aria-label="Buscar rol" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           <select name="codigo_rol" id="edit_rol" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
             <?php foreach($roles as $r): ?> <option value="<?= $r['codigo_rol'] ?>"><?= $r['nombre_rol'] ?></option> <?php endforeach; ?>
           </select></div>
@@ -166,7 +178,61 @@
   </div>
 
   <script>
-    const toggleModal = (id) => document.getElementById(id).classList.toggle('hidden');
+    function resetRoleFilter(mode) {
+      const input = document.getElementById('buscarRol' + mode);
+      const select = document.getElementById(mode === 'Register' ? 'selectRolRegister' : 'edit_rol');
+      input.value = '';
+      [...select.options].forEach(option => { option.hidden = false; });
+      select.size = 1;
+    }
+
+    function attachRoleFilter(mode) {
+      const input = document.getElementById('buscarRol' + mode);
+      const select = document.getElementById(mode === 'Register' ? 'selectRolRegister' : 'edit_rol');
+      const button = document.getElementById('btnBuscarRol' + mode);
+      const form = mode === 'Register'
+        ? document.getElementById('formUsuarioRegister')
+        : document.querySelector('#modalEdit form');
+
+      const showFilteredRoles = () => {
+        const query = input.value.trim().toLocaleLowerCase();
+        [...select.options].forEach(option => {
+          option.hidden = !option.textContent.toLocaleLowerCase().includes(query);
+        });
+        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
+          select.value = '';
+        }
+        select.size = 5;
+        select.focus();
+        if (typeof select.showPicker === 'function') {
+          try {
+            select.showPicker();
+          } catch (error) {
+            // The focused list remains available if the browser blocks its native picker.
+          }
+        }
+      };
+
+      button.addEventListener('click', showFilteredRoles);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          showFilteredRoles();
+        }
+      });
+      select.addEventListener('change', () => resetRoleFilter(mode));
+      form.addEventListener('reset', () => window.setTimeout(() => resetRoleFilter(mode), 0));
+    }
+
+    attachRoleFilter('Register');
+    attachRoleFilter('Edit');
+
+    const toggleModal = (id) => {
+      if (document.getElementById(id).classList.contains('hidden')) {
+        resetRoleFilter(id === 'modalRegister' ? 'Register' : 'Edit');
+      }
+      document.getElementById(id).classList.toggle('hidden');
+    };
 
     let currentRecord = null;
 
