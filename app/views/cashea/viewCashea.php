@@ -16,7 +16,7 @@
 
   <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Créditos Cashea</h2>
+      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestion de Cashea</h2>
       <div class="flex items-center">
         <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
       </div>
@@ -26,11 +26,11 @@
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-black text-gray-800">Cashea</h1>
-          <p class="text-gray-500 text-sm font-semibold">Financiamiento de pedidos existentes sin alterar el módulo de pedidos</p>
+          <p class="text-gray-500 text-sm font-semibold">Financiamiento de pedidos existentes</p>
         </div>
         <button id="btnOpenModal" class="flex items-center gap-2 bg-linear-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-          AÑADIR CRÉDITO
+          AÑADIR CASHEA
         </button>
       </div>
 
@@ -50,7 +50,7 @@
             <tr>
               <th class="px-6 py-4">Pedido</th>
               <th class="px-6 py-4">Cliente</th>
-              <th class="px-6 py-4">Nivel</th>
+              <th class="px-6 py-4">Cuotas</th>
               <th class="px-6 py-4">Inicial</th>
               <th class="px-6 py-4">Financiado</th>
               <th class="px-6 py-4">Estado de Deuda</th>
@@ -66,7 +66,7 @@
                   <div class="uppercase font-bold text-navy-light"><?= htmlspecialchars($c['nombre_cliente'] ?? '—') ?></div>
                   <div class="text-[0.7rem] text-gray-400 font-bold">V-<?= htmlspecialchars($c['cedula_cliente'] ?? '') ?></div>
                 </td>
-                <td class="px-6 py-4 font-black text-navy-dark">Nivel <?= (int) $c['nivel_cashea'] ?></td>
+                <td class="px-6 py-4 font-black text-navy-dark"><?= (int) $c['nivel_cashea'] ?> Cuotas</td>
                 <td class="px-6 py-4">$<?= number_format((float) $c['monto_inicial_pagado'], 2, '.', ',') ?></td>
                 <td class="px-6 py-4">$<?= number_format((float) $c['monto_financiado'], 2, '.', ',') ?></td>
                 <td class="px-6 py-4">
@@ -87,9 +87,7 @@
                   </button>
                 </td>
               </tr>
-            <?php endforeach; else: ?>
-              <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400 font-bold italic">No hay créditos Cashea registrados.</td></tr>
-            <?php endif; ?>
+            <?php endforeach; endif; ?>
           </tbody>
         </table>
       </div>
@@ -119,13 +117,8 @@
           </div>
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nivel Cashea <span class="text-red-500">*</span></label>
-              <select name="nivel_cashea" id="nivelCashea" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-                <option value="">Seleccione nivel</option>
-                <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
-                  <option value="<?= $nivel ?>">Nivel <?= $nivel ?></option>
-                <?php endfor; ?>
-              </select>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
+              <input type="number" name="nivel_cashea" id="nivelCashea" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
@@ -148,7 +141,7 @@
             </div>
             <div class="col-span-2 rounded-lg bg-white px-3 py-2">
               <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
-              <p id="lblCuotas" class="mt-1 text-sm font-bold text-navy-dark">Seleccione pedido, nivel e inicial</p>
+              <p id="lblCuotas" class="mt-1 text-sm font-bold text-navy-dark">Seleccione pedido, cuotas e inicial</p>
             </div>
           </div>
           <div class="flex justify-end gap-3 mt-4">
@@ -177,12 +170,8 @@
           </div>
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nivel Cashea <span class="text-red-500">*</span></label>
-              <select name="nivel_cashea" id="edit_nivel" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-                <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
-                  <option value="<?= $nivel ?>">Nivel <?= $nivel ?></option>
-                <?php endfor; ?>
-              </select>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
+              <input type="number" name="nivel_cashea" id="edit_nivel" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
@@ -231,12 +220,12 @@
         <div class="p-6 space-y-4">
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Pedido</p><p id="det_pedido" class="font-black text-navy-dark">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cliente</p><p id="det_cliente" class="font-bold text-navy-light uppercase">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Nivel</p><p id="det_nivel" class="font-semibold text-gray-700">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas</p><p id="det_nivel" class="font-semibold text-gray-700">—</p></div>
           <div class="grid grid-cols-2 gap-4">
             <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Inicial</p><p id="det_inicial" class="font-black text-navy-dark">—</p></div>
             <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Financiado</p><p id="det_financiado" class="font-black text-orange-dk">—</p></div>
           </div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cuotas</p><p id="det_cuotas" class="font-semibold text-gray-700">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estimado por cuota</p><p id="det_cuotas" class="font-semibold text-gray-700">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado de deuda</p><p id="det_deuda" class="font-bold">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
         </div>
@@ -252,9 +241,6 @@
   </div>
 
   <script>
-    const CUOTAS_POR_NIVEL = { 1: 2, 2: 3, 3: 4, 4: 6, 5: 8, 6: 12 };
-    const INICIAL_SUGERIDA = { 1: 60, 2: 50, 3: 40, 4: 30, 5: 20, 6: 10 };
-
     const modal = document.getElementById('modalCashea');
     const btnOpen = document.getElementById('btnOpenModal');
     const selectPedido = document.getElementById('selectPedido');
@@ -288,10 +274,10 @@
 
     function textoCuotas(nivel, financiado) {
       if (!nivel || nivel < 1 || financiado <= 0) {
-        return 'Seleccione pedido, nivel e inicial';
+        return 'Seleccione pedido, cuotas e inicial';
       }
       const montoCuota = roundMoney(financiado / nivel);
-      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota) + ' (referencia visual)';
+      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota);
     }
 
     function calcularCashea() {
@@ -307,13 +293,7 @@
       document.getElementById('lblCuotas').textContent = textoCuotas(nivel, financiado);
     }
 
-    nivelCashea.addEventListener('change', () => {
-      const sugerido = INICIAL_SUGERIDA[parseInt(nivelCashea.value, 10)];
-      if (sugerido !== undefined) {
-        porcentajeInicial.value = String(sugerido);
-      }
-      calcularCashea();
-    });
+    nivelCashea.addEventListener('input', calcularCashea);
     selectPedido.addEventListener('change', calcularCashea);
     porcentajeInicial.addEventListener('change', calcularCashea);
 
@@ -325,7 +305,7 @@
       const pendiente = parseFloat(data.monto_pendiente || 0);
       document.getElementById('det_pedido').textContent = '#' + data.id_pedido + ' · Total ' + formatMoney(data.monto_total);
       document.getElementById('det_cliente').textContent = data.nombre_cliente || '—';
-      document.getElementById('det_nivel').textContent = 'Nivel ' + data.nivel_cashea;
+      document.getElementById('det_nivel').textContent = data.nivel_cashea + ' Cuotas';
       document.getElementById('det_inicial').textContent = formatMoney(data.monto_inicial_pagado) + ' (' + data.porcentaje_inicial + '%)';
       document.getElementById('det_financiado').textContent = formatMoney(data.monto_financiado);
       document.getElementById('det_cuotas').textContent = textoCuotas(parseInt(data.nivel_cashea, 10), parseFloat(data.monto_financiado || 0));
@@ -371,7 +351,7 @@
       document.getElementById('modalEditCashea').classList.add('hidden');
     }
 
-    document.getElementById('edit_nivel').addEventListener('change', calcularEditCashea);
+    document.getElementById('edit_nivel').addEventListener('input', calcularEditCashea);
     document.getElementById('edit_porcentaje').addEventListener('change', calcularEditCashea);
 
     async function confirmDelete(id) {

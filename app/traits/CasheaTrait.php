@@ -10,15 +10,6 @@ trait CasheaTrait
 {
     private static $porcentajesInicialValidos = [0, 10, 20, 30, 40, 50, 60];
 
-    private static $cuotasPorNivel = [
-        1 => 2,
-        2 => 3,
-        3 => 4,
-        4 => 6,
-        5 => 8,
-        6 => 12,
-    ];
-
     /**
      * Valida los datos de un crédito Cashea.
      */
@@ -40,8 +31,8 @@ trait CasheaTrait
         }
 
         $nivel = (int) ($datos['nivel_cashea'] ?? 0);
-        if ($nivel < 1 || $nivel > 6) {
-            return ['status' => 'error', 'message' => 'Debe seleccionar un nivel Cashea válido (1 a 6)'];
+        if ($nivel <= 0) {
+            return ['status' => 'error', 'message' => 'Debe indicar una cantidad de cuotas mayor a 0'];
         }
 
         $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
@@ -117,6 +108,6 @@ trait CasheaTrait
 
     protected function cuotasPorNivel(int $nivel): int
     {
-        return self::$cuotasPorNivel[$nivel] ?? 0;
+        return $nivel;
     }
 }
