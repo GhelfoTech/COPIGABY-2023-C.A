@@ -66,7 +66,13 @@
                   <div class="uppercase font-bold text-navy-light"><?= htmlspecialchars($c['nombre_cliente'] ?? '—') ?></div>
                   <div class="text-[0.7rem] text-gray-400 font-bold">V-<?= htmlspecialchars($c['cedula_cliente'] ?? '') ?></div>
                 </td>
-                <td class="px-6 py-4 font-black text-navy-dark"><?= (int) $c['nivel_cashea'] ?> Cuotas</td>
+                <td class="px-6 py-4 font-black text-navy-dark">
+                  <?php if ((int) ($c['cuotas_pendientes'] ?? 0) > 0): ?>
+                    <?= (int) $c['cuotas_pendientes'] ?> / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
+                  <?php else: ?>
+                    0 / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
+                  <?php endif; ?>
+                </td>
                 <td class="px-6 py-4">$<?= number_format((float) $c['monto_inicial_pagado'], 2, '.', ',') ?></td>
                 <td class="px-6 py-4">$<?= number_format((float) $c['monto_financiado'], 2, '.', ',') ?></td>
                 <td class="px-6 py-4">
@@ -226,6 +232,10 @@
             <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Financiado</p><p id="det_financiado" class="font-black text-orange-dk">—</p></div>
           </div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estimado por cuota</p><p id="det_cuotas" class="font-semibold text-gray-700">—</p></div>
+          <div id="det_cuotas_pendientes_wrap">
+            <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cuotas pendientes</p>
+            <p id="det_cuotas_pendientes" class="font-semibold text-gray-700">—</p>
+          </div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado de deuda</p><p id="det_deuda" class="font-bold">—</p></div>
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
         </div>
@@ -234,8 +244,37 @@
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
           <?php endif; ?>
+          <button type="button" id="btnDetalleAbonar" class="px-5 py-2 text-sm font-black text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors hidden">Abonar Cuota</button>
           <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalAbonarCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeAbonarModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Abonar cuota Cashea</h3>
+          <button type="button" onclick="closeAbonarModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=cashea&type=abonar" method="POST" class="p-6" id="formAbonarCashea">
+          <input type="hidden" name="id_cashea_credito" id="abonar_id">
+          <div class="mb-4 rounded-xl border border-orange/30 bg-orange/5 p-4">
+            <p class="text-[0.65rem] font-black uppercase text-gray-400">Deuda actual</p>
+            <p id="abonar_deuda_actual" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
+            <p id="abonar_cuota_sugerida" class="mt-1 text-xs font-semibold text-gray-500">—</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto a pagar <span class="text-red-500">*</span></label>
+            <input type="number" step="0.01" min="0.01" name="monto_abonado" id="abonar_monto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+          </div>
+          <div class="flex justify-end gap-3 mt-4">
+            <button type="button" onclick="closeAbonarModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Registrar pago</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -260,7 +299,25 @@
     function roundMoney(value) {
       const num = parseFloat(value);
       if (isNaN(num)) return 0;
-      return Math.round(num * 100) / 100;
+      return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    function toCents(value) {
+      return Math.round((roundMoney(value) + Number.EPSILON) * 100);
+    }
+
+    function fromCents(cents) {
+      return roundMoney(cents / 100);
+    }
+
+    function calcularMontosCasheaJs(total, percent) {
+      const totalCents = toCents(total);
+      const inicialCents = Math.round(totalCents * (percent / 100));
+      const financiadoCents = totalCents - inicialCents;
+      return {
+        inicial: fromCents(inicialCents),
+        financiado: fromCents(financiadoCents)
+      };
     }
 
     function formatMoney(value) {
@@ -269,7 +326,7 @@
 
     function getMontoPedidoSeleccionado() {
       const option = selectPedido.options[selectPedido.selectedIndex];
-      return option ? parseFloat(option.getAttribute('data-total') || '0') : 0;
+      return option ? roundMoney(option.getAttribute('data-total') || '0') : 0;
     }
 
     function textoCuotas(nivel, financiado) {
@@ -282,11 +339,12 @@
 
     function calcularCashea() {
       const total = getMontoPedidoSeleccionado();
-      const percent = parseInt(porcentajeInicial.value, 10);
+      const percent = parseFloat(porcentajeInicial.value);
       const nivel = parseInt(nivelCashea.value, 10);
       const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
-      const inicial = inicialValida ? roundMoney(total * percent / 100) : 0;
-      const financiado = total > 0 && inicialValida ? roundMoney(total - inicial) : 0;
+      const montos = inicialValida ? calcularMontosCasheaJs(total, percent) : { inicial: 0, financiado: 0 };
+      const inicial = montos.inicial;
+      const financiado = total > 0 && inicialValida ? montos.financiado : 0;
 
       document.getElementById('lblMontoInicial').textContent = formatMoney(inicial);
       document.getElementById('lblMontoFinanciado').textContent = formatMoney(financiado);
@@ -313,10 +371,31 @@
         ? '<span class="bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Con Deuda: ' + formatMoney(pendiente) + '</span>'
         : '<span class="bg-green-100 text-green-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Solvente</span>';
       document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
+      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
+      const wrapPendientes = document.getElementById('det_cuotas_pendientes_wrap');
+      const lblPendientes = document.getElementById('det_cuotas_pendientes');
+      if (pendiente > 0 && montoCuota > 0) {
+        const cuotasPendientes = Math.max(1, Math.ceil(roundMoney(pendiente / montoCuota)));
+        lblPendientes.textContent = cuotasPendientes + (cuotasPendientes === 1 ? ' cuota pendiente' : ' cuotas pendientes');
+        wrapPendientes.classList.remove('hidden');
+      } else {
+        lblPendientes.textContent = 'Sin cuotas pendientes';
+        wrapPendientes.classList.add('hidden');
+      }
       const btnEditar = document.getElementById('btnDetalleEditar');
       const btnEliminar = document.getElementById('btnDetalleEliminar');
+      const btnAbonar = document.getElementById('btnDetalleAbonar');
       if (btnEditar) btnEditar.onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
       if (btnEliminar) btnEliminar.onclick = () => confirmDelete(currentRecord.id_cashea_credito);
+      if (btnAbonar) {
+        if (pendiente > 0) {
+          btnAbonar.classList.remove('hidden');
+          btnAbonar.onclick = () => openAbonarModal(currentRecord);
+        } else {
+          btnAbonar.classList.add('hidden');
+          btnAbonar.onclick = null;
+        }
+      }
       document.getElementById('modalDetalle').classList.remove('hidden');
     }
 
@@ -325,18 +404,19 @@
     }
 
     function calcularEditCashea() {
-      const percent = parseInt(document.getElementById('edit_porcentaje').value, 10);
+      const percent = parseFloat(document.getElementById('edit_porcentaje').value);
       const nivel = parseInt(document.getElementById('edit_nivel').value, 10);
       const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
-      const inicial = inicialValida ? roundMoney(editTotal * percent / 100) : 0;
-      const financiado = editTotal > 0 && inicialValida ? roundMoney(editTotal - inicial) : 0;
+      const montos = inicialValida ? calcularMontosCasheaJs(editTotal, percent) : { inicial: 0, financiado: 0 };
+      const inicial = montos.inicial;
+      const financiado = editTotal > 0 && inicialValida ? montos.financiado : 0;
       document.getElementById('editLblMontoInicial').textContent = formatMoney(inicial);
       document.getElementById('editLblMontoFinanciado').textContent = formatMoney(financiado);
       document.getElementById('editLblCuotas').textContent = textoCuotas(nivel, financiado);
     }
 
     function openEditModal(data) {
-      editTotal = parseFloat(data.monto_total || 0);
+      editTotal = roundMoney(data.monto_total || 0);
       document.getElementById('edit_id').value = data.id_cashea_credito;
       document.getElementById('edit_id_pedido').value = data.id_pedido;
       document.getElementById('edit_pedido_label').value = 'Pedido #' + data.id_pedido + ' — ' + formatMoney(data.monto_total);
@@ -349,6 +429,24 @@
 
     function closeEditModal() {
       document.getElementById('modalEditCashea').classList.add('hidden');
+    }
+
+    function openAbonarModal(data) {
+      closeDetalleModal();
+      const pendiente = roundMoney(data.monto_pendiente || 0);
+      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
+      const sugerido = (pendiente < montoCuota || montoCuota <= 0) ? pendiente : montoCuota;
+      document.getElementById('abonar_id').value = data.id_cashea_credito;
+      document.getElementById('abonar_deuda_actual').textContent = formatMoney(pendiente);
+      document.getElementById('abonar_cuota_sugerida').textContent = 'Cuota sugerida: ' + formatMoney(sugerido);
+      const inputMonto = document.getElementById('abonar_monto');
+      inputMonto.value = sugerido.toFixed(2);
+      inputMonto.max = pendiente.toFixed(2);
+      document.getElementById('modalAbonarCashea').classList.remove('hidden');
+    }
+
+    function closeAbonarModal() {
+      document.getElementById('modalAbonarCashea').classList.add('hidden');
     }
 
     document.getElementById('edit_nivel').addEventListener('input', calcularEditCashea);

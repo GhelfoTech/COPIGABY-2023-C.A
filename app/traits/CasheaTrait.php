@@ -45,11 +45,8 @@ trait CasheaTrait
             return ['status' => 'error', 'message' => 'El pedido seleccionado ya tiene un crédito Cashea registrado'];
         }
 
-        $porcentajeInicial = (int) $porcentajeInicial;
-        $montoInicial = round($montoTotal * ($porcentajeInicial / 100), 2);
-        $montoFinanciado = round($montoTotal - $montoInicial, 2);
-
-        if ($montoFinanciado <= 0) {
+        $montos = $this->calcularMontosCashea($montoTotal, (float) $porcentajeInicial);
+        if ($montos['monto_financiado'] <= 0) {
             return ['status' => 'error', 'message' => 'El monto financiado debe ser mayor a cero'];
         }
 
@@ -93,15 +90,21 @@ trait CasheaTrait
         }
     }
 
-    protected function calcularMontosCashea(float $montoTotal, int $porcentajeInicial): array
+    protected function calcularMontosCashea(float $montoTotal, int|float $porcentajeInicial): array
     {
-        $montoInicial = round($montoTotal * ($porcentajeInicial / 100), 2);
-        $montoFinanciado = round($montoTotal - $montoInicial, 2);
+        $montoTotal = round((float) $montoTotal, 2);
+        $porcentajeInicial = (float) $porcentajeInicial;
+        $totalCents = (int) round($montoTotal * 100);
+        $inicialCents = (int) round($totalCents * ($porcentajeInicial / 100));
+        $financiadoCents = $totalCents - $inicialCents;
+
+        $montoInicial = round($inicialCents / 100, 2);
+        $montoFinanciado = round($financiadoCents / 100, 2);
 
         return [
             'monto_inicial_pagado'  => $montoInicial,
             'monto_financiado'      => $montoFinanciado,
-            'porcentaje_financiado' => 100 - $porcentajeInicial,
+            'porcentaje_financiado' => (int) round(100 - $porcentajeInicial),
             'monto_pendiente'       => $montoFinanciado,
         ];
     }

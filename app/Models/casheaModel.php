@@ -40,6 +40,9 @@ class casheaModel extends ConectDB {
                 $financiado = (float) $credito['monto_financiado'];
                 $credito['cantidad_cuotas'] = $cuotas;
                 $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
+                $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
+                    ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
+                    : 0;
                 $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
             }
 
@@ -74,6 +77,9 @@ class casheaModel extends ConectDB {
             $cuotas = $this->cuotasPorNivel($nivel);
             $credito['cantidad_cuotas'] = $cuotas;
             $credito['monto_cuota'] = $cuotas > 0 ? round(((float) $credito['monto_financiado']) / $cuotas, 2) : 0;
+            $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
+                ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
+                : 0;
             $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
             return $credito;
         } catch (PDOException $e) {
@@ -117,8 +123,8 @@ class casheaModel extends ConectDB {
         }
 
         $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
-        $porcentajeInicial = (int) $datos['porcentaje_inicial'];
-        $montos = $this->calcularMontosCashea((float) $pedido['monto_total'], $porcentajeInicial);
+        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
+        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
 
         try {
             $query = "INSERT INTO cashea_credito
@@ -154,8 +160,8 @@ class casheaModel extends ConectDB {
         }
 
         $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
-        $porcentajeInicial = (int) $datos['porcentaje_inicial'];
-        $montos = $this->calcularMontosCashea((float) $pedido['monto_total'], $porcentajeInicial);
+        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
+        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
         $estado = isset($datos['estado']) ? (int) $datos['estado'] : 1;
 
         try {
@@ -187,6 +193,66 @@ class casheaModel extends ConectDB {
                 ? ['status' => 'success', 'message' => 'Crédito Cashea actualizado.']
                 : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
         } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Registra un abono/pago de cuota sobre un crédito Cashea.
+     */
+    public function registrarPago($idCredito, $montoAbonado) {
+        try {
+            $this->conex->beginTransaction();
+
+            $credito = $this->getCreditoById($idCredito);
+            if (!$credito) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El crédito Cashea no existe.'];
+            }
+
+            $montoAbonado = round((float) $montoAbonado, 2);
+            $pendiente = round((float) $credito['monto_pendiente'], 2);
+
+            if ($montoAbonado <= 0) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El monto abonado debe ser mayor a cero.'];
+            }
+
+            if ($montoAbonado > $pendiente) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El monto abonado no puede ser mayor a la deuda pendiente.'];
+            }
+
+            $stmtDeposito = $this->conex->prepare(
+                'INSERT INTO cashea_deposito (fecha_deposito, monto_recibido) VALUES (NOW(), ?)'
+            );
+            $stmtDeposito->execute([number_format($montoAbonado, 2, '.', '')]);
+            $idDeposito = (int) $this->conex->lastInsertId();
+
+            $stmtDetalle = $this->conex->prepare(
+                'INSERT INTO cashea_deposito_detalle (id_cashea_credito, id_cashea_deposito, monto_aplicado)
+                 VALUES (?, ?, ?)'
+            );
+            $stmtDetalle->execute([
+                (int) $idCredito,
+                $idDeposito,
+                number_format($montoAbonado, 2, '.', ''),
+            ]);
+
+            $stmtUpdate = $this->conex->prepare(
+                'UPDATE cashea_credito SET monto_pendiente = monto_pendiente - ? WHERE id_cashea_credito = ?'
+            );
+            $stmtUpdate->execute([
+                number_format($montoAbonado, 2, '.', ''),
+                (int) $idCredito,
+            ]);
+
+            $this->conex->commit();
+            return ['status' => 'success', 'message' => 'Pago registrado con éxito.'];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }

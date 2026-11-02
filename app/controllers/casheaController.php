@@ -59,6 +59,22 @@
             exit();
         }
 
+        elseif ($_GET['type'] === 'abonar') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'], $_POST['monto_abonado'])) {
+                $resultado = $object->registrarPago(
+                    (int) $_POST['id_cashea_credito'],
+                    (float) $_POST['monto_abonado']
+                );
+                $_SESSION['cashea_flash'] = is_array($resultado)
+                    ? $resultado
+                    : ['status' => 'error', 'message' => 'No se pudo registrar el pago.'];
+                header("Location: ?url=cashea");
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
         elseif ($_GET['type'] === 'details') {
             if (isset($_GET['id'])) {
                 $result = $object->getCreditoById((int) $_GET['id']);
