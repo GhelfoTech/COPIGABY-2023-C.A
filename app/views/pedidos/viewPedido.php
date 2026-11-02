@@ -6,10 +6,9 @@
   <title>CopiGaby — Gestión de Pedidos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/dist.css">
+  <link rel="stylesheet" href="assets/css/dist.css?v=3">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
@@ -48,7 +47,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4 text-center">ID</th>
@@ -117,16 +116,27 @@
           <input type="hidden" name="porcentaje_iva" id="inputPorcentajeIva" value="0.00">
           <input type="hidden" name="monto_total" id="inputMontoTotal" value="0.00">
           <input type="hidden" name="tasa_actual" id="inputTasaActual" value="<?= number_format($tasaActual, 2, '.', '') ?>">
+          <input type="hidden" name="es_cashea" id="inputEsCashea" value="0">
 
-           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <div class="grid grid-cols-3 gap-4 mb-6">
              <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente <span class="text-red-500">*</span></label>
+               <div class="flex gap-2 mb-2">
+                 <input type="search" id="buscarCliente" aria-label="Buscar cliente por nombre o cédula" placeholder="Buscar por nombre o cédula" class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+                 <button type="button" id="btnBuscarCliente" aria-label="Buscar cliente" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+                 </button>
+               </div>
                <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
                 <option value="">— Seleccione un cliente —</option>
                 <?php foreach ($clientes as $cli): ?>
                   <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
                 <?php endforeach; ?>
               </select>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Fecha del Pedido <span class="text-red-500">*</span></label>
+              <input type="date" name="fecha_pedido" required max="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Moneda / Tasa Global</label>
@@ -154,11 +164,9 @@
                  <thead>
                   <tr class="bg-navy-dark text-white text-xs uppercase tracking-widest">
                     <th class="px-2 py-2 w-20">Tipo</th>
-                    <th class="px-2 py-2 w-80">Descripción</th>
+                    <th class="px-2 py-2 w-48">Descripción</th>
                      <th class="px-2 py-2 w-20">Unidad</th>
                      <th class="px-2 py-2 w-16">Cant</th>
-                     <th class="px-2 py-2 w-20">Cant. Unid</th>
-                     <th class="px-2 py-2 w-20">Cant. Total</th>
                     <th class="px-2 py-2 w-20">Precio</th>
                     <th class="px-2 py-2 w-24 text-right">Subtotal</th>
                     <th class="px-2 py-2 w-10"></th>
@@ -166,7 +174,7 @@
                 </thead>
                <tbody id="itemsBody" class="divide-y font-semibold text-gray-700">
                  <tr id="emptyRow">
-                   <td colspan="9" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td>
+                   <td colspan="7" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td>
                  </tr>
                </tbody>
             </table>
@@ -209,9 +217,57 @@
           <!-- Sección de Pago -->
           <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 mb-6">
             <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider mb-4">Datos del Pago</h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Método de Pago</label>
+            <button type="button" id="btnCashea" class="mb-4 flex items-center gap-2 rounded-xl border border-orange/40 bg-white px-4 py-2.5 text-sm font-black text-navy-dark transition-colors hover:bg-orange/10">
+              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-orange/15 text-orange-dk">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              </span>
+              <span id="btnCasheaLabel">Pagar con Cashea</span>
+            </button>
+            <div id="casheaConfig" class="mb-4 hidden rounded-xl border border-orange/30 bg-orange/5 p-4">
+              <div class="mb-3">
+                <p class="text-sm font-black text-navy-dark">Cashea</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="nivelCashea" class="mb-1 block text-xs font-black uppercase text-gray-500">Nivel</label>
+                  <select name="nivel_cashea" id="nivelCashea" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
+                    <option value="">Seleccione nivel</option>
+                    <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
+                      <option value="<?= $nivel ?>">Nivel <?= $nivel ?></option>
+                    <?php endfor; ?>
+                  </select>
+                </div>
+                <div>
+                  <label for="porcentajeInicial" class="mb-1 block text-xs font-black uppercase text-gray-500">Inicial</label>
+                  <select name="porcentaje_inicial" id="porcentajeInicial" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
+                    <option value="">Seleccione inicial</option>
+                    <?php foreach ([60, 50, 40, 30, 20, 10, 0] as $porcentajeInicial): ?>
+                      <option value="<?= $porcentajeInicial ?>"><?= $porcentajeInicial ?>%</option>
+                    <?php endforeach; ?>
+                  </select>
+                  <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">El nivel sugiere una inicial; puedes cambiarla aquí.</p>
+                </div>
+                <div class="rounded-lg bg-white px-3 py-2">
+                  <p class="text-[0.65rem] font-black uppercase text-gray-400">Inicial que pagará</p>
+                  <p id="montoInicialCasheaBs" class="mt-1 text-xl font-black text-navy-dark">Bs 0.00</p>
+                  <p id="montoInicialCashea" class="text-xs font-semibold text-gray-500"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
+                </div>
+                <div class="rounded-lg bg-white px-3 py-2">
+                  <p class="text-[0.65rem] font-black uppercase text-gray-400">Saldo financiado</p>
+                  <p id="montoFinanciadoCasheaBs" class="mt-1 text-xl font-black text-orange-dk">Bs 0.00</p>
+                  <p id="montoFinanciadoCashea" class="text-xs font-semibold text-gray-500"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+              <div id="wrapMetodoPago">
+                <label id="labelMetodoPago" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Método de Pago</label>
+                <div class="flex gap-2 mb-2">
+                  <input type="search" id="buscarMetodo" aria-label="Buscar método de pago por nombre" placeholder="Buscar método por nombre" class="min-w-0 flex-1 px-3 py-2 bg-white border rounded-lg outline-none text-sm focus:border-orange">
+                  <button type="button" id="btnBuscarMetodo" aria-label="Buscar método de pago" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+                  </button>
+                </div>
                 <select name="codigo_metodo" id="selectMetodo" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
                   <option value="">— Seleccione —</option>
                   <?php foreach ($metodos as $m): ?>
@@ -224,13 +280,13 @@
                 <select name="codigo_banco" id="selectBanco" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
                   <option value="">— Seleccione banco —</option>
                   <?php foreach ($bancos as $b): ?>
-                    <option value="<?= $b['codigo_banco'] ?>"><?= htmlspecialchars($b['nombre_banco']) ?></option>
+                    <option value="<?= (int) $b['codigo_banco'] ?>"><?= (int) $b['codigo_banco'] ?> - <?= htmlspecialchars($b['nombre_banco']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
               <div id="wrapReferencia" class="hidden">
-                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Referencia / Comprobante</label>
-                <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia (solo números)">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Referencia</label>
+                <input type="text" name="referencia_pago" id="referenciaPago" maxlength="50" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold" placeholder="N° de referencia">
               </div>
             </div>
           </div>
@@ -299,6 +355,14 @@
               <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Referencia</p>
               <p class="font-bold text-navy-dark" id="det_referencia">—</p>
             </div>
+            <div id="det_cashea_wrap" class="col-span-2 hidden rounded-lg border border-orange/30 bg-orange/5 p-3">
+              <p class="mb-2 text-[0.65rem] font-black uppercase tracking-widest text-orange-dk">Financiamiento Cashea</p>
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <p class="text-xs font-bold text-gray-500">Nivel: <span id="det_cashea_nivel" class="text-navy-dark">—</span></p>
+                <p class="text-xs font-bold text-gray-500">Inicial pagada: <span id="det_cashea_inicial" class="text-navy-dark">—</span></p>
+                <p class="text-xs font-bold text-gray-500">Saldo financiado: <span id="det_cashea_saldo" class="text-navy-dark">—</span></p>
+              </div>
+            </div>
           </div>
 
           <div class="flex justify-between items-end border-t pt-6">
@@ -331,6 +395,7 @@
     const ivaDefaultCodigo = <?= json_encode((int) ($ivaActivo['codigo_IVA'] ?? 1)) ?>;
     const simboloMoneda = <?= json_encode($monedaActiva['simbolo'] ?? '$') ?>;
     const METODOS_CON_BANCO = [563, 564];
+    const PORCENTAJES_INICIAL_CASHEA = [60, 50, 40, 30, 20, 10, 0];
 
     const modalPedido = document.getElementById('modalPedido');
     const modalDetalle = document.getElementById('modalDetalle');
@@ -348,6 +413,13 @@
     const modalPedidoTitulo = document.getElementById('modalPedidoTitulo');
     const codigoPedidoEdit = document.getElementById('codigoPedidoEdit');
     const selectMetodo = document.getElementById('selectMetodo');
+    const wrapMetodoPago = document.getElementById('wrapMetodoPago');
+    const labelMetodoPago = document.getElementById('labelMetodoPago');
+    const btnCashea = document.getElementById('btnCashea');
+    const casheaConfig = document.getElementById('casheaConfig');
+    const inputEsCashea = document.getElementById('inputEsCashea');
+    const nivelCashea = document.getElementById('nivelCashea');
+    const porcentajeInicialCashea = document.getElementById('porcentajeInicial');
     const wrapBanco = document.getElementById('wrapBanco');
     const wrapReferencia = document.getElementById('wrapReferencia');
     const selectIva = document.getElementById('selectIva');
@@ -356,9 +428,53 @@
     const inputPorcentajeIva = document.getElementById('inputPorcentajeIva');
     const inputMontoTotal = document.getElementById('inputMontoTotal');
     const inputTasaActual = document.getElementById('inputTasaActual');
+    const selectCliente = document.getElementById('selectCliente');
 
     let itemCounter = 0;
     let editMode = false;
+    let casheaMode = false;
+
+    function attachSelectFilter(input, select, button) {
+      const openFilteredOptions = () => {
+        const query = input.value.trim().toLocaleLowerCase();
+        [...select.options].forEach((option, index) => {
+          option.hidden = index !== 0 && !option.textContent.toLocaleLowerCase().includes(query);
+        });
+        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
+          select.value = '';
+        }
+        select.size = 5;
+        select.focus();
+        if (typeof select.showPicker === 'function') {
+          try {
+            select.showPicker();
+          } catch (error) {
+            // Focused list remains available if the browser blocks its native picker.
+          }
+        }
+      };
+
+      button.addEventListener('click', openFilteredOptions);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          openFilteredOptions();
+        }
+      });
+      select.addEventListener('change', () => {
+        input.value = '';
+        [...select.options].forEach(option => { option.hidden = false; });
+        select.size = 1;
+      });
+      formPedido.addEventListener('reset', () => window.setTimeout(() => {
+        input.value = '';
+        select.size = 1;
+        [...select.options].forEach(option => { option.hidden = false; });
+      }, 0));
+    }
+
+    attachSelectFilter(document.getElementById('buscarCliente'), selectCliente, document.getElementById('btnBuscarCliente'));
+    attachSelectFilter(document.getElementById('buscarMetodo'), selectMetodo, document.getElementById('btnBuscarMetodo'));
 
     function roundMoney(value) {
       const num = parseFloat(value);
@@ -422,21 +538,25 @@
 
     function resetFormPedido() {
       editMode = false;
+      casheaMode = false;
       codigoPedidoEdit.value = '';
       formPedido.action = '?url=pedido&type=register';
       modalPedidoTitulo.textContent = 'Nuevo Pedido';
       btnSubmitPedido.textContent = 'Registrar Pedido';
+      btnCashea.classList.remove('hidden');
       formPedido.reset();
+      setCasheaMode(false);
       document.getElementById('tasaActualInput').value = formatMoney(tasaActual);
       if (inputTasaActual) inputTasaActual.value = formatMoney(tasaActual);
       setIvaSeleccionado(ivaDefaultCodigo);
-      itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="9" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
+      itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="7" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
       subtotalGeneral.textContent = simboloMoneda + '0.00';
       montoIva.textContent = simboloMoneda + '0.00';
       totalGeneral.textContent = 'Bs 0.00';
       totalBs.textContent = simboloMoneda + '0.00';
       syncHiddenFinancialFields(0, 0, getPorcentajeIvaSeleccionado(), 0);
       toggleCamposBanco();
+      updateCasheaAmounts(0);
     }
 
     btnOpen.onclick = () => {
@@ -453,6 +573,48 @@
       wrapReferencia.classList.toggle('hidden', !requiere);
       document.getElementById('selectBanco').required = requiere;
       document.getElementById('referenciaPago').required = requiere;
+    }
+
+    function setCasheaMode(enabled) {
+      casheaMode = enabled && !editMode;
+      inputEsCashea.value = casheaMode ? '1' : '0';
+      casheaConfig.classList.toggle('hidden', !casheaMode);
+      document.getElementById('btnCasheaLabel').textContent = casheaMode
+        ? 'Quitar pago con Cashea'
+        : 'Pagar con Cashea';
+      labelMetodoPago.textContent = casheaMode ? 'Método de pago de la inicial' : 'Método de Pago';
+      nivelCashea.required = casheaMode;
+      porcentajeInicialCashea.required = casheaMode;
+      updateCasheaPaymentFields();
+      if (!casheaMode) {
+        nivelCashea.value = '';
+        porcentajeInicialCashea.value = '';
+      }
+      updateCasheaAmounts(computeFinancialTotals().total);
+    }
+
+    function updateCasheaPaymentFields() {
+      const esInicialCero = casheaMode && porcentajeInicialCashea.value === '0';
+      wrapMetodoPago.classList.toggle('hidden', esInicialCero);
+      selectMetodo.required = !esInicialCero;
+      if (esInicialCero) {
+        selectMetodo.value = '';
+        toggleCamposBanco();
+      } else {
+        toggleCamposBanco();
+      }
+    }
+
+    function updateCasheaAmounts(total) {
+      const percent = parseInt(porcentajeInicialCashea.value, 10);
+      const validPercent = casheaMode && PORCENTAJES_INICIAL_CASHEA.includes(percent);
+      const initial = validPercent ? roundMoney(total * percent / 100) : 0;
+      const financed = casheaMode ? roundMoney(total - initial) : 0;
+      const tasa = getTasaFormulario();
+      document.getElementById('montoInicialCasheaBs').textContent = 'Bs ' + formatMoney(initial * tasa);
+      document.getElementById('montoInicialCashea').textContent = simboloMoneda + formatMoney(initial);
+      document.getElementById('montoFinanciadoCasheaBs').textContent = 'Bs ' + formatMoney(financed * tasa);
+      document.getElementById('montoFinanciadoCashea').textContent = simboloMoneda + formatMoney(financed);
     }
 
     function buildOptions(tipo) {
@@ -480,6 +642,7 @@
       totalGeneral.textContent = 'Bs ' + formatMoney(total * tasa);
       totalBs.textContent = simboloMoneda + formatMoney(total);
       syncHiddenFinancialFields(subtotal, iva, porcentajeIva, total);
+      updateCasheaAmounts(total);
     }
 
     function normalizeCantidad(input) {
@@ -500,8 +663,6 @@
       const subtotal = roundMoney(cantidadTotal * precio);
       row.querySelector('.item-subtotal').textContent = simboloMoneda + formatMoney(subtotal);
       row.dataset.subtotal = String(subtotal);
-      const cantidadTotalInput = row.querySelector('.item-cantidad-total');
-      if (cantidadTotalInput) cantidadTotalInput.value = String(cantidadTotal);
       recalcTotal();
     }
 
@@ -514,7 +675,7 @@
       }
       row.querySelector('.item-precio').value = '';
       row.querySelector('.item-cant').value = '1';
-      row.querySelector('.item-cantidad-total').value = '1';
+      row.querySelector('.item-search').value = '';
       row.querySelector('.item-subtotal').textContent = simboloMoneda + '0.00';
       row.querySelector('.item-unidad-info').textContent = '';
       row.querySelector('.item-stock-info').textContent = '';
@@ -553,7 +714,7 @@
     function removeItemRow(tr) {
       tr.remove();
       if (!itemsBody.querySelector('tr[data-item]')) {
-        itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="9" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
+        itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="7" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
         subtotalGeneral.textContent = simboloMoneda + '0.00';
         montoIva.textContent = simboloMoneda + '0.00';
         totalGeneral.textContent = 'Bs 0.00';
@@ -584,7 +745,6 @@
     }
 
     function addItemRow(prefill = null) {
-      console.log('addItemRow called', prefill);
       const emptyRow = document.getElementById('emptyRow');
       if (emptyRow) emptyRow.remove();
 
@@ -601,6 +761,12 @@
           </select>
         </td>
          <td class="px-2 py-2">
+           <div class="flex gap-1 mb-1">
+             <input type="search" class="item-search min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border rounded-lg text-xs focus:border-orange outline-none" placeholder="Buscar..." aria-label="Buscar producto o servicio">
+             <button type="button" class="item-search-button shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk" aria-label="Buscar producto o servicio" title="Buscar">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+             </button>
+           </div>
            <select class="item-select w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none" required></select>
            <div class="item-unidad-info text-[0.65rem] text-gray-500 font-semibold mt-1"></div>
            <div class="item-stock-info text-[0.65rem] text-orange font-semibold mt-0.5"></div>
@@ -613,9 +779,6 @@
         <td class="px-2 py-2">
           <input type="number" step="0.01" min="0.01" value="1" class="item-cant w-full px-2 py-1.5 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none">
         </td>
-         <td class="px-2 py-2">
-           <input type="number" step="0.01" min="0.01" value="1" readonly tabindex="-1" class="item-cantidad-total w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
-         </td>
         <td class="px-2 py-2">
           <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
         </td>
@@ -629,6 +792,7 @@
 
       itemsBody.appendChild(tr);
       bindItemRow(tr);
+      attachSelectFilter(tr.querySelector('.item-search'), tr.querySelector('.item-select'), tr.querySelector('.item-search-button'));
       populateUnidadSelect(tr);
 
       if (prefill) {
@@ -642,7 +806,6 @@
          if (unidadSel && prefill.codigo_unidad_medida) unidadSel.value = String(prefill.codigo_unidad_medida);
 
          tr.querySelector('.item-cant').value = String(parseFloat(prefill.cantidad) || 1);
-         tr.querySelector('.item-cantidad-total').value = String(parseFloat(prefill.cantidad) || 1);
 
         tr.querySelector('.item-precio').value = formatMoney(prefill.precio_venta);
         updateRowSubtotal(tr);
@@ -692,7 +855,7 @@
     async function submitPedido(e) {
       e.preventDefault();
 
-      if (!document.getElementById('selectCliente').value) {
+      if (!selectCliente.value) {
         Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Seleccione un cliente.' });
         return;
       }
@@ -707,6 +870,7 @@
       const totals = computeFinancialTotals();
 
       const formData = new FormData(formPedido);
+      const esCashea = casheaMode && !editMode;
       formData.set('items', JSON.stringify(collected.items));
       formData.set('codigo_IVA', selectIva ? selectIva.value : String(ivaDefaultCodigo));
       formData.set('subtotal', formatMoney(totals.subtotal));
@@ -714,7 +878,12 @@
       formData.set('porcentaje_iva', formatMoney(totals.porcentajeIva));
       formData.set('monto_total', formatMoney(totals.total));
       formData.set('tasa_actual', formatMoney(getTasaFormulario()));
-      formData.set('codigo_metodo', selectMetodo.value);
+      formData.set('es_cashea', esCashea ? '1' : '0');
+      formData.set('codigo_metodo', esCashea && porcentajeInicialCashea.value === '0' ? '0' : selectMetodo.value);
+      if (esCashea) {
+        formData.set('nivel_cashea', nivelCashea.value);
+        formData.set('porcentaje_inicial', porcentajeInicialCashea.value);
+      }
       if (selectMetodo.value && METODOS_CON_BANCO.includes(parseInt(selectMetodo.value, 10))) {
         formData.set('codigo_banco', document.getElementById('selectBanco').value);
         formData.set('referencia_pago', document.getElementById('referenciaPago').value.trim());
@@ -777,18 +946,13 @@
           const tasaDet = parseFloat(h.tasa_actual ?? h.tasa_cambio ?? tasaActual) || parseFloat(tasaActual);
           document.getElementById('det_total_bs').innerText = formatMoney(totalDet * tasaDet) + ' Bs';
           document.getElementById('det_iva').innerText = simboloMoneda + formatMoney(ivaDet) + ' (' + formatMoney(pctIvaDet) + '%)';
-          document.getElementById('det_metodo').innerText = h.nombre_metodo || '—';
-
           const pago = h.pago || null;
-          document.getElementById('det_monto_pago').innerText = pago
-            ? simboloMoneda + formatMoney(parseFloat(pago.monto))
-            : simboloMoneda + formatMoney(totalDet);
 
           const bancoWrap = document.getElementById('det_banco_wrap');
           const refWrap = document.getElementById('det_ref_wrap');
           if (pago && pago.nombre_banco) {
             bancoWrap.classList.remove('hidden');
-            document.getElementById('det_banco').innerText = pago.nombre_banco;
+            document.getElementById('det_banco').innerText = `${pago.codigo_banco} - ${pago.nombre_banco}`;
           } else {
             bancoWrap.classList.add('hidden');
           }
@@ -816,8 +980,19 @@
                </tr>`;
            });
 
+          const esCashea = parseInt(h.id_cashea_credito, 10) > 0;
           const activo = parseInt(h.estado, 10) === 1;
-          document.getElementById('btnDetalleEditar').classList.toggle('hidden', !activo);
+          document.getElementById('det_metodo').innerText = h.nombre_metodo || (esCashea ? 'Cashea (sin inicial)' : '—');
+          document.getElementById('det_monto_pago').innerText = pago
+            ? simboloMoneda + formatMoney(parseFloat(pago.monto))
+            : simboloMoneda + formatMoney(esCashea ? 0 : totalDet);
+          document.getElementById('det_cashea_wrap').classList.toggle('hidden', !esCashea);
+          if (esCashea) {
+            document.getElementById('det_cashea_nivel').innerText = h.nivel_cashea ? 'Nivel ' + h.nivel_cashea : 'No especificado';
+            document.getElementById('det_cashea_inicial').innerText = simboloMoneda + formatMoney(parseFloat(h.monto_inicial_pagado || 0));
+            document.getElementById('det_cashea_saldo').innerText = simboloMoneda + formatMoney(parseFloat(h.monto_pendiente || h.monto_financiado || 0));
+          }
+          document.getElementById('btnDetalleEditar').classList.toggle('hidden', !activo || esCashea);
           document.getElementById('btnDetalleEliminar').classList.toggle('hidden', !activo);
           document.getElementById('btnDetalleEditar').onclick = () => {
             closeDetalleModal();
@@ -844,6 +1019,7 @@
 
           resetFormPedido();
           editMode = true;
+          btnCashea.classList.add('hidden');
           codigoPedidoEdit.value = h.codigo_pedido;
           formPedido.action = '?url=pedido&type=update';
           modalPedidoTitulo.textContent = 'Modificar Pedido #' + String(h.codigo_pedido).padStart(4, '0');
@@ -927,6 +1103,24 @@
       });
     }
 
+    btnCashea.addEventListener('click', () => setCasheaMode(!casheaMode));
+    nivelCashea.addEventListener('change', () => {
+      const inicialSugeridaPorNivel = {
+        '1': '60',
+        '2': '50',
+        '3': '40',
+        '4': '30',
+        '5': '20',
+        '6': '0',
+      };
+      porcentajeInicialCashea.value = inicialSugeridaPorNivel[nivelCashea.value] || '';
+      updateCasheaPaymentFields();
+      updateCasheaAmounts(computeFinancialTotals().total);
+    });
+    porcentajeInicialCashea.addEventListener('change', () => {
+      updateCasheaPaymentFields();
+      updateCasheaAmounts(computeFinancialTotals().total);
+    });
     selectMetodo.addEventListener('change', toggleCamposBanco);
     if (selectIva) {
       selectIva.addEventListener('change', recalcTotal);
@@ -935,5 +1129,6 @@
     document.getElementById('btnAddItem').addEventListener('click', () => addItemRow());
     formPedido.addEventListener('submit', submitPedido);
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="assets/css/dist.css">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
@@ -58,7 +57,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead>
             <tr class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
               <th class="px-6 py-4">Código</th>
@@ -318,5 +317,6 @@
       });
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

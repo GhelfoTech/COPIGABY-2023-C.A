@@ -14,14 +14,14 @@ trait ProveedoresTrait
     protected function validarProveedor(array $datos)
     {
         // Campos obligatorios
-        foreach (['rif_proveedor', 'razon_social', 'telefono', 'correo', 'direccion', 'estado'] as $campo) {
+        foreach (['rif_proveedor', 'razon_social', 'telefono', 'correo', 'estado'] as $campo) {
             if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
                 return ['status' => 'error', 'message' => 'Todos los campos obligatorios del proveedor deben ser completados'];
             }
         }
 
         // Unicidad estricta del RIF
-        $idProveedor = isset($datos['codigo_proveedor']) ? (int) $datos['codigo_proveedor'] : null;
+        $idProveedor = isset($datos['codigo_proveedor_actual']) ? (int) $datos['codigo_proveedor_actual'] : null;
         if ($this->rifProveedorDuplicado(trim((string) $datos['rif_proveedor']), $idProveedor)) {
             return ['status' => 'error', 'message' => 'El RIF ya está registrado en el sistema'];
         }

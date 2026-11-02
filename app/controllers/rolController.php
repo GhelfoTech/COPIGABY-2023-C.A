@@ -15,7 +15,8 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_rol'])) {
-                $object->addRol($_POST);
+                $resultado = $object->addRol($_POST);
+                $_SESSION['rol_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=rol");
                 exit();
             }
@@ -24,11 +25,12 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_rol'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateRol((int)$_POST['codigo_rol'], [
+                $resultado = $object->updateRol((int)$_POST['codigo_rol'], [
                     'nombre_rol'  => $_POST['nombre_rol'],
                     'descripcion' => $_POST['descripcion'],
                     'estado'      => $estado
                 ]);
+                $_SESSION['rol_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=rol");
                 exit();
             }

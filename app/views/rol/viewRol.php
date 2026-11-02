@@ -34,8 +34,18 @@
         </button>
       </div>
 
+      <?php if (!empty($_SESSION['rol_flash'])): ?>
+        <?php $flash = $_SESSION['rol_flash']; unset($_SESSION['rol_flash']); ?>
+        <script>
+          showFlashAlert(
+            <?= json_encode($flash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            <?= json_encode($flash['message'] ?? (($flash['status'] ?? '') === 'success' ? 'Operación realizada correctamente' : 'No se pudo realizar la operación'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+          );
+        </script>
+      <?php endif; ?>
+
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead>
             <tr class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
               <th class="px-6 py-4">Código</th>
@@ -182,18 +192,19 @@
       toggleModal('modalEdit');
     }
 
-    function eliminar(id) {
-      if(confirm('¿Desea desactivar este rol?')) {
+    async function eliminar(id) {
+      if(await showConfirm('¿Desea desactivar este rol?', 'Desactivar rol', 'Sí, desactivar')) {
         const f = new FormData();
         f.append('deleteRol', 'true');
         f.append('idrol', id);
         fetch('?url=rol&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar la solicitud.');
+          else showAlert('No se pudo procesar la solicitud.', 'error', 'Error');
         });
       }
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

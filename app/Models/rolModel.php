@@ -40,12 +40,15 @@ class rolModel extends ConectDB {
         try {
             $query = "INSERT INTO rol (nombre_rol, descripcion, estado) VALUES (?, ?, 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 trim($datos['nombre_rol']),
                 trim($datos['descripcion'])
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo registrar el rol'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -59,14 +62,17 @@ class rolModel extends ConectDB {
         try {
             $query = "UPDATE rol SET nombre_rol = ?, descripcion = ?, estado = ? WHERE codigo_rol = ?";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 trim($datos['nombre_rol']),
                 trim($datos['descripcion']),
                 (int) $datos['estado'],
                 (int) $id
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el rol'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 

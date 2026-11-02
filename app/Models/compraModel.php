@@ -77,8 +77,6 @@ class compraModel extends ConectDB {
                            WHERE codigo_producto = ?";
             $stmtStock = $this->conex->prepare($queryStock);
 
-            $productoModel = new productoModel();
-
             foreach ($items as $item) {
                 $subtotal = $item['cantidad'] * $item['costo'];
 
@@ -97,13 +95,17 @@ class compraModel extends ConectDB {
                     $item['codigo_producto']
                 ]);
 
-                // Recalcular y guardar el precio de venta del producto afectado
-                $productoModel->calcularYGuardarPrecio((int) $item['codigo_producto']);
             }
 
             $this->conex->commit();
+
+            $productoModel = new productoModel();
+            foreach (array_unique(array_column($items, 'codigo_producto')) as $codigoProducto) {
+                $productoModel->calcularYGuardarPrecio((int) $codigoProducto);
+            }
+
             return ["status" => "success"];
-        } catch (PDOException $e) {
+        } catch (\Throwable $e) {
             if ($this->conex->inTransaction()) $this->conex->rollBack();
             return ["status" => "error", "message" => $e->getMessage()];
         }
@@ -165,6 +167,14 @@ class compraModel extends ConectDB {
     /**
      * Obtiene productos para el selector de la compra.
      */
+    public function getCategories() {
+        try {
+            $stmt = $this->conex->prepare("SELECT codigo_categoria, nombre_categoria FROM categoria WHERE estado = 1");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) { return []; }
+    }
+
     public function getProducts() {
         try {
             $query = "SELECT p.codigo_producto, p.nombre_producto,

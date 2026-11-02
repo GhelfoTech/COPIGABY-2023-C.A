@@ -106,8 +106,9 @@ class productoModel extends ConectDB {
                 ]);
             }
 
-            $this->calcularYGuardarPrecio((int) $this->conex->lastInsertId());
-            return ["status" => "success"];
+            $codigoProducto = (int) $this->conex->lastInsertId();
+            $this->calcularYGuardarPrecio($codigoProducto);
+            return ["status" => "success", "codigo_producto" => $codigoProducto];
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
         }

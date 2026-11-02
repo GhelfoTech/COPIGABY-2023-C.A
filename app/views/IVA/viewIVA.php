@@ -34,8 +34,18 @@
         </button>
       </div>
 
+      <?php if (!empty($_SESSION['iva_flash'])): ?>
+        <?php $flash = $_SESSION['iva_flash']; unset($_SESSION['iva_flash']); ?>
+        <script>
+          showFlashAlert(
+            <?= json_encode($flash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            <?= json_encode($flash['message'] ?? (($flash['status'] ?? '') === 'success' ? 'Operación realizada correctamente' : 'No se pudo realizar la operación'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+          );
+        </script>
+      <?php endif; ?>
+
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4">Código</th>
@@ -177,18 +187,19 @@
         document.getElementById('modalEditIva').classList.add('hidden');
     }
 
-    function confirmDelete(id) {
-      if(confirm('¿Desea desactivar este registro de IVA?')) {
+    async function confirmDelete(id) {
+      if(await showConfirm('¿Desea desactivar este registro de IVA?', 'Desactivar IVA', 'Sí, desactivar')) {
         const f = new FormData();
         f.append('deleteIva', 'true');
         f.append('codigo_IVA', id);
         fetch('?url=iva&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar');
+          else showAlert('No se pudo procesar', 'error', 'Error');
         });
       }
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

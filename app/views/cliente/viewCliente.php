@@ -34,8 +34,15 @@
         </button>
       </div>
 
+      <?php if (!empty($_SESSION['cliente_error'])): ?>
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+          <?= htmlspecialchars($_SESSION['cliente_error']) ?>
+        </div>
+        <?php unset($_SESSION['cliente_error']); ?>
+      <?php endif; ?>
+
       <div class="bg-white rounded-[14px] shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
             <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4">Cédula</th>
@@ -103,8 +110,8 @@
              <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="correo@cliente.com">
           </div>
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección</label>
-            <textarea name="direccion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold"></textarea>
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección <span class="text-red-500">*</span></label>
+            <textarea name="direccion" rows="2" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -227,18 +234,19 @@
         document.getElementById('modalEditCliente').classList.add('hidden');
     }
 
-    function confirmDelete(id) {
-      if(confirm('¿Desea desactivar este cliente?')) {
+    async function confirmDelete(id) {
+      if(await showConfirm('¿Desea desactivar este cliente?', 'Desactivar cliente', 'Sí, desactivar')) {
         const f = new FormData();
         f.append('deleteCliente', 'true');
         f.append('idcliente', id);
         fetch('?url=cliente&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo eliminar el cliente.');
+          else showAlert('No se pudo eliminar el cliente.', 'error', 'Error');
         });
       }
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

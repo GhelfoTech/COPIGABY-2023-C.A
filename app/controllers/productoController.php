@@ -17,7 +17,14 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_producto'])) {
                 $_POST['porcentaje_ganancia'] = $_POST['porcentaje_ganancia'] ?? 0;
                 $_POST['costo'] = $_POST['costo'] ?? 0;
-                $object->addProduct($_POST);
+                $resultado = $object->addProduct($_POST);
+
+                if (($_POST['origen'] ?? '') === 'compra') {
+                    header('Content-Type: application/json');
+                    echo json_encode($resultado);
+                    exit();
+                }
+
                 header("Location: ?url=producto");
                 exit();
             }

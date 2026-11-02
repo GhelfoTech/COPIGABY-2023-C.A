@@ -37,6 +37,11 @@ trait ClientesTrait
             return $validacionTelefono;
         }
 
+        $idActual = isset($datos['cedula_cliente_actual']) ? $datos['cedula_cliente_actual'] : null;
+        if ($this->cedulaClienteDuplicada(trim((string) $datos['cedula_cliente']), $idActual)) {
+            return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
+        }
+
         // Correo: formato de email válido (obligatorio si se registra)
         if (!empty($datos['correo']) && !filter_var(trim($datos['correo']), FILTER_VALIDATE_EMAIL)) {
             return ['status' => 'error', 'message' => 'El correo electrónico no tiene un formato válido'];

@@ -51,13 +51,14 @@ class pedidoModel extends ConectDB {
             $query = "SELECT p.codigo_pedido, p.cedula_cliente, p.cedula_usuario, p.fecha_pedido, p.estado,
                              p.subtotal, p.monto_iva, p.porcentaje_iva, p.monto_total, p.tasa_cambio,
                              c.nombre AS nombre_cliente, u.nombre_usuario,
-                             mp.nombre_metodo
+                             COALESCE(mp.nombre_metodo, CASE WHEN cc.id_cashea_credito IS NOT NULL THEN 'CASHEA' END) AS nombre_metodo
                       FROM pedido p
                       LEFT JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
                       LEFT JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
                       LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
                       LEFT JOIN detalle_pago dpg ON dpg.codigo_pago = pg.codigo_pago
                       LEFT JOIN metodo_pago mp ON dpg.codigo_metodo = mp.codigo_metodo
+                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido
                       ORDER BY p.codigo_pedido DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
@@ -85,6 +86,10 @@ class pedidoModel extends ConectDB {
         $porcentajeIva = $this->formatearMonto((float) ($datos['porcentaje_iva'] ?? 0));
         $montoTotal    = $this->formatearMonto((float) ($datos['monto_total'] ?? 0));
         $tasaCambio    = $this->formatearMonto((float) ($datos['tasa_actual'] ?? $this->getTasaActual()));
+        $esCashea      = !empty($datos['es_cashea']);
+        $porcentajeInicial = $esCashea ? (int) $datos['porcentaje_inicial'] : 100;
+        $montoInicial  = $this->formatearMonto($montoTotal * ($porcentajeInicial / 100));
+        $montoFinanciado = $this->formatearMonto($montoTotal - $montoInicial);
 
         try {
             $this->conex->beginTransaction();
@@ -92,11 +97,12 @@ class pedidoModel extends ConectDB {
             $stmtPedido = $this->conex->prepare(
                 'INSERT INTO pedido (cedula_cliente, cedula_usuario, fecha_pedido, estado,
                                      subtotal, monto_iva, porcentaje_iva, monto_total, tasa_cambio)
-                 VALUES (?, ?, NOW(), 1, ?, ?, ?, ?, ?)'
+                 VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?)'
             );
             $stmtPedido->execute([
                 $cedulaCliente,
                 $cedulaUsuario,
+                $datos['fecha_pedido'],
                 $this->formatearMontoDecimal($subtotal),
                 $this->formatearMontoDecimal($montoIva),
                 $this->formatearMontoDecimal($porcentajeIva),
@@ -110,7 +116,16 @@ class pedidoModel extends ConectDB {
             }
 
             $this->insertarDetallesYDescontarStock($codigoPedido, $items);
-            $this->registrarPago($codigoPedido, $pago, $montoTotal);
+            $this->registrarPago($codigoPedido, $pago, $montoTotal, $esCashea ? $montoInicial : null);
+            if ($esCashea) {
+                $this->registrarCreditoCashea(
+                    $codigoPedido,
+                    (int) $datos['nivel_cashea'],
+                    $montoInicial,
+                    $montoFinanciado,
+                    100 - $porcentajeInicial
+                );
+            }
 
             $this->conex->commit();
 
@@ -163,6 +178,9 @@ class pedidoModel extends ConectDB {
             $pedidoActual = $this->getPedidoById($id);
             if (!$pedidoActual) {
                 throw new PDOException('El pedido indicado no existe');
+            }
+            if (!empty($pedidoActual['id_cashea_credito'])) {
+                throw new PDOException('Los pedidos financiados con Cashea no se pueden editar desde Pedidos');
             }
 
             if ((int) $pedidoActual['estado'] === 1) {
@@ -233,6 +251,9 @@ class pedidoModel extends ConectDB {
             $stmtPago = $this->conex->prepare('UPDATE pagos SET estado = 0 WHERE codigo_pedido = ?');
             $stmtPago->execute([$id]);
 
+            $stmtCashea = $this->conex->prepare('UPDATE cashea_credito SET estado = 0 WHERE id_pedido = ?');
+            $stmtCashea->execute([$id]);
+
             $this->conex->commit();
             return ['status' => 'success', 'message' => 'Pedido annulado correctamente'];
         } catch (PDOException $e) {
@@ -252,13 +273,15 @@ class pedidoModel extends ConectDB {
             $query = "SELECT p.*, c.nombre AS nombre_cliente, c.telefono AS telefono_cliente,
                              u.nombre_usuario,
                              pg.codigo_pago, dpg.codigo_metodo, dpg.codigo_moneda, pg.fecha_pago AS fecha_pago,
-                             mp.nombre_metodo
+                             mp.nombre_metodo, cc.id_cashea_credito, cc.nivel_cashea, cc.monto_inicial_pagado,
+                             cc.monto_financiado, cc.porcentaje_financiado, cc.monto_pendiente
                       FROM pedido p
                       INNER JOIN cliente c ON p.cedula_cliente = c.cedula_cliente
                       INNER JOIN usuario u ON p.cedula_usuario = u.cedula_usuario
                       LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
                       LEFT JOIN detalle_pago dpg ON dpg.codigo_pago = pg.codigo_pago
                       LEFT JOIN metodo_pago mp ON dpg.codigo_metodo = mp.codigo_metodo
+                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido
                       WHERE p.codigo_pedido = ?";
             $stmt = $this->conex->prepare($query);
             $stmt->execute([(int) $id]);
@@ -654,11 +677,14 @@ class pedidoModel extends ConectDB {
             );
 
             foreach ($materiales as $mat) {
-                $cantidadNecesaria = (float) $mat['cantidad_usada'] * $cantidad;
+                $cantidadNecesaria = $this->calcularCantidadMaterial(
+                    (float) $mat['cantidad_usada'],
+                    $cantidad
+                );
                 if ($cantidadNecesaria <= 0) {
                     continue;
                 }
-                $stmtStock->execute([(int) $cantidadNecesaria, (int) $mat['codigo_producto'], (int) $cantidadNecesaria]);
+                $stmtStock->execute([$cantidadNecesaria, (int) $mat['codigo_producto'], $cantidadNecesaria]);
                 if ($stmtStock->rowCount() === 0) {
                     throw new PDOException("Stock insuficiente del material #{$mat['codigo_producto']} para el servicio en la línea {$linea}");
                 }
@@ -667,18 +693,17 @@ class pedidoModel extends ConectDB {
     }
 
     private function getMaterialesByServicio(int $codigoServicio): array {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT codigo_producto, cantidad_usada
-                 FROM servicio_material
-                 WHERE codigo_servicio = ?'
-            );
-            $stmt->execute([$codigoServicio]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $this->logPdoError('getMaterialesByServicio', $e);
-            return [];
-        }
+        $stmt = $this->conex->prepare(
+            'SELECT codigo_producto, cantidad_usada
+             FROM servicio_material
+             WHERE codigo_servicio = ?'
+        );
+        $stmt->execute([$codigoServicio]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function calcularCantidadMaterial(float $cantidadPorServicio, float $cantidadServicio): int {
+        return (int) ceil($cantidadPorServicio * $cantidadServicio);
     }
 
     private function restaurarStockPedido(int $codigoPedido): void {
@@ -695,9 +720,12 @@ class pedidoModel extends ConectDB {
             if ($item['tipo'] === 'servicio' && !empty($item['codigo_servicio'])) {
                 $materiales = $this->getMaterialesByServicio((int) $item['codigo_servicio']);
                 foreach ($materiales as $mat) {
-                    $cantidadRestaurar = (float) $mat['cantidad_usada'] * $cantidad;
+                    $cantidadRestaurar = $this->calcularCantidadMaterial(
+                        (float) $mat['cantidad_usada'],
+                        $cantidad
+                    );
                     if ($cantidadRestaurar > 0) {
-                        $stmtSumar->execute([(int) $cantidadRestaurar, (int) $mat['codigo_producto']]);
+                        $stmtSumar->execute([$cantidadRestaurar, (int) $mat['codigo_producto']]);
                     }
                 }
             }
@@ -756,12 +784,15 @@ class pedidoModel extends ConectDB {
         return (int) $this->getIvaActivo()['codigo_IVA'];
     }
 
-    private function registrarPago(int $codigoPedido, array $pago, float $montoTotal): void {
-        $codigoMetodo = (int) $pago['codigo_metodo'];
-        $monto = $this->formatearMonto($montoTotal);
+    private function registrarPago(int $codigoPedido, array $pago, float $montoTotal, ?float $montoRegistrar = null): void {
+        $codigoMetodo = (int) ($pago['codigo_metodo'] ?? 0);
+        $monto = $this->formatearMonto($montoRegistrar ?? $montoTotal);
 
-        if ($monto <= 0) {
-            throw new PDOException('El total del pedido debe ser mayor a cero');
+        if ($monto < 0 || ($monto === 0.0 && $montoRegistrar === null)) {
+            throw new PDOException('El monto del pago debe ser válido');
+        }
+        if ($monto === 0.0) {
+            return;
         }
 
         $stmtPago = $this->conex->prepare('INSERT INTO pagos (codigo_pedido, fecha_pago, estado) VALUES (?, NOW(), 1)');
@@ -799,6 +830,29 @@ class pedidoModel extends ConectDB {
                 $referencia,
             ]);
         }
+    }
+
+    private function registrarCreditoCashea(
+        int $codigoPedido,
+        int $nivel,
+        float $montoInicial,
+        float $montoFinanciado,
+        int $porcentajeFinanciado
+    ): void {
+        $stmt = $this->conex->prepare(
+            'INSERT INTO cashea_credito
+                (id_pedido, nivel_cashea, monto_inicial_pagado, monto_financiado,
+                 porcentaje_financiado, monto_pendiente, fecha, estado)
+             VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)'
+        );
+        $stmt->execute([
+            $codigoPedido,
+            $nivel,
+            $this->formatearMontoDecimal($montoInicial),
+            $this->formatearMontoDecimal($montoFinanciado),
+            $porcentajeFinanciado,
+            $this->formatearMontoDecimal($montoFinanciado),
+        ]);
     }
 
     private function getDetallePagoByPago(int $codigoPago): ?array {

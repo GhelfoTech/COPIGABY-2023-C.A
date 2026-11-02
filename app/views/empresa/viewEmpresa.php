@@ -35,7 +35,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4">RIF / Nombre</th>
@@ -285,15 +285,15 @@
         document.getElementById('modalEditEmpresa').classList.add('hidden');
     }
 
-    function confirmDelete(id) {
-      if(confirm('¿Desea eliminar definitivamente esta empresa? Esta acción no se puede deshacer.')) {
+    async function confirmDelete(id) {
+      if(await showConfirm('¿Desea eliminar definitivamente esta empresa? Esta acción no se puede deshacer.', 'Eliminar empresa', 'Sí, eliminar')) {
         const f = new FormData();
         f.append('deleteEmpresa', 'true');
         f.append('codigo_empresa', id);
         fetch('?url=empresa&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar la eliminación.');
+          else showAlert('No se pudo procesar la eliminación.', 'error', 'Error');
         });
       }
     }
@@ -313,5 +313,6 @@
       setRifForEmpresa(this);
     });
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

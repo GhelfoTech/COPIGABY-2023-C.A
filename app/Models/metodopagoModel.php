@@ -39,9 +39,11 @@ class metodopagoModel extends ConectDB {
         try {
             $query = "INSERT INTO metodo_pago (nombre_metodo, estado) VALUES (?, 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([trim($nombre)]);
+            return $stmt->execute([trim($nombre)])
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo registrar el método de pago'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -54,13 +56,16 @@ class metodopagoModel extends ConectDB {
         try {
             $query = "UPDATE metodo_pago SET nombre_metodo = ?, estado = ? WHERE codigo_metodo = ?";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 trim($nombre),
                 (int) $estado,
                 (int) $id
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el método de pago'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 

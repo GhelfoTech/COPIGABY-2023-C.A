@@ -20,6 +20,14 @@ trait ComprasTrait
             }
         }
 
+        $fechaCompra = \DateTimeImmutable::createFromFormat('!Y-m-d', trim((string) $datos['fecha_compra']));
+        if (!$fechaCompra || $fechaCompra->format('Y-m-d') !== trim((string) $datos['fecha_compra'])) {
+            return ['status' => 'error', 'message' => 'La fecha de compra no es válida'];
+        }
+        if ($fechaCompra > new \DateTimeImmutable('today')) {
+            return ['status' => 'error', 'message' => 'La fecha de compra no puede ser futura'];
+        }
+
         if (!empty($items)) {
             foreach ($items as $index => $item) {
                 $linea    = (int) $index + 1;

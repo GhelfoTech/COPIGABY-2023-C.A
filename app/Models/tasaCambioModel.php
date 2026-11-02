@@ -23,7 +23,11 @@ class tasaCambioModel extends ConectDB {
      */
     public function getAllTasas() {
         try {
-            $query = "SELECT codigo_tasa, fecha, monto_bolivares FROM tasa_cambio ORDER BY fecha DESC";
+            $query = "SELECT t.codigo_tasa, t.fecha, t.monto_bolivares,
+                             m.nombre_moneda, m.simbolo
+                      FROM tasa_cambio t
+                      LEFT JOIN moneda m ON m.codigo_moneda = t.codigo_moneda
+                      ORDER BY t.fecha DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -65,11 +69,28 @@ class tasaCambioModel extends ConectDB {
      */
     public function addTasa($datos) {
         try {
+            $fecha = $datos['fecha'] ?? date('Y-m-d H:i:s');
+            $tasa = (float) ($datos['monto_bolivares'] ?? 0);
+
+            if ($tasa <= 0) {
+                return ['status' => 'error', 'message' => 'La tasa debe ser mayor que cero.'];
+            }
+
+            $stmtDelDia = $this->conex->prepare(
+                'SELECT codigo_tasa FROM tasa_cambio WHERE DATE(fecha) = DATE(?) ORDER BY fecha DESC LIMIT 1'
+            );
+            $stmtDelDia->execute([$fecha]);
+            $codigoExistente = $stmtDelDia->fetchColumn();
+
+            if ($codigoExistente) {
+                return $this->updateTasa((int) $codigoExistente, ['fecha' => $fecha, 'monto_bolivares' => $tasa]);
+            }
+
             $query = "INSERT INTO tasa_cambio (fecha, monto_bolivares) VALUES (?, ?)";
             $stmt = $this->conex->prepare($query);
             $success = $stmt->execute([
-                $datos['fecha'],
-                $datos['monto_bolivares']
+                $fecha,
+                $tasa
             ]);
             return $success
                 ? ["status" => "success", "message" => "Tasa de cambio registrada con éxito."]

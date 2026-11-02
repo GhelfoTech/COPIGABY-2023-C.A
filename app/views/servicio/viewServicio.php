@@ -35,7 +35,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead>
             <tr class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
               <th class="px-6 py-4">Código</th>
@@ -105,7 +105,14 @@
                <span class="text-[0.65rem] font-bold text-gray-400 italic">Opcional</span>
              </div>
              <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
-               <select id="selProducto_register" class="flex-1 min-w-[200px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+               <div class="flex-1 min-w-[200px]">
+                 <div class="flex gap-1 mb-1">
+                   <input type="search" id="buscarProductoServicio_register" aria-label="Buscar producto o insumo por nombre" placeholder="Buscar producto / insumo..." class="min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
+                   <button type="button" id="btnBuscarProductoServicio_register" aria-label="Buscar producto o insumo" title="Buscar" class="shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+                   </button>
+                 </div>
+               <select id="selProducto_register" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
                  <option value="">Seleccione un producto / insumo…</option>
                  <?php foreach ($productos as $p): ?>
                    <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
@@ -113,6 +120,7 @@
                    </option>
                  <?php endforeach; ?>
                </select>
+               </div>
                <input type="number" id="cantProducto_register" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
                <button type="button" onclick="agregarMaterial('register')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
@@ -162,7 +170,14 @@
                <span class="text-[0.65rem] font-bold text-gray-400 italic">Opcional</span>
              </div>
              <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
-               <select id="selProducto_edit" class="flex-1 min-w-[200px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+               <div class="flex-1 min-w-[200px]">
+                 <div class="flex gap-1 mb-1">
+                   <input type="search" id="buscarProductoServicio_edit" aria-label="Buscar producto o insumo por nombre" placeholder="Buscar producto / insumo..." class="min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
+                   <button type="button" id="btnBuscarProductoServicio_edit" aria-label="Buscar producto o insumo" title="Buscar" class="shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
+                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
+                   </button>
+                 </div>
+               <select id="selProducto_edit" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
                  <option value="">Seleccione un producto / insumo…</option>
                  <?php foreach ($productos as $p): ?>
                    <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
@@ -170,6 +185,7 @@
                    </option>
                  <?php endforeach; ?>
                </select>
+               </div>
                <input type="number" id="cantProducto_edit" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
                <button type="button" onclick="agregarMaterial('edit')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
@@ -229,9 +245,58 @@
     let materialesRegister = [];
     let materialesEdit = [];
 
+    function attachMaterialFilter(mode) {
+      const input = document.getElementById('buscarProductoServicio_' + mode);
+      const select = document.getElementById('selProducto_' + mode);
+      const button = document.getElementById('btnBuscarProductoServicio_' + mode);
+      const form = select.closest('form');
+
+      const resetFilter = () => {
+        input.value = '';
+        [...select.options].forEach(option => { option.hidden = false; });
+        select.size = 1;
+      };
+
+      const showFilteredOptions = () => {
+        const query = input.value.trim().toLocaleLowerCase();
+        [...select.options].forEach((option, index) => {
+          option.hidden = index !== 0 && !option.textContent.toLocaleLowerCase().includes(query);
+        });
+        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
+          select.value = '';
+        }
+        select.size = 5;
+        select.focus();
+        if (typeof select.showPicker === 'function') {
+          try {
+            select.showPicker();
+          } catch (error) {
+            // The focused list remains available if the browser blocks its native picker.
+          }
+        }
+      };
+
+      button.addEventListener('click', showFilteredOptions);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          showFilteredOptions();
+        }
+      });
+      select.addEventListener('change', resetFilter);
+      form.addEventListener('reset', () => window.setTimeout(resetFilter, 0));
+      return resetFilter;
+    }
+
+    const resetMaterialFilters = {
+      register: attachMaterialFilter('register'),
+      edit: attachMaterialFilter('edit')
+    };
+
     function abrirModalRegistro() {
       materialesRegister = [];
       renderMateriales('register');
+      resetMaterialFilters.register();
       toggleModal('modalRegister');
     }
 
@@ -239,7 +304,7 @@
       const sel = document.getElementById('selProducto_' + mode);
       const cant = document.getElementById('cantProducto_' + mode);
       const codigo = sel.value;
-      if (!codigo) { alert('Seleccione un producto o insumo.'); return; }
+      if (!codigo) { showAlert('Seleccione un producto o insumo.', 'warning', 'Material requerido'); return; }
 
       const nombre = sel.options[sel.selectedIndex].dataset.nombre;
       const stockDisp = parseInt(sel.options[sel.selectedIndex].dataset.stock || '0', 10);
@@ -346,6 +411,7 @@
     }
 
     function openEditModal(data) {
+      resetMaterialFilters.edit();
       document.getElementById('edit_id').value = data.codigo_servicio;
       document.getElementById('edit_nombre').value = data.nombre_servicio;
       document.getElementById('edit_precio').value = data.precio;
@@ -362,18 +428,19 @@
       toggleModal('modalEdit');
     }
 
-    function eliminar(id) {
-      if(confirm('¿Desea desactivar este servicio?')) {
+    async function eliminar(id) {
+      if(await showConfirm('¿Desea desactivar este servicio?', 'Desactivar servicio', 'Sí, desactivar')) {
         const f = new FormData();
         f.append('deleteServicio', 'true');
         f.append('idservicio', id);
         fetch('?url=servicio&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert('No se pudo procesar la solicitud.');
+          else showAlert('No se pudo procesar la solicitud.', 'error', 'Error');
         });
       }
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

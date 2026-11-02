@@ -28,10 +28,17 @@
                 && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
             ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
 
-            if (!isset($_POST['codigo_cliente'], $_POST['items'], $_POST['codigo_metodo'])) {
+            $esCashea = ($_POST['es_cashea'] ?? '') === '1';
+            $porcentajeInicialRaw = $_POST['porcentaje_inicial'] ?? '';
+            $porcentajeInicial = in_array((string) $porcentajeInicialRaw, ['0', '10', '20', '30', '40', '50', '60'], true)
+                ? (int) $porcentajeInicialRaw
+                : null;
+            $requiereMetodoPago = !$esCashea || ($porcentajeInicial !== null && $porcentajeInicial > 0);
+
+            if (!isset($_POST['codigo_cliente'], $_POST['items']) || ($requiereMetodoPago && empty($_POST['codigo_metodo']))) {
                 $payload = [
                     'status'  => 'error',
-                    'message' => 'Datos incompletos: cliente, ítems y método de pago son obligatorios.',
+                    'message' => 'Datos incompletos: cliente, ítems y método de pago de la inicial son obligatorios.',
                 ];
                 if ($isAjax) {
                     header('Content-Type: application/json; charset=utf-8');
@@ -77,16 +84,20 @@
             $datos = [
                 'cedula_cliente'  => trim((string) $_POST['codigo_cliente']),
                 'cedula_usuario'  => $_SESSION['user_id'],
+                'fecha_pedido'    => $_POST['fecha_pedido'] ?? date('Y-m-d'),
                 'codigo_IVA'      => (int) $_POST['codigo_IVA'],
                 'subtotal'        => $_POST['subtotal'] ?? null,
                 'monto_iva'       => $_POST['monto_iva'] ?? null,
                 'porcentaje_iva'  => $_POST['porcentaje_iva'] ?? null,
                 'monto_total'     => $_POST['monto_total'] ?? null,
                 'tasa_actual'     => $_POST['tasa_actual'] ?? null,
+                'es_cashea'       => $esCashea,
+                'nivel_cashea'    => (int) ($_POST['nivel_cashea'] ?? 0),
+                'porcentaje_inicial' => $porcentajeInicial,
             ];
 
             $pago = [
-                'codigo_metodo' => (int) $_POST['codigo_metodo'],
+                'codigo_metodo' => (int) ($_POST['codigo_metodo'] ?? 0),
                 'codigo_banco'  => isset($_POST['codigo_banco']) ? (int) $_POST['codigo_banco'] : null,
                 'referencia'    => trim((string) ($_POST['referencia_pago'] ?? '')),
             ];

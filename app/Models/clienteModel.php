@@ -44,23 +44,23 @@ class clienteModel extends ConectDB {
         if ($validacion !== true) {
             return $validacion;
         }
-        if ($this->cedulaClienteDuplicada(trim((string) $datos['cedula_cliente']))) {
-            return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
-        }
 
         try {
             $query = "INSERT INTO cliente (cedula_cliente, nombre, telefono, correo, direccion, estado)
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 $datos['cedula_cliente'],
                 $datos['nombre'],
                 $datos['telefono'],
-                $datos['correo'],
-                $datos['direccion']
+                trim((string) ($datos['correo'] ?? '')),
+                trim((string) ($datos['direccion'] ?? ''))
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo registrar el cliente'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -68,19 +68,17 @@ class clienteModel extends ConectDB {
      * Actualiza la información de un cliente.
      */
     public function updateCliente($idActual, $datos) {
+        $datos['cedula_cliente_actual'] = $idActual;
         $validacion = $this->validarCliente($datos);
         if ($validacion !== true) {
             return $validacion;
-        }
-        if ($this->cedulaClienteDuplicada(trim((string) $datos['cedula_cliente']), $idActual)) {
-            return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
         }
 
         try {
             $query = "UPDATE cliente SET cedula_cliente = ?, nombre = ?, telefono = ?, correo = ?, direccion = ?, estado = ? 
                       WHERE cedula_cliente = ?";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 $datos['cedula_cliente'],
                 $datos['nombre'],
                 $datos['telefono'],
@@ -89,8 +87,11 @@ class clienteModel extends ConectDB {
                 (int) $datos['estado'],
                 $idActual
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el cliente'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 

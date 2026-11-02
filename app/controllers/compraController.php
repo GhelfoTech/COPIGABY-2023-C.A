@@ -18,7 +18,25 @@
                 // Usamos cedula_usuario para que coincida con el modelo y la DB
                 $_POST['cedula_usuario'] = $_SESSION['user_id']; 
                 $items = json_decode($_POST['items'], true);
-                $object->addCompra($_POST, $items);
+                if (!is_array($items)) {
+                    $items = [];
+                }
+                $resultado = $object->addCompra($_POST, $items);
+
+                $esAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+                if ($esAjax) {
+                    header('Content-Type: application/json; charset=utf-8');
+                    echo json_encode($resultado);
+                    exit();
+                }
+
+                if (isset($resultado['status']) && $resultado['status'] === 'success') {
+                    header("Location: ?url=compra");
+                    exit();
+                }
+
+                $_SESSION['compra_error'] = $resultado['message'] ?? 'No se pudo registrar la compra';
                 header("Location: ?url=compra");
                 exit();
             }
@@ -73,4 +91,5 @@
     $compras = $object->getAllCompras();
     $proveedores = $object->getProviders();
     $productos = $object->getProducts();
+    $categorias = $object->getCategories();
     include 'app/views/compras/viewCompra.php';

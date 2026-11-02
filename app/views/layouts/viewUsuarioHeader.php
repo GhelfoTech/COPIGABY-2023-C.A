@@ -101,14 +101,14 @@ $inicial = strtoupper(substr($nombreUsuario, 0, 1));
         if (nuevoNombre) {
           document.querySelector('#btnOpenCredenciales span').textContent = 'BIENVENIDO, ' + String(nuevoNombre).toUpperCase();
         }
-        alert(data.message);
+        showAlert(data.message, 'success', 'Credenciales actualizadas');
         closeModal();
         form.reset();
       } else {
-        alert(data.message || 'No se pudo actualizar las credenciales.');
+        showAlert(data.message || 'No se pudo actualizar las credenciales.', 'error', 'Error');
       }
     })
-    .catch(() => alert('Error de conexión. Intente nuevamente.'));
+    .catch(() => showAlert('Error de conexión. Intente nuevamente.', 'error', 'Error de conexión'));
   });
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

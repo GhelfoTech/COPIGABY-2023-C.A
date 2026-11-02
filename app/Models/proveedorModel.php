@@ -50,15 +50,17 @@ class proveedorModel extends ConectDB {
             $query = "INSERT INTO proveedor (rif_proveedor, razon_social, telefono, correo, direccion, estado)
                       VALUES (?, ?, ?, ?, ?, 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $insertado = $stmt->execute([
                 $datos['rif_proveedor'],
                 $datos['razon_social'],
                 $datos['telefono'],
                 $datos['correo'],
-                $datos['direccion']
+                trim((string) ($datos['direccion'] ?? ''))
             ]);
+
+            return $insertado ? (int) $this->conex->lastInsertId() : false;
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -66,6 +68,7 @@ class proveedorModel extends ConectDB {
      * Actualiza un proveedor existente.
      */
     public function updateProveedor($id, $datos) {
+        $datos['codigo_proveedor_actual'] = $id;
         $validacion = $this->validarProveedor($datos);
         if ($validacion !== true) {
             return $validacion;
@@ -75,7 +78,7 @@ class proveedorModel extends ConectDB {
             $query = "UPDATE proveedor SET rif_proveedor = ?, razon_social = ?, telefono = ?, correo = ?, direccion = ?, estado = ? 
                       WHERE codigo_proveedor = ?";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([
+            $ejecutado = $stmt->execute([
                 $datos['rif_proveedor'],
                 $datos['razon_social'],
                 $datos['telefono'],
@@ -84,8 +87,11 @@ class proveedorModel extends ConectDB {
                 $datos['estado'],
                 $id
             ]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el proveedor'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 

@@ -25,17 +25,12 @@
     <main class="p-8 flex-1 animate-fade-up">
       <?php if (isset($_SESSION['flash_message'])): $flash = $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
         <?php if (is_array($flash) && isset($flash['status'])): ?>
-          <div id="flashMessage" class="mb-6 flex items-center gap-3 px-5 py-4 rounded-xl font-bold text-sm border
-            <?= $flash['status'] === 'success'
-                ? 'bg-green-50 text-green-700 border-green-200'
-                : 'bg-red-50 text-red-700 border-red-200' ?>">
-            <span class="w-8 h-8 flex items-center justify-center rounded-full shrink-0
-              <?= $flash['status'] === 'success' ? 'bg-green-100' : 'bg-red-100' ?>">
-              <?= $flash['status'] === 'success' ? '✔' : '✖' ?>
-            </span>
-            <span><?= htmlspecialchars($flash['message'] ?? ($flash['status'] === 'success' ? 'Operación realizada con éxito' : 'No se pudo completar la operación')) ?></span>
-            <button type="button" onclick="this.parentElement.remove()" class="ml-auto text-lg opacity-50 hover:opacity-100">&times;</button>
-          </div>
+          <script>
+            showFlashAlert(
+              <?= json_encode($flash['status'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+              <?= json_encode($flash['message'] ?? ($flash['status'] === 'success' ? 'Operación realizada con éxito' : 'No se pudo completar la operación'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+            );
+          </script>
         <?php endif; ?>
       <?php endif; ?>
 
@@ -51,7 +46,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table class="w-full text-left">
+        <table data-datatable="true" class="w-full text-left">
           <thead>
             <tr class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
               <th class="px-6 py-4">Código</th>
@@ -205,18 +200,19 @@
       document.getElementById('modalEditCategory').classList.add('hidden');
     }
 
-    function confirmDelete(id) {
-      if(confirm('¿Desea desactivar esta categoría?')) {
+    async function confirmDelete(id) {
+      if(await showConfirm('¿Desea desactivar esta categoría?', 'Desactivar categoría', 'Sí, desactivar')) {
         const f = new FormData();
         f.append('deleteCategory', 'true');
         f.append('idcategoria', id);
         fetch('?url=categoria&type=main', { method:'POST', body:f })
         .then(r => r.json()).then(d => {
           if(d.status === 'success') location.reload();
-          else alert(d.message || 'No se pudo procesar');
+          else showAlert(d.message || 'No se pudo procesar', 'error', 'Error');
         });
       }
     }
   </script>
+  <script src="assets/js/datatables-init.js"></script>
 </body>
 </html>

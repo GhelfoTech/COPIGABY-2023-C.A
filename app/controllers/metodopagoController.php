@@ -15,7 +15,8 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_metodo'])) {
-                $object->addMetodo($_POST['nombre_metodo']);
+                $resultado = $object->addMetodo($_POST['nombre_metodo']);
+                $_SESSION['metodopago_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=metodopago");
                 exit();
             }

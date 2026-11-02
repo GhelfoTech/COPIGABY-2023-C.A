@@ -16,6 +16,17 @@ trait PedidosTrait
      */
     protected function validarPedido(array $datos, array $items)
     {
+        $esCashea = !empty($datos['es_cashea']);
+        $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
+
+        $fechaPedido = \DateTimeImmutable::createFromFormat('!Y-m-d', trim((string) ($datos['fecha_pedido'] ?? date('Y-m-d'))));
+        if (!$fechaPedido || $fechaPedido->format('Y-m-d') !== trim((string) ($datos['fecha_pedido'] ?? date('Y-m-d')))) {
+            return ['status' => 'error', 'message' => 'La fecha del pedido no es válida'];
+        }
+        if ($fechaPedido > new \DateTimeImmutable('today')) {
+            return ['status' => 'error', 'message' => 'La fecha del pedido no puede ser futura'];
+        }
+
         // Cliente y usuario obligatorios
         $cedulaCliente = $datos['cedula_cliente'] ?? '';
         $cedulaUsuario = $datos['cedula_usuario'] ?? '';
@@ -53,6 +64,17 @@ trait PedidosTrait
             return ['status' => 'error', 'message' => 'El total del pedido debe ser mayor a cero'];
         }
 
+        if ($esCashea) {
+            $nivelCashea = (int) ($datos['nivel_cashea'] ?? 0);
+            if ($nivelCashea < 1 || $nivelCashea > 6) {
+                return ['status' => 'error', 'message' => 'Debe seleccionar un nivel Cashea válido'];
+            }
+            if ($porcentajeInicial === null || !in_array((int) $porcentajeInicial, [0, 10, 20, 30, 40, 50, 60], true)) {
+                return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje de inicial válido'];
+            }
+            $porcentajeInicial = (int) $porcentajeInicial;
+        }
+
         // Debe existir una tasa de cambio activa para el cálculo en divisas
         $validacionTasa = $this->validarTasaCambioActiva();
         if ($validacionTasa !== true) {
@@ -62,9 +84,12 @@ trait PedidosTrait
         // Validación del pago asociado
         $pago = func_get_args()[2] ?? null;
         if (is_array($pago)) {
-            $validacionPago = $this->validarDatosPago($pago);
-            if ($validacionPago !== true) {
-                return $validacionPago;
+            $montoInicial = round($montoTotal * ((int) $porcentajeInicial / 100), 2);
+            if (!$esCashea || $montoInicial > 0) {
+                $validacionPago = $this->validarDatosPago($pago);
+                if ($validacionPago !== true) {
+                    return $validacionPago;
+                }
             }
         }
 
@@ -102,8 +127,12 @@ trait PedidosTrait
             if (empty($pago['codigo_banco'])) {
                 return ['status' => 'error', 'message' => 'Debe seleccionar el banco para este método de pago'];
             }
-            if (empty(trim((string) ($pago['referencia'] ?? '')))) {
+            $referencia = trim((string) ($pago['referencia'] ?? ''));
+            if ($referencia === '') {
                 return ['status' => 'error', 'message' => 'Debe indicar la referencia del pago'];
+            }
+            if (!preg_match('/\A[0-9]+\z/', $referencia)) {
+                return ['status' => 'error', 'message' => 'La referencia del pago solo puede contener números'];
             }
         }
         return true;

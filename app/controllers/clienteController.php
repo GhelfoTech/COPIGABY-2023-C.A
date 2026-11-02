@@ -16,7 +16,11 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula_cliente'])) {
-                $object->addCliente($_POST);
+                $resultado = $object->addCliente($_POST);
+
+                if (is_array($resultado) && isset($resultado['status']) && $resultado['status'] === 'error') {
+                    $_SESSION['cliente_error'] = $resultado['message'] ?? 'No se pudo registrar el cliente';
+                }
                 header("Location: ?url=cliente");
                 exit();
             }

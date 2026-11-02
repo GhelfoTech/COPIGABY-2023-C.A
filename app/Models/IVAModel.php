@@ -46,9 +46,12 @@ class ivaModel extends ConectDB {
         try {
             $query = "INSERT INTO iva (porcentaje_iva, fecha, estado) VALUES (?, NOW(), 1)";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([$porcentaje_iva]);
+            $ejecutado = $stmt->execute([$porcentaje_iva]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo registrar el IVA'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 
@@ -64,9 +67,12 @@ class ivaModel extends ConectDB {
         try {
             $query = "UPDATE iva SET porcentaje_iva = ?, estado = ? WHERE codigo_IVA = ?";
             $stmt = $this->conex->prepare($query);
-            return $stmt->execute([$porcentaje_iva, $estado, $id]);
+            $ejecutado = $stmt->execute([$porcentaje_iva, $estado, $id]);
+            return $ejecutado
+                ? ['status' => 'success']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el IVA'];
         } catch (PDOException $e) {
-            return false;
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 

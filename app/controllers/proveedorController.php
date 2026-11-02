@@ -15,7 +15,27 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rif_proveedor'])) {
-                $object->addProveedor($_POST);
+                $resultado = $object->addProveedor($_POST);
+
+                if (($_POST['origen'] ?? '') === 'compra') {
+                    header('Content-Type: application/json');
+                    if (is_int($resultado) && $resultado > 0) {
+                        echo json_encode([
+                            'status' => 'success',
+                            'codigo_proveedor' => $resultado
+                        ]);
+                    } else {
+                        $mensaje = is_string($resultado)
+                            ? $resultado
+                            : ($resultado['message'] ?? 'No se pudo registrar el proveedor');
+                        echo json_encode([
+                            'status' => 'error',
+                            'message' => $mensaje
+                        ]);
+                    }
+                    exit();
+                }
+
                 header("Location: ?url=proveedor");
                 exit();
             }

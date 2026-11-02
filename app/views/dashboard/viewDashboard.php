@@ -31,7 +31,69 @@
     <main class="p-8 flex-1 animate-fade-up">
       <h1 class="text-2xl font-[900] text-gray-800 mb-8">Resumen de Actividad</h1>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
+      <?php if (!empty($_SESSION['tasa_flash'])): ?>
+        <?php $tasaFlash = $_SESSION['tasa_flash']; unset($_SESSION['tasa_flash']); ?>
+        <script>
+          showFlashAlert(
+            <?= json_encode($tasaFlash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            <?= json_encode($tasaFlash['message'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+          );
+        </script>
+      <?php endif; ?>
+
+      <div id="dashboardTasa" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <section class="bg-white rounded-custom border border-gray-100 shadow-sm p-6">
+          <div class="flex flex-col gap-5">
+            <div>
+              <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Tasa del día</p>
+              <p class="mt-1 text-3xl font-black text-navy-dark">
+                Bs. <?= number_format((float) ($tasaActual['monto_bolivares'] ?? 0), 2, ',', '.') ?>
+              </p>
+              <p class="mt-1 text-xs font-bold text-gray-400">
+                Última actualización: <?= !empty($tasaActual['fecha']) ? date('d/m/Y H:i', strtotime($tasaActual['fecha'])) : 'Sin registros' ?>
+              </p>
+            </div>
+            <form method="POST" action="?url=dashboard" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input type="hidden" name="guardar_tasa" value="1">
+              <div>
+                <label class="block text-xs font-black text-gray-400 uppercase mb-1">Tipo de moneda</label>
+                <select name="codigo_moneda" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none font-black text-navy-dark focus:border-orange">
+                  <?php foreach ($monedas as $moneda): ?>
+                    <option value="<?= (int) $moneda['codigo_moneda'] ?>" <?= !empty($monedaActual) && (int) $monedaActual['codigo_moneda'] === (int) $moneda['codigo_moneda'] ? 'selected' : '' ?>><?= htmlspecialchars($moneda['nombre_moneda']) ?> (<?= htmlspecialchars($moneda['simbolo']) ?>)</option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nueva tasa (Bs.)</label>
+                <input type="number" name="monto_bolivares" min="0.01" step="0.01" required value="<?= htmlspecialchars(number_format((float) ($monedaActual['tasa_cambio'] ?? $tasaActual['monto_bolivares'] ?? 0), 2, '.', '')) ?>" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none font-black text-navy-dark focus:border-orange">
+              </div>
+              <button type="submit" class="sm:col-span-2 px-5 py-2.5 bg-orange text-navy-dark rounded-lg font-black shadow-sm hover:bg-orange-dk transition-colors">GUARDAR TASA</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-custom border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100">
+            <h2 class="text-sm font-black text-navy-dark uppercase tracking-widest">Historial reciente</h2>
+          </div>
+          <div class="divide-y divide-gray-100">
+            <?php foreach ($historialTasas as $historialTasa): ?>
+              <div class="px-5 py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs font-black text-navy-dark uppercase"><?= htmlspecialchars($historialTasa['nombre_moneda'] ?? 'Moneda') ?> (<?= htmlspecialchars($historialTasa['simbolo'] ?? '') ?>)</p>
+                  <p class="text-xs font-bold text-gray-400"><?= date('d/m/Y H:i', strtotime($historialTasa['fecha'])) ?></p>
+                </div>
+                <span class="font-black text-navy-dark whitespace-nowrap">Bs. <?= number_format((float) $historialTasa['monto_bolivares'], 2, ',', '.') ?></span>
+              </div>
+            <?php endforeach; ?>
+            <?php if (empty($historialTasas)): ?>
+              <p class="px-5 py-4 text-sm font-bold text-gray-400">No hay tasas registradas.</p>
+            <?php endif; ?>
+          </div>
+        </section>
+      </div>
+
+      <div id="dashboardIndicadores" class="grid grid-cols-4 gap-6 mb-8">
         
         <!-- Card: Productos Activos -->
         <div class="bg-white rounded-custom shadow-sm p-6 flex items-center justify-between border border-gray-100 hover:shadow-md transition-shadow">
@@ -78,7 +140,55 @@
         </div>
 
       </div>
+
+      <section class="mb-8">
+        <div class="mb-4">
+          <h2 class="text-lg font-black text-navy-dark">Accesos rápidos</h2>
+          <p class="text-sm font-semibold text-gray-400">Continúa con tus tareas más frecuentes</p>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <?php if (puedeVerModulo('pedido')): ?>
+          <a href="?url=pedido" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange/10 text-orange-dk transition-colors group-hover:bg-orange group-hover:text-navy-dark">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Gestionar pedidos</span><span class="block text-xs font-semibold text-gray-400">Ventas y órdenes</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <?php if (puedeVerModulo('compra')): ?>
+          <a href="?url=compra" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Registrar compra</span><span class="block text-xs font-semibold text-gray-400">Actualizar inventario</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <?php if (puedeVerModulo('producto')): ?>
+          <a href="?url=producto" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-500 transition-colors group-hover:bg-purple-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Ver inventario</span><span class="block text-xs font-semibold text-gray-400">Productos e insumos</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+          <?php endif; ?>
+          <a href="?url=servicio" class="dashboard-quick-link group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-orange/40 hover:shadow-lg">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 transition-colors group-hover:bg-emerald-500 group-hover:text-white">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </span>
+            <span class="min-w-0 flex-1"><span class="block font-black text-navy-dark">Ver servicios</span><span class="block text-xs font-semibold text-gray-400">Catálogo de servicios</span></span>
+            <span class="text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-orange-dk">→</span>
+          </a>
+        </div>
+      </section>
     </main>
   </div>
+  <script>
+    const indicadores = document.getElementById('dashboardIndicadores');
+    const tasa = document.getElementById('dashboardTasa');
+    if (indicadores && tasa) tasa.before(indicadores);
+  </script>
 </body>
 </html>

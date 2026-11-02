@@ -223,6 +223,46 @@ class monedaModel extends ConectDB {
         }
     }
 
+    public function actualizarTasaMoneda(int $idMoneda, float $tasa): array {
+        if ($idMoneda <= 0) {
+            return ['status' => 'error', 'message' => 'Debe seleccionar una moneda válida'];
+        }
+        if ($tasa <= 0) {
+            return ['status' => 'error', 'message' => 'La tasa debe ser mayor que cero'];
+        }
+
+        try {
+            $moneda = $this->getMonedaById($idMoneda);
+            if (!$moneda) {
+                return ['status' => 'error', 'message' => 'La moneda seleccionada no existe'];
+            }
+
+            $this->conex->beginTransaction();
+            $stmtTasa = $this->conex->prepare(
+                'INSERT INTO tasa_cambio (codigo_moneda, fecha, monto_bolivares) VALUES (?, NOW(), ?)'
+            );
+            $stmtTasa->execute([$idMoneda, $tasa]);
+            $idTasaNueva = (int) $this->conex->lastInsertId();
+
+            if ($idTasaNueva <= 0) {
+                throw new PDOException('No se pudo registrar la tasa de cambio');
+            }
+
+            $stmtMoneda = $this->conex->prepare(
+                'UPDATE moneda SET codigo_tasa = ? WHERE codigo_moneda = ?'
+            );
+            $stmtMoneda->execute([$idTasaNueva, $idMoneda]);
+            $this->conex->commit();
+
+            return ['status' => 'success', 'message' => 'Tasa de cambio registrada correctamente'];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
     /**
      * Actualiza datos de moneda y su tasa vinculada.
      */
