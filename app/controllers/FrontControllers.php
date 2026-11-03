@@ -3,7 +3,7 @@
     namespace App\controllers;
 
     // Helpers de autenticación y permisos por rol
-    require_once __DIR__ . '/../../herpers/auth.php';
+    require_once __DIR__ . '/../../helpers/auth.php';
 
     class FrontControllers {
 

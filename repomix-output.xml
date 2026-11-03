@@ -126,7 +126,6 @@ assets/js/alerts.js
 assets/js/datatables-init.js
 composer.json
 helpers/auth.php
-herpers/auth.php
 index.php
 package.json
 </directory_structure>
@@ -136,106 +135,6 @@ This section contains the contents of the repository's files.
 
 <file path=".gitignore">
 /vendor/
-</file>
-
-<file path="app/controllers/casheaController.php">
-<?php
-
-    use App\models\casheaModel;
-
-    if (session_status() === PHP_SESSION_NONE) session_start();
-
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: ?url=login");
-        exit();
-    }
-
-    $object = new casheaModel();
-
-    if (isset($_GET['type'])) {
-
-        if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pedido'])) {
-                $resultado = $object->addCredito([
-                    'id_pedido'           => (int) $_POST['id_pedido'],
-                    'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
-                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
-                ]);
-                $_SESSION['cashea_flash'] = is_array($resultado)
-                    ? $resultado
-                    : ['status' => 'error', 'message' => 'No se pudo registrar el crédito Cashea.'];
-                header("Location: ?url=cashea");
-                exit();
-            }
-            header("Location: ?url=cashea");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'])) {
-                $resultado = $object->updateCredito((int) $_POST['id_cashea_credito'], [
-                    'id_pedido'           => (int) ($_POST['id_pedido'] ?? 0),
-                    'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
-                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
-                    'estado'              => isset($_POST['estado']) ? 1 : 0,
-                ]);
-                $_SESSION['cashea_flash'] = is_array($resultado)
-                    ? $resultado
-                    : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
-                header("Location: ?url=cashea");
-                exit();
-            }
-            header("Location: ?url=cashea");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteCashea'])) {
-                $result = $object->deleteCredito((int) $_POST['id_cashea_credito']);
-                header('Content-Type: application/json');
-                echo json_encode($result);
-                exit();
-            }
-            header("Location: ?url=cashea");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'abonar') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'], $_POST['monto_abonado'])) {
-                $resultado = $object->registrarPago(
-                    (int) $_POST['id_cashea_credito'],
-                    (float) $_POST['monto_abonado']
-                );
-                $_SESSION['cashea_flash'] = is_array($resultado)
-                    ? $resultado
-                    : ['status' => 'error', 'message' => 'No se pudo registrar el pago.'];
-                header("Location: ?url=cashea");
-                exit();
-            }
-            header("Location: ?url=cashea");
-            exit();
-        }
-
-        elseif ($_GET['type'] === 'details') {
-            if (isset($_GET['id'])) {
-                $result = $object->getCreditoById((int) $_GET['id']);
-                header('Content-Type: application/json');
-                echo json_encode($result);
-                exit();
-            }
-            header("Location: ?url=cashea");
-            exit();
-        }
-
-        else {
-            header("Location: ?url=cashea");
-            exit();
-        }
-    }
-
-    $creditos = $object->getAllCreditos();
-    $pedidosDisponibles = $object->getPedidosDisponibles();
-    include 'app/views/cashea/viewCashea.php';
 </file>
 
 <file path="app/controllers/empresaController.php">
@@ -468,282 +367,6 @@ This section contains the contents of the repository's files.
     $pedidos = $object->getPedidosActivos();
     $metodos = $object->getMetodosActivos();
     include 'app/views/pagos/viewPagos.php';
-</file>
-
-<file path="app/Models/casheaModel.php">
-<?php
-
-namespace App\models;
-
-use App\config\ConectDB;
-use App\traits\CasheaTrait;
-use PDO;
-use PDOException;
-
-class casheaModel extends ConectDB {
-    use CasheaTrait;
-    private $conex;
-
-    public function __construct() {
-        parent::__construct();
-        $this->conex = $this->getConnection();
-    }
-
-    /**
-     * Lista todos los créditos Cashea con datos del pedido y del cliente.
-     */
-    public function getAllCreditos() {
-        try {
-            $query = "SELECT cc.id_cashea_credito, cc.id_pedido, cc.nivel_cashea,
-                             cc.monto_inicial_pagado, cc.monto_financiado, cc.porcentaje_financiado,
-                             cc.monto_pendiente, cc.fecha, cc.estado,
-                             p.monto_total, p.fecha_pedido, p.cedula_cliente,
-                             c.nombre AS nombre_cliente
-                      FROM cashea_credito cc
-                      INNER JOIN pedido p ON p.codigo_pedido = cc.id_pedido
-                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
-                      ORDER BY cc.id_cashea_credito DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute();
-            $creditos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            foreach ($creditos as &$credito) {
-                $nivel = (int) $credito['nivel_cashea'];
-                $cuotas = $this->cuotasPorNivel($nivel);
-                $financiado = (float) $credito['monto_financiado'];
-                $credito['cantidad_cuotas'] = $cuotas;
-                $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
-                $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
-                    ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
-                    : 0;
-                $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
-            }
-
-            return $creditos;
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene un crédito por su identificador.
-     */
-    public function getCreditoById($id) {
-        try {
-            $query = "SELECT cc.id_cashea_credito, cc.id_pedido, cc.nivel_cashea,
-                             cc.monto_inicial_pagado, cc.monto_financiado, cc.porcentaje_financiado,
-                             cc.monto_pendiente, cc.fecha, cc.estado,
-                             p.monto_total, p.fecha_pedido, p.cedula_cliente,
-                             c.nombre AS nombre_cliente
-                      FROM cashea_credito cc
-                      INNER JOIN pedido p ON p.codigo_pedido = cc.id_pedido
-                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
-                      WHERE cc.id_cashea_credito = ?";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $id]);
-            $credito = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$credito) {
-                return null;
-            }
-
-            $nivel = (int) $credito['nivel_cashea'];
-            $cuotas = $this->cuotasPorNivel($nivel);
-            $credito['cantidad_cuotas'] = $cuotas;
-            $credito['monto_cuota'] = $cuotas > 0 ? round(((float) $credito['monto_financiado']) / $cuotas, 2) : 0;
-            $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
-                ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
-                : 0;
-            $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
-            return $credito;
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Pedidos activos sin crédito Cashea vigente (lectura simple de pedido).
-     */
-    public function getPedidosDisponibles($idPedidoActual = null) {
-        try {
-            $query = "SELECT p.codigo_pedido, p.monto_total, p.fecha_pedido, p.cedula_cliente,
-                             c.nombre AS nombre_cliente
-                      FROM pedido p
-                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
-                      WHERE p.estado = 1
-                        AND (
-                            NOT EXISTS (
-                                SELECT 1 FROM cashea_credito cc
-                                WHERE cc.id_pedido = p.codigo_pedido AND cc.estado = 1
-                            )
-                            OR p.codigo_pedido = ?
-                        )
-                      ORDER BY p.codigo_pedido DESC";
-            $stmt = $this->conex->prepare($query);
-            $stmt->execute([(int) $idPedidoActual]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Registra un crédito Cashea sobre un pedido existente.
-     */
-    public function addCredito($datos) {
-        $validacion = $this->validarCreditoCashea($datos);
-        if ($validacion !== true) {
-            return $validacion;
-        }
-
-        $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
-        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
-        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
-
-        try {
-            $query = "INSERT INTO cashea_credito
-                        (id_pedido, nivel_cashea, monto_inicial_pagado, monto_financiado,
-                         porcentaje_financiado, monto_pendiente, fecha, estado)
-                      VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)";
-            $stmt = $this->conex->prepare($query);
-            $ejecutado = $stmt->execute([
-                (int) $datos['id_pedido'],
-                (int) $datos['nivel_cashea'],
-                number_format($montos['monto_inicial_pagado'], 2, '.', ''),
-                number_format($montos['monto_financiado'], 2, '.', ''),
-                $montos['porcentaje_financiado'],
-                number_format($montos['monto_pendiente'], 2, '.', ''),
-            ]);
-
-            return $ejecutado
-                ? ['status' => 'success', 'message' => 'Crédito Cashea registrado con éxito.']
-                : ['status' => 'error', 'message' => 'No se pudo registrar el crédito Cashea.'];
-        } catch (PDOException $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Actualiza un crédito Cashea. No modifica la tabla pedido.
-     */
-    public function updateCredito($id, $datos) {
-        $datos['id_cashea_credito'] = (int) $id;
-        $validacion = $this->validarCreditoCashea($datos);
-        if ($validacion !== true) {
-            return $validacion;
-        }
-
-        $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
-        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
-        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
-        $estado = isset($datos['estado']) ? (int) $datos['estado'] : 1;
-
-        try {
-            $actual = $this->getCreditoById($id);
-            $montoPendiente = $montos['monto_pendiente'];
-            if ($actual) {
-                $pendienteActual = (float) $actual['monto_pendiente'];
-                $montoPendiente = min($pendienteActual, $montos['monto_financiado']);
-            }
-
-            $query = "UPDATE cashea_credito
-                      SET id_pedido = ?, nivel_cashea = ?, monto_inicial_pagado = ?,
-                          monto_financiado = ?, porcentaje_financiado = ?,
-                          monto_pendiente = ?, estado = ?
-                      WHERE id_cashea_credito = ?";
-            $stmt = $this->conex->prepare($query);
-            $ejecutado = $stmt->execute([
-                (int) $datos['id_pedido'],
-                (int) $datos['nivel_cashea'],
-                number_format($montos['monto_inicial_pagado'], 2, '.', ''),
-                number_format($montos['monto_financiado'], 2, '.', ''),
-                $montos['porcentaje_financiado'],
-                number_format($montoPendiente, 2, '.', ''),
-                $estado,
-                (int) $id,
-            ]);
-
-            return $ejecutado
-                ? ['status' => 'success', 'message' => 'Crédito Cashea actualizado.']
-                : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
-        } catch (PDOException $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Registra un abono/pago de cuota sobre un crédito Cashea.
-     */
-    public function registrarPago($idCredito, $montoAbonado) {
-        try {
-            $this->conex->beginTransaction();
-
-            $credito = $this->getCreditoById($idCredito);
-            if (!$credito) {
-                $this->conex->rollBack();
-                return ['status' => 'error', 'message' => 'El crédito Cashea no existe.'];
-            }
-
-            $montoAbonado = round((float) $montoAbonado, 2);
-            $pendiente = round((float) $credito['monto_pendiente'], 2);
-
-            if ($montoAbonado <= 0) {
-                $this->conex->rollBack();
-                return ['status' => 'error', 'message' => 'El monto abonado debe ser mayor a cero.'];
-            }
-
-            if ($montoAbonado > $pendiente) {
-                $this->conex->rollBack();
-                return ['status' => 'error', 'message' => 'El monto abonado no puede ser mayor a la deuda pendiente.'];
-            }
-
-            $stmtDeposito = $this->conex->prepare(
-                'INSERT INTO cashea_deposito (fecha_deposito, monto_recibido) VALUES (NOW(), ?)'
-            );
-            $stmtDeposito->execute([number_format($montoAbonado, 2, '.', '')]);
-            $idDeposito = (int) $this->conex->lastInsertId();
-
-            $stmtDetalle = $this->conex->prepare(
-                'INSERT INTO cashea_deposito_detalle (id_cashea_credito, id_cashea_deposito, monto_aplicado)
-                 VALUES (?, ?, ?)'
-            );
-            $stmtDetalle->execute([
-                (int) $idCredito,
-                $idDeposito,
-                number_format($montoAbonado, 2, '.', ''),
-            ]);
-
-            $stmtUpdate = $this->conex->prepare(
-                'UPDATE cashea_credito SET monto_pendiente = monto_pendiente - ? WHERE id_cashea_credito = ?'
-            );
-            $stmtUpdate->execute([
-                number_format($montoAbonado, 2, '.', ''),
-                (int) $idCredito,
-            ]);
-
-            $this->conex->commit();
-            return ['status' => 'success', 'message' => 'Pago registrado con éxito.'];
-        } catch (PDOException $e) {
-            if ($this->conex->inTransaction()) {
-                $this->conex->rollBack();
-            }
-            return ['status' => 'error', 'message' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Desactivación lógica del crédito.
-     */
-    public function deleteCredito($id) {
-        try {
-            $stmt = $this->conex->prepare("UPDATE cashea_credito SET estado = 0 WHERE id_cashea_credito = ?");
-            return $stmt->execute([(int) $id])
-                ? ['status' => 'success', 'message' => 'Crédito Cashea desactivado.']
-                : ['status' => 'error', 'message' => 'No se pudo desactivar el crédito Cashea.'];
-        } catch (PDOException $e) {
-            return ['status' => 'error', 'message' => $e->getMessage()];
-        }
-    }
-}
 </file>
 
 <file path="app/Models/pagosModel.php">
@@ -1975,175 +1598,6 @@ async function showConfirm(message, title = '¿Está seguro?', confirmButtonText
 </file>
 
 <file path="helpers/auth.php">
-<?php
-/**
- * helpers/auth.php
- * Autenticación y control de permisos por rol.
- *
- * Roles del sistema:
- *   1 = admin     -> acceso total al sistema
- *   2 = empleado  -> solo los módulos definidos en PERMISOS_EMPLEADO,
- *                    y dentro de ellos únicamente "añadir" y "consultar"
- */
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-/** Código del rol administrador */
-const ROL_ADMIN = 1;
-
-/** Código del rol empleado */
-const ROL_EMPLEADO = 2;
-
-/**
- * Módulos permitidos para el rol EMPLEADO y las acciones que puede ejecutar.
- * Acciones válidas: 'add', 'update', 'delete', 'consultar'
- */
-const PERMISOS_EMPLEADO = [
-    'pedido'    => ['add', 'consultar'],
-    'cliente'   => ['add', 'consultar'],
-    'producto'  => ['add', 'consultar'],
-    'categoria' => ['add', 'consultar'],
-    'servicio'  => ['add', 'consultar'],
-];
-
-/**
- * Verifica que exista una sesión activa.
- * Si no la hay, redirige al login.
- */
-function checkAuth(): void
-{
-    if (empty($_SESSION['user_id'])) {
-        header('Location: ?url=login&msg=unauthorized');
-        exit;
-    }
-}
-
-/**
- * Verifica que el rol del usuario esté dentro de los roles permitidos.
- * El admin (rol 1) siempre tiene acceso; si no está en la lista, redirige.
- */
-function checkRole(array $roles): void
-{
-    checkAuth();
-
-    $rol = (int) ($_SESSION['rol'] ?? 0);
-
-    // El administrador siempre tiene acceso
-    if ($rol === ROL_ADMIN) {
-        return;
-    }
-
-    if (!in_array($rol, array_map('intval', $roles), true)) {
-        header('Location: ?url=dashboard&msg=forbidden');
-        exit;
-    }
-}
-
-/**
- * Obtiene el módulo actual desde la URL (?url=xxx).
- */
-function getModuloActual(): string
-{
-    return strtolower(trim((string) ($_REQUEST['url'] ?? '')));
-}
-
-/**
- * Determina la acción solicitada según el "type" del query string y el método HTTP.
- *  - register/update con POST       -> 'add' / 'update'
- *  - type=main con POST + delete    -> 'delete'
- *  - type=main con POST + get       -> 'consultar'
- *  - cualquier GET                  -> 'consultar' (ver la vista)
- */
-function getAccionActual(): string
-{
-    $type = $_GET['type'] ?? '';
-    $esPost = ($_SERVER['REQUEST_METHOD'] === 'POST');
-
-    if ($esPost) {
-        if (isset($_POST['deleteCategory'], $_POST['deleteUser'], $_POST['deleteProduct'], $_POST['deleteCliente'], $_POST['deleteServicio'], $_POST['deleteMetodo'], $_POST['deleteRol'], $_POST['deleteIva'], $_POST['deleteMoneda'], $_POST['deleteMedida'], $_POST['deleteEmpresa'], $_POST['deleteProveedor'], $_POST['deletePedido'], $_POST['deleteCompra'])) {
-            return 'delete';
-        }
-        if ($type === 'register') {
-            return 'add';
-        }
-        if ($type === 'update') {
-            return 'update';
-        }
-        return 'consultar'; // type=main con getCategories, getUsers, etc.
-    }
-
-    return 'consultar'; // GET: ver la vista / listar
-}
-
-/**
- * Verifica si el usuario logueado tiene permiso para ejecutar
- * la acción actual sobre el módulo actual.
- * El admin siempre tiene permiso.
- */
-function tienePermiso(string $modulo = null, string $accion = null): bool
-{
-    $rol = (int) ($_SESSION['rol'] ?? 0);
-
-    // Administrador: acceso total
-    if ($rol === ROL_ADMIN) {
-        return true;
-    }
-
-    $modulo = $modulo ?? getModuloActual();
-    $accion = $accion ?? getAccionActual();
-
-    // El módulo no está en la lista del empleado -> sin permiso
-    if (!isset(PERMISOS_EMPLEADO[$modulo])) {
-        return false;
-    }
-
-    return in_array($accion, PERMISOS_EMPLEADO[$modulo], true);
-}
-
-/**
- * Igual que tienePermiso, pero redirige con mensaje si no tiene acceso.
- */
-function checkPermission(string $modulo = null, string $accion = null): void
-{
-    checkAuth();
-
-    if (!tienePermiso($modulo, $accion)) {
-        $_SESSION['flash_message'] = [
-            'status'  => 'error',
-            'message' => 'No tienes permisos para realizar esta acción.',
-        ];
-        header('Location: ?url=dashboard&msg=forbidden');
-        exit;
-    }
-}
-
-/**
- * Indica si el usuario logueado es administrador (para usar en las vistas).
- */
-function esAdmin(): bool
-{
-    return (int) ($_SESSION['rol'] ?? 0) === ROL_ADMIN;
-}
-
-/**
- * Indica si el usuario logueado puede ver el módulo en el menú
- * (para ocultar opciones del sidebar según el rol).
- */
-function puedeVerModulo(string $modulo): bool
-{
-    $rol = (int) ($_SESSION['rol'] ?? 0);
-
-    if ($rol === ROL_ADMIN) {
-        return true;
-    }
-
-    return isset(PERMISOS_EMPLEADO[$modulo]);
-}
-</file>
-
-<file path="herpers/auth.php">
 <?php
 /**
  * helpers/auth.php
@@ -3556,6 +3010,106 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 </file>
 
+<file path="app/controllers/casheaController.php">
+<?php
+
+    use App\models\casheaModel;
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: ?url=login");
+        exit();
+    }
+
+    $object = new casheaModel();
+
+    if (isset($_GET['type'])) {
+
+        if ($_GET['type'] === 'register') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pedido'])) {
+                $resultado = $object->addCredito([
+                    'id_pedido'           => (int) $_POST['id_pedido'],
+                    'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
+                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
+                ]);
+                $_SESSION['cashea_flash'] = is_array($resultado)
+                    ? $resultado
+                    : ['status' => 'error', 'message' => 'No se pudo registrar el crédito Cashea.'];
+                header("Location: ?url=cashea");
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'update') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'])) {
+                $resultado = $object->updateCredito((int) $_POST['id_cashea_credito'], [
+                    'id_pedido'           => (int) ($_POST['id_pedido'] ?? 0),
+                    'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
+                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
+                    'estado'              => isset($_POST['estado']) ? 1 : 0,
+                ]);
+                $_SESSION['cashea_flash'] = is_array($resultado)
+                    ? $resultado
+                    : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
+                header("Location: ?url=cashea");
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'main') {
+            if (isset($_POST['deleteCashea'])) {
+                $result = $object->deleteCredito((int) $_POST['id_cashea_credito']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'abonar') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'], $_POST['monto_abonado'])) {
+                $resultado = $object->registrarPago(
+                    (int) $_POST['id_cashea_credito'],
+                    (float) $_POST['monto_abonado']
+                );
+                $_SESSION['cashea_flash'] = is_array($resultado)
+                    ? $resultado
+                    : ['status' => 'error', 'message' => 'No se pudo registrar el pago.'];
+                header("Location: ?url=cashea");
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'details') {
+            if (isset($_GET['id'])) {
+                $result = $object->getCreditoById((int) $_GET['id']);
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit();
+            }
+            header("Location: ?url=cashea");
+            exit();
+        }
+
+        else {
+            header("Location: ?url=cashea");
+            exit();
+        }
+    }
+
+    $creditos = $object->getAllCreditos();
+    $pedidosDisponibles = $object->getPedidosDisponibles();
+    include 'app/views/cashea/viewCashea.php';
+</file>
+
 <file path="app/controllers/metodopagoController.php">
 <?php
 
@@ -3667,6 +3221,287 @@ COMMIT;
     $roles = $object->getAllRoles();
     // Carga de la vista
     include 'app/views/rol/viewRol.php';
+</file>
+
+<file path="app/Models/casheaModel.php">
+<?php
+
+namespace App\models;
+
+use App\config\ConectDB;
+use App\traits\CasheaTrait;
+use PDO;
+use PDOException;
+
+class casheaModel extends ConectDB {
+    use CasheaTrait;
+    private $conex;
+
+    public function __construct() {
+        parent::__construct();
+        $this->conex = $this->getConnection();
+    }
+
+    /**
+     * Lista todos los créditos Cashea con datos del pedido y del cliente.
+     */
+    public function getAllCreditos() {
+        try {
+            $query = "SELECT cc.id_cashea_credito, cc.id_pedido, cc.nivel_cashea,
+                             cc.monto_inicial_pagado, cc.monto_financiado, cc.porcentaje_financiado,
+                             cc.monto_pendiente, cc.fecha, cc.estado,
+                             p.monto_total, p.fecha_pedido, p.cedula_cliente,
+                             c.nombre AS nombre_cliente
+                      FROM cashea_credito cc
+                      INNER JOIN pedido p ON p.codigo_pedido = cc.id_pedido
+                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
+                      ORDER BY cc.id_cashea_credito DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            $creditos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($creditos as &$credito) {
+                $nivel = (int) $credito['nivel_cashea'];
+                $cuotas = $this->cuotasPorNivel($nivel);
+                $financiado = (float) $credito['monto_financiado'];
+                $credito['cantidad_cuotas'] = $cuotas;
+                $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
+                $credito['cuotas_pendientes'] = $this->calcularCuotasPendientes(
+                    (float) $credito['monto_pendiente'],
+                    $financiado,
+                    $cuotas
+                );
+                $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
+            }
+
+            return $creditos;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene un crédito por su identificador.
+     */
+    public function getCreditoById($id) {
+        try {
+            $query = "SELECT cc.id_cashea_credito, cc.id_pedido, cc.nivel_cashea,
+                             cc.monto_inicial_pagado, cc.monto_financiado, cc.porcentaje_financiado,
+                             cc.monto_pendiente, cc.fecha, cc.estado,
+                             p.monto_total, p.fecha_pedido, p.cedula_cliente,
+                             c.nombre AS nombre_cliente
+                      FROM cashea_credito cc
+                      INNER JOIN pedido p ON p.codigo_pedido = cc.id_pedido
+                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
+                      WHERE cc.id_cashea_credito = ?";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $id]);
+            $credito = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$credito) {
+                return null;
+            }
+
+            $nivel = (int) $credito['nivel_cashea'];
+            $cuotas = $this->cuotasPorNivel($nivel);
+            $financiado = (float) $credito['monto_financiado'];
+            $credito['cantidad_cuotas'] = $cuotas;
+            $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
+            $credito['cuotas_pendientes'] = $this->calcularCuotasPendientes(
+                (float) $credito['monto_pendiente'],
+                $financiado,
+                $cuotas
+            );
+            $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
+            return $credito;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Pedidos activos sin crédito Cashea vigente (lectura simple de pedido).
+     */
+    public function getPedidosDisponibles($idPedidoActual = null) {
+        try {
+            $query = "SELECT p.codigo_pedido, p.monto_total, p.fecha_pedido, p.cedula_cliente,
+                             c.nombre AS nombre_cliente
+                      FROM pedido p
+                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
+                      WHERE p.estado = 1
+                        AND (
+                            NOT EXISTS (
+                                SELECT 1 FROM cashea_credito cc
+                                WHERE cc.id_pedido = p.codigo_pedido AND cc.estado = 1
+                            )
+                            OR p.codigo_pedido = ?
+                        )
+                      ORDER BY p.codigo_pedido DESC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute([(int) $idPedidoActual]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Registra un crédito Cashea sobre un pedido existente.
+     */
+    public function addCredito($datos) {
+        $validacion = $this->validarCreditoCashea($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
+        $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
+        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
+        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
+
+        try {
+            $query = "INSERT INTO cashea_credito
+                        (id_pedido, nivel_cashea, monto_inicial_pagado, monto_financiado,
+                         porcentaje_financiado, monto_pendiente, fecha, estado)
+                      VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)";
+            $stmt = $this->conex->prepare($query);
+            $ejecutado = $stmt->execute([
+                (int) $datos['id_pedido'],
+                (int) $datos['nivel_cashea'],
+                number_format($montos['monto_inicial_pagado'], 2, '.', ''),
+                number_format($montos['monto_financiado'], 2, '.', ''),
+                $montos['porcentaje_financiado'],
+                number_format($montos['monto_pendiente'], 2, '.', ''),
+            ]);
+
+            return $ejecutado
+                ? ['status' => 'success', 'message' => 'Crédito Cashea registrado con éxito.']
+                : ['status' => 'error', 'message' => 'No se pudo registrar el crédito Cashea.'];
+        } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Actualiza un crédito Cashea. No modifica la tabla pedido.
+     */
+    public function updateCredito($id, $datos) {
+        $datos['id_cashea_credito'] = (int) $id;
+        $validacion = $this->validarCreditoCashea($datos);
+        if ($validacion !== true) {
+            return $validacion;
+        }
+
+        $pedido = $this->obtenerPedidoActivo((int) $datos['id_pedido']);
+        $porcentajeInicial = (float) $datos['porcentaje_inicial'];
+        $montos = $this->calcularMontosCashea(round((float) $pedido['monto_total'], 2), $porcentajeInicial);
+        $estado = isset($datos['estado']) ? (int) $datos['estado'] : 1;
+
+        try {
+            $actual = $this->getCreditoById($id);
+            $montoPendiente = $montos['monto_pendiente'];
+            if ($actual) {
+                $pendienteActual = (float) $actual['monto_pendiente'];
+                $montoPendiente = min($pendienteActual, $montos['monto_financiado']);
+            }
+
+            $query = "UPDATE cashea_credito
+                      SET id_pedido = ?, nivel_cashea = ?, monto_inicial_pagado = ?,
+                          monto_financiado = ?, porcentaje_financiado = ?,
+                          monto_pendiente = ?, estado = ?
+                      WHERE id_cashea_credito = ?";
+            $stmt = $this->conex->prepare($query);
+            $ejecutado = $stmt->execute([
+                (int) $datos['id_pedido'],
+                (int) $datos['nivel_cashea'],
+                number_format($montos['monto_inicial_pagado'], 2, '.', ''),
+                number_format($montos['monto_financiado'], 2, '.', ''),
+                $montos['porcentaje_financiado'],
+                number_format($montoPendiente, 2, '.', ''),
+                $estado,
+                (int) $id,
+            ]);
+
+            return $ejecutado
+                ? ['status' => 'success', 'message' => 'Crédito Cashea actualizado.']
+                : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
+        } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Registra un abono/pago de cuota sobre un crédito Cashea.
+     */
+    public function registrarPago($idCredito, $montoAbonado) {
+        try {
+            $this->conex->beginTransaction();
+
+            $credito = $this->getCreditoById($idCredito);
+            if (!$credito) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El crédito Cashea no existe.'];
+            }
+
+            $montoAbonado = round((float) $montoAbonado, 2);
+            $pendiente = round((float) $credito['monto_pendiente'], 2);
+
+            if ($montoAbonado <= 0) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El monto abonado debe ser mayor a cero.'];
+            }
+
+            if ($montoAbonado > $pendiente) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => 'El monto abonado no puede ser mayor a la deuda pendiente.'];
+            }
+
+            $stmtDeposito = $this->conex->prepare(
+                'INSERT INTO cashea_deposito (fecha_deposito, monto_recibido) VALUES (NOW(), ?)'
+            );
+            $stmtDeposito->execute([number_format($montoAbonado, 2, '.', '')]);
+            $idDeposito = (int) $this->conex->lastInsertId();
+
+            $stmtDetalle = $this->conex->prepare(
+                'INSERT INTO cashea_deposito_detalle (id_cashea_credito, id_cashea_deposito, monto_aplicado)
+                 VALUES (?, ?, ?)'
+            );
+            $stmtDetalle->execute([
+                (int) $idCredito,
+                $idDeposito,
+                number_format($montoAbonado, 2, '.', ''),
+            ]);
+
+            $stmtUpdate = $this->conex->prepare(
+                'UPDATE cashea_credito SET monto_pendiente = monto_pendiente - ? WHERE id_cashea_credito = ?'
+            );
+            $stmtUpdate->execute([
+                number_format($montoAbonado, 2, '.', ''),
+                (int) $idCredito,
+            ]);
+
+            $this->conex->commit();
+            return ['status' => 'success', 'message' => 'Pago registrado con éxito.'];
+        } catch (PDOException $e) {
+            if ($this->conex->inTransaction()) {
+                $this->conex->rollBack();
+            }
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Desactivación lógica del crédito.
+     */
+    public function deleteCredito($id) {
+        try {
+            $stmt = $this->conex->prepare("UPDATE cashea_credito SET estado = 0 WHERE id_cashea_credito = ?");
+            return $stmt->execute([(int) $id])
+                ? ['status' => 'success', 'message' => 'Crédito Cashea desactivado.']
+                : ['status' => 'error', 'message' => 'No se pudo desactivar el crédito Cashea.'];
+        } catch (PDOException $e) {
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
+}
 </file>
 
 <file path="app/Models/categoriaModel.php">
@@ -4036,125 +3871,6 @@ class tasaCambioModel extends ConectDB {
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
         }
-    }
-}
-</file>
-
-<file path="app/traits/CasheaTrait.php">
-<?php
-
-namespace App\traits;
-
-/**
- * Trait CasheaTrait
- * Validaciones del módulo de créditos Cashea.
- */
-trait CasheaTrait
-{
-    private static $porcentajesInicialValidos = [0, 10, 20, 30, 40, 50, 60];
-
-    /**
-     * Valida los datos de un crédito Cashea.
-     */
-    protected function validarCreditoCashea(array $datos)
-    {
-        $idPedido = (int) ($datos['id_pedido'] ?? 0);
-        if ($idPedido <= 0) {
-            return ['status' => 'error', 'message' => 'Debe seleccionar un pedido existente'];
-        }
-
-        $pedido = $this->obtenerPedidoActivo($idPedido);
-        if (!$pedido) {
-            return ['status' => 'error', 'message' => 'El pedido seleccionado no existe o no está activo'];
-        }
-
-        $montoTotal = round((float) ($pedido['monto_total'] ?? 0), 2);
-        if ($montoTotal <= 0) {
-            return ['status' => 'error', 'message' => 'El monto total del pedido debe ser mayor a cero'];
-        }
-
-        $nivel = (int) ($datos['nivel_cashea'] ?? 0);
-        if ($nivel <= 0) {
-            return ['status' => 'error', 'message' => 'Debe indicar una cantidad de cuotas mayor a 0'];
-        }
-
-        $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
-        if ($porcentajeInicial === null || !in_array((int) $porcentajeInicial, self::$porcentajesInicialValidos, true)) {
-            return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje inicial válido'];
-        }
-
-        $idActual = isset($datos['id_cashea_credito']) ? (int) $datos['id_cashea_credito'] : null;
-        if ($this->pedidoYaTieneCredito($idPedido, $idActual)) {
-            return ['status' => 'error', 'message' => 'El pedido seleccionado ya tiene un crédito Cashea registrado'];
-        }
-
-        $montos = $this->calcularMontosCashea($montoTotal, (float) $porcentajeInicial);
-        if ($montos['monto_financiado'] <= 0) {
-            return ['status' => 'error', 'message' => 'El monto financiado debe ser mayor a cero'];
-        }
-
-        return true;
-    }
-
-    protected function obtenerPedidoActivo(int $idPedido): ?array
-    {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT codigo_pedido, monto_total, estado
-                 FROM pedido
-                 WHERE codigo_pedido = ? AND estado = 1'
-            );
-            $stmt->execute([$idPedido]);
-            $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $pedido ?: null;
-        } catch (\PDOException $e) {
-            return null;
-        }
-    }
-
-    protected function pedidoYaTieneCredito(int $idPedido, ?int $idActual = null): bool
-    {
-        try {
-            if ($idActual !== null && $idActual > 0) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM cashea_credito
-                     WHERE id_pedido = ? AND id_cashea_credito <> ? AND estado = 1'
-                );
-                $stmt->execute([$idPedido, $idActual]);
-            } else {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM cashea_credito WHERE id_pedido = ? AND estado = 1'
-                );
-                $stmt->execute([$idPedido]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
-        }
-    }
-
-    protected function calcularMontosCashea(float $montoTotal, int|float $porcentajeInicial): array
-    {
-        $montoTotal = round((float) $montoTotal, 2);
-        $porcentajeInicial = (float) $porcentajeInicial;
-        $totalCents = (int) round($montoTotal * 100);
-        $inicialCents = (int) round($totalCents * ($porcentajeInicial / 100));
-        $financiadoCents = $totalCents - $inicialCents;
-
-        $montoInicial = round($inicialCents / 100, 2);
-        $montoFinanciado = round($financiadoCents / 100, 2);
-
-        return [
-            'monto_inicial_pagado'  => $montoInicial,
-            'monto_financiado'      => $montoFinanciado,
-            'porcentaje_financiado' => (int) round(100 - $porcentajeInicial),
-            'monto_pendiente'       => $montoFinanciado,
-        ];
-    }
-
-    protected function cuotasPorNivel(int $nivel): int
-    {
-        return $nivel;
     }
 }
 </file>
@@ -4596,479 +4312,6 @@ trait ProveedoresTrait
         }
     }
 }
-</file>
-
-<file path="app/views/cashea/viewCashea.php">
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CopiGaby — Créditos Cashea</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/dist.css">
-  <link rel="stylesheet" href="assets/css/theme.css">
-  <link rel="stylesheet" href="assets/css/dashboard.css">
-</head>
-<body class="font-[Nunito] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
-
-  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
-
-  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
-    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestion de Cashea</h2>
-      <div class="flex items-center">
-        <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
-      </div>
-    </header>
-
-    <main class="p-8 flex-1 animate-fade-up">
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-2xl font-black text-gray-800">Cashea</h1>
-          <p class="text-gray-500 text-sm font-semibold">Financiamiento de pedidos existentes</p>
-        </div>
-        <button id="btnOpenModal" class="flex items-center gap-2 bg-linear-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-          AÑADIR CASHEA
-        </button>
-      </div>
-
-      <?php if (!empty($_SESSION['cashea_flash'])): ?>
-        <?php $flash = $_SESSION['cashea_flash']; unset($_SESSION['cashea_flash']); ?>
-        <script>
-          showFlashAlert(
-            <?= json_encode($flash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-            <?= json_encode($flash['message'] ?? 'No se pudo completar la operación', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-          );
-        </script>
-      <?php endif; ?>
-
-      <div class="bg-white rounded-[14px] shadow-sm overflow-hidden border border-gray-100">
-        <table data-datatable="true" class="w-full text-left">
-          <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
-            <tr>
-              <th class="px-6 py-4">Pedido</th>
-              <th class="px-6 py-4">Cliente</th>
-              <th class="px-6 py-4">Cuotas</th>
-              <th class="px-6 py-4">Inicial</th>
-              <th class="px-6 py-4">Financiado</th>
-              <th class="px-6 py-4">Estado de Deuda</th>
-              <th class="px-6 py-4 text-center">Consultar</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-700 font-semibold text-sm divide-y">
-            <?php if (!empty($creditos)): foreach ($creditos as $c): ?>
-              <?php $pendiente = (float) ($c['monto_pendiente'] ?? 0); ?>
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4 font-black text-navy-dark">#<?= (int) $c['id_pedido'] ?></td>
-                <td class="px-6 py-4">
-                  <div class="uppercase font-bold text-navy-light"><?= htmlspecialchars($c['nombre_cliente'] ?? '—') ?></div>
-                  <div class="text-[0.7rem] text-gray-400 font-bold">V-<?= htmlspecialchars($c['cedula_cliente'] ?? '') ?></div>
-                </td>
-                <td class="px-6 py-4 font-black text-navy-dark">
-                  <?php if ((int) ($c['cuotas_pendientes'] ?? 0) > 0): ?>
-                    <?= (int) $c['cuotas_pendientes'] ?> / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
-                  <?php else: ?>
-                    0 / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
-                  <?php endif; ?>
-                </td>
-                <td class="px-6 py-4">$<?= number_format((float) $c['monto_inicial_pagado'], 2, '.', ',') ?></td>
-                <td class="px-6 py-4">$<?= number_format((float) $c['monto_financiado'], 2, '.', ',') ?></td>
-                <td class="px-6 py-4">
-                  <?php if ($pendiente > 0): ?>
-                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[0.65rem] bg-red-100 text-red-600 font-bold uppercase">
-                      Con Deuda: $<?= number_format($pendiente, 2, '.', ',') ?>
-                    </span>
-                  <?php else: ?>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] bg-green-100 text-green-600 font-bold uppercase">
-                      Solvente
-                    </span>
-                  <?php endif; ?>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <button type="button" onclick='viewDetails(<?= json_encode($c, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  </button>
-                </td>
-              </tr>
-            <?php endforeach; endif; ?>
-          </tbody>
-        </table>
-      </div>
-    </main>
-  </div>
-
-  <div id="modalCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Nuevo crédito Cashea</h3>
-          <button type="button" onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=cashea&type=register" method="POST" class="p-6" id="formCashea">
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Pedido existente <span class="text-red-500">*</span></label>
-            <select name="id_pedido" id="selectPedido" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-              <option value="">Seleccione un pedido</option>
-              <?php if (!empty($pedidosDisponibles)): foreach ($pedidosDisponibles as $p): ?>
-                <option value="<?= (int) $p['codigo_pedido'] ?>" data-total="<?= htmlspecialchars((string) $p['monto_total']) ?>">
-                  Pedido #<?= (int) $p['codigo_pedido'] ?> — <?= htmlspecialchars($p['nombre_cliente'] ?? 'Cliente') ?> — $<?= number_format((float) $p['monto_total'], 2, '.', ',') ?>
-                </option>
-              <?php endforeach; endif; ?>
-            </select>
-            <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">Solo se listan pedidos activos sin crédito Cashea vigente.</p>
-          </div>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
-              <input type="number" name="nivel_cashea" id="nivelCashea" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
-              <select name="porcentaje_inicial" id="porcentajeInicial" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-                <option value="">Seleccione inicial</option>
-                <?php foreach ([0, 10, 20, 30, 40, 50, 60] as $porcentaje): ?>
-                  <option value="<?= $porcentaje ?>"><?= $porcentaje ?>%</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4 mb-4">
-            <div class="rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto inicial</p>
-              <p id="lblMontoInicial" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
-            </div>
-            <div class="rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto financiado</p>
-              <p id="lblMontoFinanciado" class="mt-1 text-xl font-black text-orange-dk">$0.00</p>
-            </div>
-            <div class="col-span-2 rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
-              <p id="lblCuotas" class="mt-1 text-sm font-bold text-navy-dark">Seleccione pedido, cuotas e inicial</p>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3 mt-4">
-            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalEditCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Editar crédito Cashea</h3>
-          <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=cashea&type=update" method="POST" class="p-6" id="formEditCashea">
-          <input type="hidden" name="id_cashea_credito" id="edit_id">
-          <input type="hidden" name="id_pedido" id="edit_id_pedido">
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Pedido</label>
-            <input type="text" id="edit_pedido_label" readonly class="w-full px-4 py-2 bg-gray-100 border rounded-lg font-bold text-sm text-navy-dark">
-          </div>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
-              <input type="number" name="nivel_cashea" id="edit_nivel" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
-              <select name="porcentaje_inicial" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-                <?php foreach ([0, 10, 20, 30, 40, 50, 60] as $porcentaje): ?>
-                  <option value="<?= $porcentaje ?>"><?= $porcentaje ?>%</option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4 mb-4">
-            <div class="rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto inicial</p>
-              <p id="editLblMontoInicial" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
-            </div>
-            <div class="rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto financiado</p>
-              <p id="editLblMontoFinanciado" class="mt-1 text-xl font-black text-orange-dk">$0.00</p>
-            </div>
-            <div class="col-span-2 rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
-              <p id="editLblCuotas" class="mt-1 text-sm font-bold text-navy-dark">—</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 mb-4">
-            <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
-            <label class="text-sm font-bold text-navy-dark uppercase">Activo</label>
-          </div>
-          <div class="flex justify-end gap-3 mt-4">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalDetalle" class="fixed inset-0 z-160 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
-      <div class="relative bg-white shadow-2xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Detalle del crédito Cashea</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <div class="p-6 space-y-4">
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Pedido</p><p id="det_pedido" class="font-black text-navy-dark">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cliente</p><p id="det_cliente" class="font-bold text-navy-light uppercase">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas</p><p id="det_nivel" class="font-semibold text-gray-700">—</p></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Inicial</p><p id="det_inicial" class="font-black text-navy-dark">—</p></div>
-            <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Financiado</p><p id="det_financiado" class="font-black text-orange-dk">—</p></div>
-          </div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estimado por cuota</p><p id="det_cuotas" class="font-semibold text-gray-700">—</p></div>
-          <div id="det_cuotas_pendientes_wrap">
-            <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cuotas pendientes</p>
-            <p id="det_cuotas_pendientes" class="font-semibold text-gray-700">—</p>
-          </div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado de deuda</p><p id="det_deuda" class="font-bold">—</p></div>
-          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
-        </div>
-        <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
-          <?php if (esAdmin()): ?>
-          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
-          <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <?php endif; ?>
-          <button type="button" id="btnDetalleAbonar" class="px-5 py-2 text-sm font-black text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors hidden">Abonar Cuota</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalAbonarCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeAbonarModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Abonar cuota Cashea</h3>
-          <button type="button" onclick="closeAbonarModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=cashea&type=abonar" method="POST" class="p-6" id="formAbonarCashea">
-          <input type="hidden" name="id_cashea_credito" id="abonar_id">
-          <div class="mb-4 rounded-xl border border-orange/30 bg-orange/5 p-4">
-            <p class="text-[0.65rem] font-black uppercase text-gray-400">Deuda actual</p>
-            <p id="abonar_deuda_actual" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
-            <p id="abonar_cuota_sugerida" class="mt-1 text-xs font-semibold text-gray-500">—</p>
-          </div>
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto a pagar <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" min="0.01" name="monto_abonado" id="abonar_monto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
-          </div>
-          <div class="flex justify-end gap-3 mt-4">
-            <button type="button" onclick="closeAbonarModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Registrar pago</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const modal = document.getElementById('modalCashea');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const selectPedido = document.getElementById('selectPedido');
-    const nivelCashea = document.getElementById('nivelCashea');
-    const porcentajeInicial = document.getElementById('porcentajeInicial');
-    const formCashea = document.getElementById('formCashea');
-
-    const toggleModal = () => {
-      modal.classList.toggle('hidden');
-      if (!modal.classList.contains('hidden')) {
-        formCashea.reset();
-        calcularCashea();
-      }
-    };
-    btnOpen.onclick = toggleModal;
-
-    function roundMoney(value) {
-      const num = parseFloat(value);
-      if (isNaN(num)) return 0;
-      return Math.round((num + Number.EPSILON) * 100) / 100;
-    }
-
-    function toCents(value) {
-      return Math.round((roundMoney(value) + Number.EPSILON) * 100);
-    }
-
-    function fromCents(cents) {
-      return roundMoney(cents / 100);
-    }
-
-    function calcularMontosCasheaJs(total, percent) {
-      const totalCents = toCents(total);
-      const inicialCents = Math.round(totalCents * (percent / 100));
-      const financiadoCents = totalCents - inicialCents;
-      return {
-        inicial: fromCents(inicialCents),
-        financiado: fromCents(financiadoCents)
-      };
-    }
-
-    function formatMoney(value) {
-      return '$' + roundMoney(value).toFixed(2);
-    }
-
-    function getMontoPedidoSeleccionado() {
-      const option = selectPedido.options[selectPedido.selectedIndex];
-      return option ? roundMoney(option.getAttribute('data-total') || '0') : 0;
-    }
-
-    function textoCuotas(nivel, financiado) {
-      if (!nivel || nivel < 1 || financiado <= 0) {
-        return 'Seleccione pedido, cuotas e inicial';
-      }
-      const montoCuota = roundMoney(financiado / nivel);
-      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota);
-    }
-
-    function calcularCashea() {
-      const total = getMontoPedidoSeleccionado();
-      const percent = parseFloat(porcentajeInicial.value);
-      const nivel = parseInt(nivelCashea.value, 10);
-      const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
-      const montos = inicialValida ? calcularMontosCasheaJs(total, percent) : { inicial: 0, financiado: 0 };
-      const inicial = montos.inicial;
-      const financiado = total > 0 && inicialValida ? montos.financiado : 0;
-
-      document.getElementById('lblMontoInicial').textContent = formatMoney(inicial);
-      document.getElementById('lblMontoFinanciado').textContent = formatMoney(financiado);
-      document.getElementById('lblCuotas').textContent = textoCuotas(nivel, financiado);
-    }
-
-    nivelCashea.addEventListener('input', calcularCashea);
-    selectPedido.addEventListener('change', calcularCashea);
-    porcentajeInicial.addEventListener('change', calcularCashea);
-
-    let currentRecord = null;
-    let editTotal = 0;
-
-    function viewDetails(data) {
-      currentRecord = data;
-      const pendiente = parseFloat(data.monto_pendiente || 0);
-      document.getElementById('det_pedido').textContent = '#' + data.id_pedido + ' · Total ' + formatMoney(data.monto_total);
-      document.getElementById('det_cliente').textContent = data.nombre_cliente || '—';
-      document.getElementById('det_nivel').textContent = data.nivel_cashea + ' Cuotas';
-      document.getElementById('det_inicial').textContent = formatMoney(data.monto_inicial_pagado) + ' (' + data.porcentaje_inicial + '%)';
-      document.getElementById('det_financiado').textContent = formatMoney(data.monto_financiado);
-      document.getElementById('det_cuotas').textContent = textoCuotas(parseInt(data.nivel_cashea, 10), parseFloat(data.monto_financiado || 0));
-      document.getElementById('det_deuda').innerHTML = pendiente > 0
-        ? '<span class="bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Con Deuda: ' + formatMoney(pendiente) + '</span>'
-        : '<span class="bg-green-100 text-green-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Solvente</span>';
-      document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
-      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
-      const wrapPendientes = document.getElementById('det_cuotas_pendientes_wrap');
-      const lblPendientes = document.getElementById('det_cuotas_pendientes');
-      if (pendiente > 0 && montoCuota > 0) {
-        const cuotasPendientes = Math.max(1, Math.ceil(roundMoney(pendiente / montoCuota)));
-        lblPendientes.textContent = cuotasPendientes + (cuotasPendientes === 1 ? ' cuota pendiente' : ' cuotas pendientes');
-        wrapPendientes.classList.remove('hidden');
-      } else {
-        lblPendientes.textContent = 'Sin cuotas pendientes';
-        wrapPendientes.classList.add('hidden');
-      }
-      const btnEditar = document.getElementById('btnDetalleEditar');
-      const btnEliminar = document.getElementById('btnDetalleEliminar');
-      const btnAbonar = document.getElementById('btnDetalleAbonar');
-      if (btnEditar) btnEditar.onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
-      if (btnEliminar) btnEliminar.onclick = () => confirmDelete(currentRecord.id_cashea_credito);
-      if (btnAbonar) {
-        if (pendiente > 0) {
-          btnAbonar.classList.remove('hidden');
-          btnAbonar.onclick = () => openAbonarModal(currentRecord);
-        } else {
-          btnAbonar.classList.add('hidden');
-          btnAbonar.onclick = null;
-        }
-      }
-      document.getElementById('modalDetalle').classList.remove('hidden');
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function calcularEditCashea() {
-      const percent = parseFloat(document.getElementById('edit_porcentaje').value);
-      const nivel = parseInt(document.getElementById('edit_nivel').value, 10);
-      const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
-      const montos = inicialValida ? calcularMontosCasheaJs(editTotal, percent) : { inicial: 0, financiado: 0 };
-      const inicial = montos.inicial;
-      const financiado = editTotal > 0 && inicialValida ? montos.financiado : 0;
-      document.getElementById('editLblMontoInicial').textContent = formatMoney(inicial);
-      document.getElementById('editLblMontoFinanciado').textContent = formatMoney(financiado);
-      document.getElementById('editLblCuotas').textContent = textoCuotas(nivel, financiado);
-    }
-
-    function openEditModal(data) {
-      editTotal = roundMoney(data.monto_total || 0);
-      document.getElementById('edit_id').value = data.id_cashea_credito;
-      document.getElementById('edit_id_pedido').value = data.id_pedido;
-      document.getElementById('edit_pedido_label').value = 'Pedido #' + data.id_pedido + ' — ' + formatMoney(data.monto_total);
-      document.getElementById('edit_nivel').value = data.nivel_cashea;
-      document.getElementById('edit_porcentaje').value = String(data.porcentaje_inicial);
-      document.getElementById('edit_estado').checked = data.estado == 1;
-      calcularEditCashea();
-      document.getElementById('modalEditCashea').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-      document.getElementById('modalEditCashea').classList.add('hidden');
-    }
-
-    function openAbonarModal(data) {
-      closeDetalleModal();
-      const pendiente = roundMoney(data.monto_pendiente || 0);
-      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
-      const sugerido = (pendiente < montoCuota || montoCuota <= 0) ? pendiente : montoCuota;
-      document.getElementById('abonar_id').value = data.id_cashea_credito;
-      document.getElementById('abonar_deuda_actual').textContent = formatMoney(pendiente);
-      document.getElementById('abonar_cuota_sugerida').textContent = 'Cuota sugerida: ' + formatMoney(sugerido);
-      const inputMonto = document.getElementById('abonar_monto');
-      inputMonto.value = sugerido.toFixed(2);
-      inputMonto.max = pendiente.toFixed(2);
-      document.getElementById('modalAbonarCashea').classList.remove('hidden');
-    }
-
-    function closeAbonarModal() {
-      document.getElementById('modalAbonarCashea').classList.add('hidden');
-    }
-
-    document.getElementById('edit_nivel').addEventListener('input', calcularEditCashea);
-    document.getElementById('edit_porcentaje').addEventListener('change', calcularEditCashea);
-
-    async function confirmDelete(id) {
-      if (await showConfirm('¿Desea desactivar este crédito Cashea?', 'Desactivar crédito', 'Sí, desactivar')) {
-        const f = new FormData();
-        f.append('deleteCashea', 'true');
-        f.append('id_cashea_credito', id);
-        fetch('?url=cashea&type=main', { method: 'POST', body: f })
-          .then(r => r.json()).then(d => {
-            if (d.status === 'success') location.reload();
-            else showAlert(d.message || 'No se pudo desactivar el crédito.', 'error', 'Error');
-          });
-      }
-    }
-  </script>
-  <script src="assets/js/datatables-init.js"></script>
-</body>
-</html>
 </file>
 
 <file path="app/views/layouts/viewUsuarioHeader.php">
@@ -5604,7 +4847,7 @@ body::before {
     namespace App\controllers;
 
     // Helpers de autenticación y permisos por rol
-    require_once __DIR__ . '/../../herpers/auth.php';
+    require_once __DIR__ . '/../../helpers/auth.php';
 
     class FrontControllers {
 
@@ -5889,6 +5132,676 @@ class dashboardModel extends ConectDB {
         }
     }
 }
+</file>
+
+<file path="app/traits/CasheaTrait.php">
+<?php
+
+namespace App\traits;
+
+/**
+ * Trait CasheaTrait
+ * Validaciones del módulo de créditos Cashea.
+ */
+trait CasheaTrait
+{
+    private static $porcentajesInicialValidos = [0, 10, 20, 30, 40, 50, 60];
+
+    /**
+     * Valida los datos de un crédito Cashea.
+     */
+    protected function validarCreditoCashea(array $datos)
+    {
+        $idPedido = (int) ($datos['id_pedido'] ?? 0);
+        if ($idPedido <= 0) {
+            return ['status' => 'error', 'message' => 'Debe seleccionar un pedido existente'];
+        }
+
+        $pedido = $this->obtenerPedidoActivo($idPedido);
+        if (!$pedido) {
+            return ['status' => 'error', 'message' => 'El pedido seleccionado no existe o no está activo'];
+        }
+
+        $montoTotal = round((float) ($pedido['monto_total'] ?? 0), 2);
+        if ($montoTotal <= 0) {
+            return ['status' => 'error', 'message' => 'El monto total del pedido debe ser mayor a cero'];
+        }
+
+        $nivel = (int) ($datos['nivel_cashea'] ?? 0);
+        if ($nivel <= 0) {
+            return ['status' => 'error', 'message' => 'Debe indicar una cantidad de cuotas mayor a 0'];
+        }
+
+        $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
+        if ($porcentajeInicial === null || !in_array((int) $porcentajeInicial, self::$porcentajesInicialValidos, true)) {
+            return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje inicial válido'];
+        }
+
+        $idActual = isset($datos['id_cashea_credito']) ? (int) $datos['id_cashea_credito'] : null;
+        if ($this->pedidoYaTieneCredito($idPedido, $idActual)) {
+            return ['status' => 'error', 'message' => 'El pedido seleccionado ya tiene un crédito Cashea registrado'];
+        }
+
+        $montos = $this->calcularMontosCashea($montoTotal, (float) $porcentajeInicial);
+        if ($montos['monto_financiado'] <= 0) {
+            return ['status' => 'error', 'message' => 'El monto financiado debe ser mayor a cero'];
+        }
+
+        return true;
+    }
+
+    protected function obtenerPedidoActivo(int $idPedido): ?array
+    {
+        try {
+            $stmt = $this->conex->prepare(
+                'SELECT codigo_pedido, monto_total, estado
+                 FROM pedido
+                 WHERE codigo_pedido = ? AND estado = 1'
+            );
+            $stmt->execute([$idPedido]);
+            $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $pedido ?: null;
+        } catch (\PDOException $e) {
+            return null;
+        }
+    }
+
+    protected function pedidoYaTieneCredito(int $idPedido, ?int $idActual = null): bool
+    {
+        try {
+            if ($idActual !== null && $idActual > 0) {
+                $stmt = $this->conex->prepare(
+                    'SELECT COUNT(*) FROM cashea_credito
+                     WHERE id_pedido = ? AND id_cashea_credito <> ? AND estado = 1'
+                );
+                $stmt->execute([$idPedido, $idActual]);
+            } else {
+                $stmt = $this->conex->prepare(
+                    'SELECT COUNT(*) FROM cashea_credito WHERE id_pedido = ? AND estado = 1'
+                );
+                $stmt->execute([$idPedido]);
+            }
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+
+    protected function calcularMontosCashea(float $montoTotal, int|float $porcentajeInicial): array
+    {
+        $montoTotal = round((float) $montoTotal, 2);
+        $porcentajeInicial = (float) $porcentajeInicial;
+        $totalCents = (int) round($montoTotal * 100);
+        $inicialCents = (int) round($totalCents * ($porcentajeInicial / 100));
+        $financiadoCents = $totalCents - $inicialCents;
+
+        $montoInicial = round($inicialCents / 100, 2);
+        $montoFinanciado = round($financiadoCents / 100, 2);
+
+        return [
+            'monto_inicial_pagado'  => $montoInicial,
+            'monto_financiado'      => $montoFinanciado,
+            'porcentaje_financiado' => (int) round(100 - $porcentajeInicial),
+            'monto_pendiente'       => $montoFinanciado,
+        ];
+    }
+
+    protected function cuotasPorNivel(int $nivel): int
+    {
+        return $nivel;
+    }
+
+    /**
+     * Cuotas pendientes según el saldo, usando centavos y el residuo de la última cuota.
+     * Nunca supera la cantidad contratada en nivel_cashea.
+     */
+    protected function calcularCuotasPendientes(float $montoPendiente, float $montoFinanciado, int $cantidadCuotas): int
+    {
+        $cantidadCuotas = max(0, $cantidadCuotas);
+        if ($cantidadCuotas === 0) {
+            return 0;
+        }
+
+        $pendienteCents = (int) round($montoPendiente * 100);
+        $financiadoCents = (int) round($montoFinanciado * 100);
+
+        if ($pendienteCents <= 0 || $financiadoCents <= 0) {
+            return 0;
+        }
+
+        if ($pendienteCents >= $financiadoCents) {
+            return $cantidadCuotas;
+        }
+
+        $cuotaBaseCents = intdiv($financiadoCents, $cantidadCuotas);
+        $residuoCents = $financiadoCents % $cantidadCuotas;
+        $restantePagado = $financiadoCents - $pendienteCents;
+        $cuotasPagadas = 0;
+
+        for ($i = 1; $i <= $cantidadCuotas; $i++) {
+            $montoCuotaCents = ($i < $cantidadCuotas)
+                ? $cuotaBaseCents
+                : ($cuotaBaseCents + $residuoCents);
+
+            if ($montoCuotaCents <= 0) {
+                break;
+            }
+
+            if ($restantePagado >= $montoCuotaCents) {
+                $restantePagado -= $montoCuotaCents;
+                $cuotasPagadas++;
+            } else {
+                break;
+            }
+        }
+
+        return $cantidadCuotas - $cuotasPagadas;
+    }
+}
+</file>
+
+<file path="app/views/cashea/viewCashea.php">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CopiGaby — Créditos Cashea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/dist.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body class="font-[Nunito] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
+
+  <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
+
+  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
+    <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Gestion de Cashea</h2>
+      <div class="flex items-center">
+        <?php include 'app/views/layouts/viewUsuarioHeader.php'; ?>
+      </div>
+    </header>
+
+    <main class="p-8 flex-1 animate-fade-up">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-2xl font-black text-gray-800">Cashea</h1>
+          <p class="text-gray-500 text-sm font-semibold">Financiamiento de pedidos existentes</p>
+        </div>
+        <button id="btnOpenModal" class="flex items-center gap-2 bg-linear-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+          AÑADIR CASHEA
+        </button>
+      </div>
+
+      <?php if (!empty($_SESSION['cashea_flash'])): ?>
+        <?php $flash = $_SESSION['cashea_flash']; unset($_SESSION['cashea_flash']); ?>
+        <script>
+          showFlashAlert(
+            <?= json_encode($flash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+            <?= json_encode($flash['message'] ?? 'No se pudo completar la operación', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+          );
+        </script>
+      <?php endif; ?>
+
+      <div class="bg-white rounded-[14px] shadow-sm overflow-hidden border border-gray-100">
+        <table data-datatable="true" class="w-full text-left">
+          <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
+            <tr>
+              <th class="px-6 py-4">Pedido</th>
+              <th class="px-6 py-4">Cliente</th>
+              <th class="px-6 py-4">Cuotas</th>
+              <th class="px-6 py-4">Inicial</th>
+              <th class="px-6 py-4">Financiado</th>
+              <th class="px-6 py-4">Estado de Deuda</th>
+              <th class="px-6 py-4 text-center">Consultar</th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-700 font-semibold text-sm divide-y">
+            <?php if (!empty($creditos)): foreach ($creditos as $c): ?>
+              <?php $pendiente = (float) ($c['monto_pendiente'] ?? 0); ?>
+              <tr class="hover:bg-gray-50/80 transition-colors">
+                <td class="px-6 py-4 font-black text-navy-dark">#<?= (int) $c['id_pedido'] ?></td>
+                <td class="px-6 py-4">
+                  <div class="uppercase font-bold text-navy-light"><?= htmlspecialchars($c['nombre_cliente'] ?? '—') ?></div>
+                  <div class="text-[0.7rem] text-gray-400 font-bold">V-<?= htmlspecialchars($c['cedula_cliente'] ?? '') ?></div>
+                </td>
+                <td class="px-6 py-4 font-black text-navy-dark">
+                  <?php if ((int) ($c['cuotas_pendientes'] ?? 0) > 0): ?>
+                    <?= (int) $c['cuotas_pendientes'] ?> / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
+                  <?php else: ?>
+                    0 / <?= (int) ($c['cantidad_cuotas'] ?? $c['nivel_cashea']) ?> Cuotas
+                  <?php endif; ?>
+                </td>
+                <td class="px-6 py-4">$<?= number_format((float) $c['monto_inicial_pagado'], 2, '.', ',') ?></td>
+                <td class="px-6 py-4">$<?= number_format((float) $c['monto_financiado'], 2, '.', ',') ?></td>
+                <td class="px-6 py-4">
+                  <?php if ($pendiente > 0): ?>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[0.65rem] bg-red-100 text-red-600 font-bold uppercase">
+                      Con Deuda: $<?= number_format($pendiente, 2, '.', ',') ?>
+                    </span>
+                  <?php else: ?>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] bg-green-100 text-green-600 font-bold uppercase">
+                      Solvente
+                    </span>
+                  <?php endif; ?>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <button type="button" onclick='viewDetails(<?= json_encode($c, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
+                </td>
+              </tr>
+            <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div id="modalCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Nuevo crédito Cashea</h3>
+          <button type="button" onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=cashea&type=register" method="POST" class="p-6" id="formCashea">
+          <div class="mb-4">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Pedido existente <span class="text-red-500">*</span></label>
+            <select name="id_pedido" id="selectPedido" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+              <option value="">Seleccione un pedido</option>
+              <?php if (!empty($pedidosDisponibles)): foreach ($pedidosDisponibles as $p): ?>
+                <option value="<?= (int) $p['codigo_pedido'] ?>" data-total="<?= htmlspecialchars((string) $p['monto_total']) ?>">
+                  Pedido #<?= (int) $p['codigo_pedido'] ?> — <?= htmlspecialchars($p['nombre_cliente'] ?? 'Cliente') ?> — $<?= number_format((float) $p['monto_total'], 2, '.', ',') ?>
+                </option>
+              <?php endforeach; endif; ?>
+            </select>
+            <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">Solo se listan pedidos activos sin crédito Cashea vigente.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
+              <input type="number" name="nivel_cashea" id="nivelCashea" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
+              <select name="porcentaje_inicial" id="porcentajeInicial" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+                <option value="">Seleccione inicial</option>
+                <?php foreach ([0, 10, 20, 30, 40, 50, 60] as $porcentaje): ?>
+                  <option value="<?= $porcentaje ?>"><?= $porcentaje ?>%</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4 mb-4">
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto inicial</p>
+              <p id="lblMontoInicial" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
+            </div>
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto financiado</p>
+              <p id="lblMontoFinanciado" class="mt-1 text-xl font-black text-orange-dk">$0.00</p>
+            </div>
+            <div class="col-span-2 rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
+              <p id="lblCuotas" class="mt-1 text-sm font-bold text-navy-dark">Seleccione pedido, cuotas e inicial</p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 mt-4">
+            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEditCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Editar crédito Cashea</h3>
+          <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=cashea&type=update" method="POST" class="p-6" id="formEditCashea">
+          <input type="hidden" name="id_cashea_credito" id="edit_id">
+          <input type="hidden" name="id_pedido" id="edit_id_pedido">
+          <div class="mb-4">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Pedido</label>
+            <input type="text" id="edit_pedido_label" readonly class="w-full px-4 py-2 bg-gray-100 border rounded-lg font-bold text-sm text-navy-dark">
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
+              <input type="number" name="nivel_cashea" id="edit_nivel" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
+              <select name="porcentaje_inicial" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+                <?php foreach ([0, 10, 20, 30, 40, 50, 60] as $porcentaje): ?>
+                  <option value="<?= $porcentaje ?>"><?= $porcentaje ?>%</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4 mb-4">
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto inicial</p>
+              <p id="editLblMontoInicial" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
+            </div>
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto financiado</p>
+              <p id="editLblMontoFinanciado" class="mt-1 text-xl font-black text-orange-dk">$0.00</p>
+            </div>
+            <div class="col-span-2 rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
+              <p id="editLblCuotas" class="mt-1 text-sm font-bold text-navy-dark">—</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
+            <label class="text-sm font-bold text-navy-dark uppercase">Activo</label>
+          </div>
+          <div class="flex justify-end gap-3 mt-4">
+            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalDetalle" class="fixed inset-0 z-160 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="relative bg-white shadow-2xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Detalle del crédito Cashea</h3>
+          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Pedido</p><p id="det_pedido" class="font-black text-navy-dark">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cliente</p><p id="det_cliente" class="font-bold text-navy-light uppercase">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas</p><p id="det_nivel" class="font-semibold text-gray-700">—</p></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Inicial</p><p id="det_inicial" class="font-black text-navy-dark">—</p></div>
+            <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Financiado</p><p id="det_financiado" class="font-black text-orange-dk">—</p></div>
+          </div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estimado por cuota</p><p id="det_cuotas" class="font-semibold text-gray-700">—</p></div>
+          <div id="det_cuotas_pendientes_wrap">
+            <p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cuotas pendientes</p>
+            <p id="det_cuotas_pendientes" class="font-semibold text-gray-700">—</p>
+          </div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado de deuda</p><p id="det_deuda" class="font-bold">—</p></div>
+          <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Estado</p><p id="det_estado" class="font-bold">—</p></div>
+        </div>
+        <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+          <?php if (esAdmin()): ?>
+          <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
+          <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
+          <?php endif; ?>
+          <button type="button" id="btnDetalleAbonar" class="px-5 py-2 text-sm font-black text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors hidden">Abonar</button>
+          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalAbonarCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeAbonarModal()"></div>
+      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+          <h3 class="text-xl font-black text-navy-dark">Abonar cuota Cashea</h3>
+          <button type="button" onclick="closeAbonarModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <form action="?url=cashea&type=abonar" method="POST" class="p-6" id="formAbonarCashea">
+          <input type="hidden" name="id_cashea_credito" id="abonar_id">
+          <div class="mb-4 rounded-xl border border-orange/30 bg-orange/5 p-4">
+            <p class="text-[0.65rem] font-black uppercase text-gray-400">Deuda actual</p>
+            <p id="abonar_deuda_actual" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
+            <p id="abonar_cuota_sugerida" class="mt-1 text-xs font-semibold text-gray-500">—</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto a pagar <span class="text-red-500">*</span></label>
+            <input type="number" step="0.01" min="0.01" name="monto_abonado" id="abonar_monto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+          </div>
+          <div class="flex justify-end gap-3 mt-4">
+            <button type="button" onclick="closeAbonarModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Registrar pago</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('modalCashea');
+    const btnOpen = document.getElementById('btnOpenModal');
+    const selectPedido = document.getElementById('selectPedido');
+    const nivelCashea = document.getElementById('nivelCashea');
+    const porcentajeInicial = document.getElementById('porcentajeInicial');
+    const formCashea = document.getElementById('formCashea');
+
+    const toggleModal = () => {
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        formCashea.reset();
+        calcularCashea();
+      }
+    };
+    btnOpen.onclick = toggleModal;
+
+    function roundMoney(value) {
+      const num = parseFloat(value);
+      if (isNaN(num)) return 0;
+      return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    function toCents(value) {
+      return Math.round((roundMoney(value) + Number.EPSILON) * 100);
+    }
+
+    function fromCents(cents) {
+      return roundMoney(cents / 100);
+    }
+
+    function calcularCuotasPendientes(pendiente, financiado, cantidadCuotas) {
+      cantidadCuotas = parseInt(cantidadCuotas, 10) || 0;
+      if (cantidadCuotas < 1) return 0;
+      const pendienteCents = toCents(pendiente);
+      const financiadoCents = toCents(financiado);
+      if (pendienteCents <= 0 || financiadoCents <= 0) return 0;
+      if (pendienteCents >= financiadoCents) return cantidadCuotas;
+
+      const cuotaBaseCents = Math.floor(financiadoCents / cantidadCuotas);
+      const residuoCents = financiadoCents % cantidadCuotas;
+      let restantePagado = financiadoCents - pendienteCents;
+      let cuotasPagadas = 0;
+
+      for (let i = 1; i <= cantidadCuotas; i++) {
+        const montoCuotaCents = (i < cantidadCuotas)
+          ? cuotaBaseCents
+          : (cuotaBaseCents + residuoCents);
+        if (montoCuotaCents <= 0) break;
+        if (restantePagado >= montoCuotaCents) {
+          restantePagado -= montoCuotaCents;
+          cuotasPagadas++;
+        } else {
+          break;
+        }
+      }
+
+      return cantidadCuotas - cuotasPagadas;
+    }
+
+    function calcularMontosCasheaJs(total, percent) {
+      const totalCents = toCents(total);
+      const inicialCents = Math.round(totalCents * (percent / 100));
+      const financiadoCents = totalCents - inicialCents;
+      return {
+        inicial: fromCents(inicialCents),
+        financiado: fromCents(financiadoCents)
+      };
+    }
+
+    function formatMoney(value) {
+      return '$' + roundMoney(value).toFixed(2);
+    }
+
+    function getMontoPedidoSeleccionado() {
+      const option = selectPedido.options[selectPedido.selectedIndex];
+      return option ? roundMoney(option.getAttribute('data-total') || '0') : 0;
+    }
+
+    function textoCuotas(nivel, financiado) {
+      if (!nivel || nivel < 1 || financiado <= 0) {
+        return 'Seleccione pedido, cuotas e inicial';
+      }
+      const montoCuota = roundMoney(financiado / nivel);
+      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota);
+    }
+
+    function calcularCashea() {
+      const total = getMontoPedidoSeleccionado();
+      const percent = parseFloat(porcentajeInicial.value);
+      const nivel = parseInt(nivelCashea.value, 10);
+      const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
+      const montos = inicialValida ? calcularMontosCasheaJs(total, percent) : { inicial: 0, financiado: 0 };
+      const inicial = montos.inicial;
+      const financiado = total > 0 && inicialValida ? montos.financiado : 0;
+
+      document.getElementById('lblMontoInicial').textContent = formatMoney(inicial);
+      document.getElementById('lblMontoFinanciado').textContent = formatMoney(financiado);
+      document.getElementById('lblCuotas').textContent = textoCuotas(nivel, financiado);
+    }
+
+    nivelCashea.addEventListener('input', calcularCashea);
+    selectPedido.addEventListener('change', calcularCashea);
+    porcentajeInicial.addEventListener('change', calcularCashea);
+
+    let currentRecord = null;
+    let editTotal = 0;
+
+    function viewDetails(data) {
+      currentRecord = data;
+      const pendiente = parseFloat(data.monto_pendiente || 0);
+      document.getElementById('det_pedido').textContent = '#' + data.id_pedido + ' · Total ' + formatMoney(data.monto_total);
+      document.getElementById('det_cliente').textContent = data.nombre_cliente || '—';
+      document.getElementById('det_nivel').textContent = data.nivel_cashea + ' Cuotas';
+      document.getElementById('det_inicial').textContent = formatMoney(data.monto_inicial_pagado) + ' (' + data.porcentaje_inicial + '%)';
+      document.getElementById('det_financiado').textContent = formatMoney(data.monto_financiado);
+      document.getElementById('det_cuotas').textContent = textoCuotas(parseInt(data.nivel_cashea, 10), parseFloat(data.monto_financiado || 0));
+      document.getElementById('det_deuda').innerHTML = pendiente > 0
+        ? '<span class="bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Con Deuda: ' + formatMoney(pendiente) + '</span>'
+        : '<span class="bg-green-100 text-green-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Solvente</span>';
+      document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
+      const wrapPendientes = document.getElementById('det_cuotas_pendientes_wrap');
+      const lblPendientes = document.getElementById('det_cuotas_pendientes');
+      const cantidadCuotas = parseInt(data.cantidad_cuotas || data.nivel_cashea, 10);
+      const cuotasPendientes = (typeof data.cuotas_pendientes !== 'undefined' && data.cuotas_pendientes !== null)
+        ? parseInt(data.cuotas_pendientes, 10)
+        : calcularCuotasPendientes(pendiente, data.monto_financiado || 0, cantidadCuotas);
+      if (pendiente > 0 && cuotasPendientes > 0) {
+        lblPendientes.textContent = cuotasPendientes + (cuotasPendientes === 1 ? ' cuota pendiente' : ' cuotas pendientes');
+        wrapPendientes.classList.remove('hidden');
+      } else {
+        lblPendientes.textContent = 'Sin cuotas pendientes';
+        wrapPendientes.classList.add('hidden');
+      }
+      const btnEditar = document.getElementById('btnDetalleEditar');
+      const btnEliminar = document.getElementById('btnDetalleEliminar');
+      const btnAbonar = document.getElementById('btnDetalleAbonar');
+      if (btnEditar) btnEditar.onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
+      if (btnEliminar) btnEliminar.onclick = () => confirmDelete(currentRecord.id_cashea_credito);
+      if (btnAbonar) {
+        if (pendiente > 0) {
+          btnAbonar.classList.remove('hidden');
+          btnAbonar.onclick = () => openAbonarModal(currentRecord);
+        } else {
+          btnAbonar.classList.add('hidden');
+          btnAbonar.onclick = null;
+        }
+      }
+      document.getElementById('modalDetalle').classList.remove('hidden');
+    }
+
+    function closeDetalleModal() {
+      document.getElementById('modalDetalle').classList.add('hidden');
+    }
+
+    function calcularEditCashea() {
+      const percent = parseFloat(document.getElementById('edit_porcentaje').value);
+      const nivel = parseInt(document.getElementById('edit_nivel').value, 10);
+      const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
+      const montos = inicialValida ? calcularMontosCasheaJs(editTotal, percent) : { inicial: 0, financiado: 0 };
+      const inicial = montos.inicial;
+      const financiado = editTotal > 0 && inicialValida ? montos.financiado : 0;
+      document.getElementById('editLblMontoInicial').textContent = formatMoney(inicial);
+      document.getElementById('editLblMontoFinanciado').textContent = formatMoney(financiado);
+      document.getElementById('editLblCuotas').textContent = textoCuotas(nivel, financiado);
+    }
+
+    function openEditModal(data) {
+      editTotal = roundMoney(data.monto_total || 0);
+      document.getElementById('edit_id').value = data.id_cashea_credito;
+      document.getElementById('edit_id_pedido').value = data.id_pedido;
+      document.getElementById('edit_pedido_label').value = 'Pedido #' + data.id_pedido + ' — ' + formatMoney(data.monto_total);
+      document.getElementById('edit_nivel').value = data.nivel_cashea;
+      document.getElementById('edit_porcentaje').value = String(data.porcentaje_inicial);
+      document.getElementById('edit_estado').checked = data.estado == 1;
+      calcularEditCashea();
+      document.getElementById('modalEditCashea').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('modalEditCashea').classList.add('hidden');
+    }
+
+    function openAbonarModal(data) {
+      closeDetalleModal();
+      const pendiente = roundMoney(data.monto_pendiente || 0);
+      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
+      const sugerido = (pendiente < montoCuota || montoCuota <= 0) ? pendiente : montoCuota;
+      document.getElementById('abonar_id').value = data.id_cashea_credito;
+      document.getElementById('abonar_deuda_actual').textContent = formatMoney(pendiente);
+      document.getElementById('abonar_cuota_sugerida').textContent = 'Cuota sugerida: ' + formatMoney(sugerido);
+      const inputMonto = document.getElementById('abonar_monto');
+      inputMonto.value = sugerido.toFixed(2);
+      inputMonto.max = pendiente.toFixed(2);
+      document.getElementById('modalAbonarCashea').classList.remove('hidden');
+    }
+
+    function closeAbonarModal() {
+      document.getElementById('modalAbonarCashea').classList.add('hidden');
+    }
+
+    document.getElementById('edit_nivel').addEventListener('input', calcularEditCashea);
+    document.getElementById('edit_porcentaje').addEventListener('change', calcularEditCashea);
+
+    async function confirmDelete(id) {
+      if (await showConfirm('¿Desea desactivar este crédito Cashea?', 'Desactivar crédito', 'Sí, desactivar')) {
+        const f = new FormData();
+        f.append('deleteCashea', 'true');
+        f.append('id_cashea_credito', id);
+        fetch('?url=cashea&type=main', { method: 'POST', body: f })
+          .then(r => r.json()).then(d => {
+            if (d.status === 'success') location.reload();
+            else showAlert(d.message || 'No se pudo desactivar el crédito.', 'error', 'Error');
+          });
+      }
+    }
+  </script>
+  <script src="assets/js/datatables-init.js"></script>
+</body>
+</html>
 </file>
 
 <file path="composer.json">
@@ -9418,7 +9331,7 @@ class userModel extends ConectDB {
 
 <file path="app/views/layouts/viewMenuLateral.php">
 <?php
-require_once __DIR__ . '/../../../herpers/auth.php';
+require_once __DIR__ . '/../../../helpers/auth.php';
 
 $currentUrl = $_REQUEST['url'] ?? '';
 $pedidoOpen = in_array($currentUrl, ['pedido', 'cliente', 'cashea'], true) && (puedeVerModulo('pedido') || puedeVerModulo('cashea'));

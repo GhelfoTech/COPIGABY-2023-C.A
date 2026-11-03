@@ -113,4 +113,51 @@ trait CasheaTrait
     {
         return $nivel;
     }
+
+    /**
+     * Cuotas pendientes según el saldo, usando centavos y el residuo de la última cuota.
+     * Nunca supera la cantidad contratada en nivel_cashea.
+     */
+    protected function calcularCuotasPendientes(float $montoPendiente, float $montoFinanciado, int $cantidadCuotas): int
+    {
+        $cantidadCuotas = max(0, $cantidadCuotas);
+        if ($cantidadCuotas === 0) {
+            return 0;
+        }
+
+        $pendienteCents = (int) round($montoPendiente * 100);
+        $financiadoCents = (int) round($montoFinanciado * 100);
+
+        if ($pendienteCents <= 0 || $financiadoCents <= 0) {
+            return 0;
+        }
+
+        if ($pendienteCents >= $financiadoCents) {
+            return $cantidadCuotas;
+        }
+
+        $cuotaBaseCents = intdiv($financiadoCents, $cantidadCuotas);
+        $residuoCents = $financiadoCents % $cantidadCuotas;
+        $restantePagado = $financiadoCents - $pendienteCents;
+        $cuotasPagadas = 0;
+
+        for ($i = 1; $i <= $cantidadCuotas; $i++) {
+            $montoCuotaCents = ($i < $cantidadCuotas)
+                ? $cuotaBaseCents
+                : ($cuotaBaseCents + $residuoCents);
+
+            if ($montoCuotaCents <= 0) {
+                break;
+            }
+
+            if ($restantePagado >= $montoCuotaCents) {
+                $restantePagado -= $montoCuotaCents;
+                $cuotasPagadas++;
+            } else {
+                break;
+            }
+        }
+
+        return $cantidadCuotas - $cuotasPagadas;
+    }
 }

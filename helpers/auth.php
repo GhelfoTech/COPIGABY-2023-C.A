@@ -26,6 +26,7 @@ const ROL_EMPLEADO = 2;
 const PERMISOS_EMPLEADO = [
     'pedido'    => ['add', 'consultar'],
     'cliente'   => ['add', 'consultar'],
+    'cashea'    => ['add', 'consultar'],
     'producto'  => ['add', 'consultar'],
     'categoria' => ['add', 'consultar'],
     'servicio'  => ['add', 'consultar'],

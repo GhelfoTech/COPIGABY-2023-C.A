@@ -40,9 +40,11 @@ class casheaModel extends ConectDB {
                 $financiado = (float) $credito['monto_financiado'];
                 $credito['cantidad_cuotas'] = $cuotas;
                 $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
-                $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
-                    ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
-                    : 0;
+                $credito['cuotas_pendientes'] = $this->calcularCuotasPendientes(
+                    (float) $credito['monto_pendiente'],
+                    $financiado,
+                    $cuotas
+                );
                 $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
             }
 
@@ -75,11 +77,14 @@ class casheaModel extends ConectDB {
 
             $nivel = (int) $credito['nivel_cashea'];
             $cuotas = $this->cuotasPorNivel($nivel);
+            $financiado = (float) $credito['monto_financiado'];
             $credito['cantidad_cuotas'] = $cuotas;
-            $credito['monto_cuota'] = $cuotas > 0 ? round(((float) $credito['monto_financiado']) / $cuotas, 2) : 0;
-            $credito['cuotas_pendientes'] = ((float) $credito['monto_pendiente'] > 0 && (float) $credito['monto_cuota'] > 0)
-                ? (int) ceil((float) $credito['monto_pendiente'] / (float) $credito['monto_cuota'])
-                : 0;
+            $credito['monto_cuota'] = $cuotas > 0 ? round($financiado / $cuotas, 2) : 0;
+            $credito['cuotas_pendientes'] = $this->calcularCuotasPendientes(
+                (float) $credito['monto_pendiente'],
+                $financiado,
+                $cuotas
+            );
             $credito['porcentaje_inicial'] = 100 - (int) $credito['porcentaje_financiado'];
             return $credito;
         } catch (PDOException $e) {

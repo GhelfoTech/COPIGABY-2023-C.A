@@ -244,7 +244,7 @@
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
           <?php endif; ?>
-          <button type="button" id="btnDetalleAbonar" class="px-5 py-2 text-sm font-black text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors hidden">Abonar Cuota</button>
+          <button type="button" id="btnDetalleAbonar" class="px-5 py-2 text-sm font-black text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors hidden">Abonar</button>
           <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
@@ -310,6 +310,35 @@
       return roundMoney(cents / 100);
     }
 
+    function calcularCuotasPendientes(pendiente, financiado, cantidadCuotas) {
+      cantidadCuotas = parseInt(cantidadCuotas, 10) || 0;
+      if (cantidadCuotas < 1) return 0;
+      const pendienteCents = toCents(pendiente);
+      const financiadoCents = toCents(financiado);
+      if (pendienteCents <= 0 || financiadoCents <= 0) return 0;
+      if (pendienteCents >= financiadoCents) return cantidadCuotas;
+
+      const cuotaBaseCents = Math.floor(financiadoCents / cantidadCuotas);
+      const residuoCents = financiadoCents % cantidadCuotas;
+      let restantePagado = financiadoCents - pendienteCents;
+      let cuotasPagadas = 0;
+
+      for (let i = 1; i <= cantidadCuotas; i++) {
+        const montoCuotaCents = (i < cantidadCuotas)
+          ? cuotaBaseCents
+          : (cuotaBaseCents + residuoCents);
+        if (montoCuotaCents <= 0) break;
+        if (restantePagado >= montoCuotaCents) {
+          restantePagado -= montoCuotaCents;
+          cuotasPagadas++;
+        } else {
+          break;
+        }
+      }
+
+      return cantidadCuotas - cuotasPagadas;
+    }
+
     function calcularMontosCasheaJs(total, percent) {
       const totalCents = toCents(total);
       const inicialCents = Math.round(totalCents * (percent / 100));
@@ -371,11 +400,13 @@
         ? '<span class="bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Con Deuda: ' + formatMoney(pendiente) + '</span>'
         : '<span class="bg-green-100 text-green-600 font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase">Solvente</span>';
       document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
-      const montoCuota = roundMoney(data.monto_cuota || (parseFloat(data.monto_financiado || 0) / parseInt(data.nivel_cashea, 10)));
       const wrapPendientes = document.getElementById('det_cuotas_pendientes_wrap');
       const lblPendientes = document.getElementById('det_cuotas_pendientes');
-      if (pendiente > 0 && montoCuota > 0) {
-        const cuotasPendientes = Math.max(1, Math.ceil(roundMoney(pendiente / montoCuota)));
+      const cantidadCuotas = parseInt(data.cantidad_cuotas || data.nivel_cashea, 10);
+      const cuotasPendientes = (typeof data.cuotas_pendientes !== 'undefined' && data.cuotas_pendientes !== null)
+        ? parseInt(data.cuotas_pendientes, 10)
+        : calcularCuotasPendientes(pendiente, data.monto_financiado || 0, cantidadCuotas);
+      if (pendiente > 0 && cuotasPendientes > 0) {
         lblPendientes.textContent = cuotasPendientes + (cuotasPendientes === 1 ? ' cuota pendiente' : ' cuotas pendientes');
         wrapPendientes.classList.remove('hidden');
       } else {

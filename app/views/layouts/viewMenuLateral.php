@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../herpers/auth.php';
+require_once __DIR__ . '/../../../helpers/auth.php';
 
 $currentUrl = $_REQUEST['url'] ?? '';
 $pedidoOpen = in_array($currentUrl, ['pedido', 'cliente', 'cashea'], true) && (puedeVerModulo('pedido') || puedeVerModulo('cashea'));
