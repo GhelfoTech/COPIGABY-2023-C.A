@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -81,46 +82,7 @@
     </main>
   </div>
 
-  <div id="modalCliente" class="fixed inset-0 z-150 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Nuevo Cliente</h3>
-          <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-         <form action="?url=cliente&type=register" method="POST" class="p-6">
-           <div class="mb-4">
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cédula <span class="text-red-500">*</span></label>
-              <div class="flex gap-0">
-                <span class="inline-flex items-center px-3 py-2 bg-gray-200 border border-r-0 rounded-l-lg text-sm font-black text-navy-dark">V-</span>
-                 <input type="tel" inputmode="numeric" pattern="[0-9]*" name="cedula_cliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-hidden font-bold no-spinner text-sm" placeholder="12345678">
-              </div>
-           </div>
-          <div class="mb-4">
-             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nombre Completo <span class="text-red-500">*</span></label>
-              <input type="text" name="nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="Juan Pérez">
-          </div>
-          <div class="mb-4">
-             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="04121234567">
-          </div>
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico</label>
-             <input type="email" name="correo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm" placeholder="correo@cliente.com">
-          </div>
-          <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Dirección <span class="text-red-500">*</span></label>
-            <textarea name="direccion" rows="2" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold"></textarea>
-          </div>
-          <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  <?php $clienteModalAction = '?url=cliente&type=register'; include 'app/views/cliente/modalRegistroCliente.php'; unset($clienteModalAction); ?>
 
   <div id="modalEditCliente" class="fixed inset-0 z-150 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
@@ -195,10 +157,27 @@
   </div>
 
   <script>
-    const modal = document.getElementById('modalCliente');
+    const modalClienteRegistro = document.getElementById('modalClienteRegistro');
+    const formClienteRegistro = document.getElementById('formClienteRegistro');
     const btnOpen = document.getElementById('btnOpenModal');
-    const toggleModal = () => modal.classList.toggle('hidden');
-    btnOpen.onclick = toggleModal;
+
+    function abrirModalClienteRegistro() {
+      modalClienteRegistro.classList.remove('hidden');
+      modalClienteRegistro.setAttribute('aria-hidden', 'false');
+      document.getElementById('clienteRegistroCedula').focus();
+    }
+
+    function cerrarModalClienteRegistro() {
+      modalClienteRegistro.classList.add('hidden');
+      modalClienteRegistro.setAttribute('aria-hidden', 'true');
+    }
+
+    btnOpen.addEventListener('click', abrirModalClienteRegistro);
+    modalClienteRegistro.addEventListener('click', (event) => {
+      if (event.target.closest('[data-close-cliente-modal]')) {
+        cerrarModalClienteRegistro();
+      }
+    });
 
     let currentRecord = null;
 
