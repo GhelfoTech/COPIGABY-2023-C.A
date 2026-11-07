@@ -2,6 +2,7 @@
 
     use App\models\pedidoModel;
     use App\models\medidaModel;
+    use App\models\clienteModel;
 
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -16,6 +17,46 @@
     $medidaModel = new medidaModel();
 
     if (isset($_GET['type'])) {
+
+        // Registro rápido de cliente desde el formulario de pedidos (AJAX).
+        if ($_GET['type'] === 'cliente') {
+            header('Content-Type: application/json; charset=utf-8');
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['status' => 'error', 'message' => 'Método no permitido.']);
+                exit();
+            }
+
+            $datosCliente = [
+                'cedula_cliente' => trim((string) ($_POST['cedula_cliente'] ?? '')),
+                'nombre'         => trim((string) ($_POST['nombre'] ?? '')),
+                'telefono'       => trim((string) ($_POST['telefono'] ?? '')),
+                'correo'         => trim((string) ($_POST['correo'] ?? '')),
+                'direccion'      => trim((string) ($_POST['direccion'] ?? '')),
+            ];
+
+            $clienteModel = new clienteModel();
+            $resultadoCliente = $clienteModel->addCliente($datosCliente);
+
+            if (is_array($resultadoCliente) && ($resultadoCliente['status'] ?? '') === 'success') {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Cliente registrado correctamente.',
+                    'cliente' => [
+                        'cedula_cliente' => $datosCliente['cedula_cliente'],
+                        'nombre' => $datosCliente['nombre'],
+                    ],
+                ]);
+                exit();
+            }
+
+            echo json_encode([
+                'status' => 'error',
+                'message' => $resultadoCliente['message'] ?? 'No se pudo registrar el cliente.',
+            ]);
+            exit();
+        }
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

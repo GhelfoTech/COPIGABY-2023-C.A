@@ -97,6 +97,55 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Resumen global de deuda pendiente -->
+      <section class="mt-8 rounded-2xl border border-orange/30 bg-white shadow-sm overflow-hidden">
+        <div class="bg-navy-dark px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-[0.65rem] font-black uppercase tracking-[0.18em] text-orange">Resumen de cartera</p>
+            <h2 class="text-xl font-black text-white">Deuda pendiente de clientes</h2>
+            <p class="mt-1 text-xs font-semibold text-white/70">Saldo acumulado de los créditos Cashea activos que todavía no han sido cancelados.</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[0.65rem] font-black uppercase tracking-widest text-white/70">Deuda total del negocio</p>
+            <p class="text-3xl font-black text-orange">$<?= number_format((float) ($resumenDeuda['total_deuda'] ?? 0), 2, '.', ',') ?></p>
+            <p class="text-xs font-bold text-white/70"><?= (int) ($resumenDeuda['cantidad_clientes'] ?? 0) ?> cliente(s) con saldo pendiente</p>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <?php if (!empty($resumenDeuda['clientes'])): ?>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b text-[0.65rem] uppercase tracking-widest text-gray-400">
+                    <th class="px-3 py-3">Cliente</th>
+                    <th class="px-3 py-3 text-center">Créditos pendientes</th>
+                    <th class="px-3 py-3 text-right">Deuda restante</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y">
+                  <?php foreach ($resumenDeuda['clientes'] as $clienteDeuda): ?>
+                    <tr class="hover:bg-orange/5">
+                      <td class="px-3 py-3">
+                        <div class="font-black uppercase text-navy-dark"><?= htmlspecialchars($clienteDeuda['nombre_cliente'] ?? 'Cliente') ?></div>
+                        <div class="text-xs font-semibold text-gray-400">V-<?= htmlspecialchars((string) ($clienteDeuda['cedula_cliente'] ?? '')) ?></div>
+                      </td>
+                      <td class="px-3 py-3 text-center text-sm font-bold text-gray-500"><?= (int) $clienteDeuda['creditos_pendientes'] ?></td>
+                      <td class="px-3 py-3 text-right text-base font-black text-red-600">$<?= number_format((float) $clienteDeuda['deuda_pendiente'], 2, '.', ',') ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php else: ?>
+            <div class="rounded-xl border border-green-200 bg-green-50 px-5 py-6 text-center">
+              <p class="font-black text-green-700">No hay deudas Cashea pendientes.</p>
+              <p class="mt-1 text-sm font-semibold text-green-600">Todos los créditos activos están cancelados o no existen saldos por cobrar.</p>
+            </div>
+          <?php endif; ?>
+        </div>
+      </section>
     </main>
   </div>
 

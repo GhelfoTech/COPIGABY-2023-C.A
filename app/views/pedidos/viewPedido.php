@@ -127,12 +127,15 @@
                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
                  </button>
                </div>
-               <select name="codigo_cliente" id="selectCliente" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
-                <option value="">— Seleccione un cliente —</option>
-                <?php foreach ($clientes as $cli): ?>
-                  <option value="<?= $cli['cedula_cliente'] ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
-                <?php endforeach; ?>
-              </select>
+               <div class="flex gap-2">
+                 <select name="codigo_cliente" id="selectCliente" required class="min-w-0 flex-1 w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+                  <option value="">— Seleccione un cliente —</option>
+                  <?php foreach ($clientes as $cli): ?>
+                    <option value="<?= htmlspecialchars((string) $cli['cedula_cliente']) ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
+                  <?php endforeach; ?>
+                 </select>
+                 <button type="button" id="btnNuevoClientePedido" title="Registrar un cliente nuevo" aria-label="Registrar un cliente nuevo" class="shrink-0 inline-flex items-center justify-center w-11 rounded-lg bg-orange text-navy-dark font-black text-2xl shadow-sm hover:bg-orange-dk transition-colors">+</button>
+               </div>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Fecha del Pedido <span class="text-red-500">*</span></label>
@@ -300,6 +303,52 @@
     </div>
   </div>
 
+  <!-- Modal de registro rápido de cliente desde Pedidos -->
+  <div id="modalNuevoClientePedido" class="fixed inset-0 z-[170] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-6">
+      <div class="fixed inset-0 bg-navy-dark/70 backdrop-blur-sm" id="overlayNuevoClientePedido"></div>
+      <div class="relative w-full max-w-xl overflow-hidden rounded-custom bg-white shadow-2xl animate-fade-up">
+        <div class="flex items-center justify-between border-b bg-gray-50 px-6 py-4">
+          <div>
+            <h3 class="text-lg font-black text-navy-dark">Registrar nuevo cliente</h3>
+            <p class="text-xs font-semibold text-gray-500">El cliente se agregará al pedido actual automáticamente.</p>
+          </div>
+          <button type="button" id="btnCerrarNuevoClientePedido" class="text-gray-400 hover:text-navy-dark" aria-label="Cerrar formulario">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form id="formNuevoClientePedido" class="space-y-4 p-6">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="nuevoClienteCedula" class="mb-1 block text-xs font-black uppercase text-gray-500">Cédula <span class="text-red-500">*</span></label>
+              <input type="text" id="nuevoClienteCedula" name="cedula_cliente" minlength="6" maxlength="9" inputmode="numeric" pattern="[0-9]{6,9}" required class="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm font-bold outline-none focus:border-orange" placeholder="Ej. 12345678">
+            </div>
+            <div>
+              <label for="nuevoClienteNombre" class="mb-1 block text-xs font-black uppercase text-gray-500">Nombre completo <span class="text-red-500">*</span></label>
+              <input type="text" id="nuevoClienteNombre" name="nombre" required pattern="[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+" class="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm font-bold outline-none focus:border-orange" placeholder="Nombre del cliente">
+            </div>
+            <div>
+              <label for="nuevoClienteTelefono" class="mb-1 block text-xs font-black uppercase text-gray-500">Teléfono <span class="text-red-500">*</span></label>
+              <input type="tel" id="nuevoClienteTelefono" name="telefono" maxlength="11" minlength="11" inputmode="numeric" pattern="[0-9]{11}" required class="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm font-bold outline-none focus:border-orange" placeholder="04245555555">
+            </div>
+            <div>
+              <label for="nuevoClienteCorreo" class="mb-1 block text-xs font-black uppercase text-gray-500">Correo electrónico</label>
+              <input type="email" id="nuevoClienteCorreo" name="correo" class="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm font-bold outline-none focus:border-orange" placeholder="correo@ejemplo.com">
+            </div>
+          </div>
+          <div>
+            <label for="nuevoClienteDireccion" class="mb-1 block text-xs font-black uppercase text-gray-500">Dirección <span class="text-red-500">*</span></label>
+            <textarea id="nuevoClienteDireccion" name="direccion" rows="2" required class="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm font-bold outline-none focus:border-orange" placeholder="Dirección del cliente"></textarea>
+          </div>
+          <div class="flex justify-end gap-3 border-t pt-4">
+            <button type="button" id="btnCancelarNuevoClientePedido" class="rounded-lg px-5 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button type="submit" id="btnGuardarNuevoClientePedido" class="rounded-lg bg-navy-dark px-6 py-2 text-sm font-black text-white shadow hover:bg-navy">Guardar cliente</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Ver Detalle (solo lectura) -->
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
@@ -429,10 +478,85 @@
     const inputMontoTotal = document.getElementById('inputMontoTotal');
     const inputTasaActual = document.getElementById('inputTasaActual');
     const selectCliente = document.getElementById('selectCliente');
+    const modalNuevoClientePedido = document.getElementById('modalNuevoClientePedido');
+    const formNuevoClientePedido = document.getElementById('formNuevoClientePedido');
+    const btnNuevoClientePedido = document.getElementById('btnNuevoClientePedido');
+    const btnGuardarNuevoClientePedido = document.getElementById('btnGuardarNuevoClientePedido');
+    const buscarClienteInput = document.getElementById('buscarCliente');
 
     let itemCounter = 0;
     let editMode = false;
     let casheaMode = false;
+
+    function abrirModalNuevoClientePedido() {
+      formNuevoClientePedido.reset();
+      modalNuevoClientePedido.classList.remove('hidden');
+      document.getElementById('nuevoClienteCedula').focus();
+    }
+
+    function cerrarModalNuevoClientePedido() {
+      modalNuevoClientePedido.classList.add('hidden');
+    }
+
+    btnNuevoClientePedido.addEventListener('click', abrirModalNuevoClientePedido);
+    document.getElementById('btnCerrarNuevoClientePedido').addEventListener('click', cerrarModalNuevoClientePedido);
+    document.getElementById('btnCancelarNuevoClientePedido').addEventListener('click', cerrarModalNuevoClientePedido);
+    document.getElementById('overlayNuevoClientePedido').addEventListener('click', cerrarModalNuevoClientePedido);
+
+    formNuevoClientePedido.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const originalText = btnGuardarNuevoClientePedido.textContent;
+      btnGuardarNuevoClientePedido.disabled = true;
+      btnGuardarNuevoClientePedido.textContent = 'Guardando...';
+
+      try {
+        const response = await fetch('?url=pedido&type=cliente', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(formNuevoClientePedido),
+        });
+        const result = await response.json();
+
+        if (!response.ok || result.status !== 'success' || !result.cliente) {
+          throw new Error(result.message || 'No se pudo registrar el cliente.');
+        }
+
+        const cliente = result.cliente;
+        const option = new Option(
+          `${cliente.nombre} (${cliente.cedula_cliente})`,
+          String(cliente.cedula_cliente),
+          true,
+          true
+        );
+        selectCliente.add(option);
+        selectCliente.value = String(cliente.cedula_cliente);
+
+        if (buscarClienteInput) buscarClienteInput.value = '';
+        [...selectCliente.options].forEach(item => { item.hidden = false; });
+        selectCliente.size = 1;
+
+        cerrarModalNuevoClientePedido();
+        formNuevoClientePedido.reset();
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Cliente registrado',
+          text: 'El cliente fue agregado y quedó seleccionado en el pedido.',
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'No se pudo registrar',
+          text: error.message || 'Ocurrió un error al registrar el cliente.',
+        });
+      } finally {
+        btnGuardarNuevoClientePedido.disabled = false;
+        btnGuardarNuevoClientePedido.textContent = originalText;
+      }
+    });
 
     function attachSelectFilter(input, select, button) {
       const openFilteredOptions = () => {

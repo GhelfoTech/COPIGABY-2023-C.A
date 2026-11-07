@@ -55,6 +55,52 @@ class casheaModel extends ConectDB {
     }
 
     /**
+     * Resumen de deuda pendiente por cliente.
+     * Solo considera créditos activos y saldos mayores que cero.
+     * El saldo proviene de cashea_credito.monto_pendiente, que se actualiza
+     * en cada abono mediante registrarPago().
+     */
+    public function getResumenDeudaPendiente(): array {
+        try {
+            $query = "SELECT
+                          p.cedula_cliente,
+                          COALESCE(c.nombre, 'Cliente no identificado') AS nombre_cliente,
+                          SUM(GREATEST(COALESCE(cc.monto_pendiente, 0), 0)) AS deuda_pendiente,
+                          COUNT(cc.id_cashea_credito) AS creditos_pendientes
+                      FROM cashea_credito cc
+                      INNER JOIN pedido p ON p.codigo_pedido = cc.id_pedido
+                      LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
+                      WHERE cc.estado = 1
+                        AND COALESCE(cc.monto_pendiente, 0) > 0
+                      GROUP BY p.cedula_cliente, c.nombre
+                      ORDER BY deuda_pendiente DESC, nombre_cliente ASC";
+            $stmt = $this->conex->prepare($query);
+            $stmt->execute();
+            $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $total = 0.0;
+            foreach ($clientes as &$cliente) {
+                $cliente['deuda_pendiente'] = round((float) $cliente['deuda_pendiente'], 2);
+                $cliente['creditos_pendientes'] = (int) $cliente['creditos_pendientes'];
+                $total += $cliente['deuda_pendiente'];
+            }
+            unset($cliente);
+
+            return [
+                'total_deuda' => round($total, 2),
+                'cantidad_clientes' => count($clientes),
+                'clientes' => $clientes,
+            ];
+        } catch (PDOException $e) {
+            return [
+                'total_deuda' => 0.0,
+                'cantidad_clientes' => 0,
+                'clientes' => [],
+            ];
+        }
+    }
+
+    /**
      * Obtiene un crédito por su identificador.
      */
     public function getCreditoById($id) {

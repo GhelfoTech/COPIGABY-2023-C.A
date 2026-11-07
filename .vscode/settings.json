@@ -1,5 +1,8 @@
 {
   "css.lint.unknownAtRules": "ignore",
+  "css.lint.validProperties": [
+    "ml-[260px]"
+  ],
   "scss.lint.unknownAtRules": "ignore",
   "tailwindCSS.includeLanguages": {
     "plaintext": "html",
@@ -15,4 +18,6 @@
   ],
   "html.validate.styles": false,
   "html.validate.scripts": false
+
+  
 }

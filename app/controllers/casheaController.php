@@ -93,5 +93,6 @@
     }
 
     $creditos = $object->getAllCreditos();
+    $resumenDeuda = $object->getResumenDeudaPendiente();
     $pedidosDisponibles = $object->getPedidosDisponibles();
     include 'app/views/cashea/viewCashea.php';
