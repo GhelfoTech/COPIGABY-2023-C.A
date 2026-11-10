@@ -1,11 +1,16 @@
 {
-    "name": "copigaby/sistema-informacion",
-    "description": "Sistema de información para CopiGaby 2023 C.A.",
+    "name": "elian/copigaby-2023-c.a",
     "type": "project",
-    "require": {},
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "App\\": "app/"
         }
-    }
+    },
+    "authors": [
+        {
+            "name": "eliannys"
+        }
+    ],
+    "require": {}
 }

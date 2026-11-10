@@ -26,10 +26,10 @@
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-black text-gray-800">Cashea</h1>
-          <p class="text-gray-500 text-sm font-semibold">Financiamiento de pedidos existentes</p>
+          <p class="text-gray-500 text-sm font-semibold">Consulta y administración de créditos Cashea</p>
         </div>
-        <button id="btnOpenModal" class="flex items-center gap-2 bg-linear-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+        <button id="btnOpenModal" type="button" class="flex items-center gap-2 rounded-xl bg-linear-to-r from-orange to-orange-dk px-6 py-3 font-black text-navy-dark shadow-lg transition-all hover:-translate-y-1">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
           AÑADIR CASHEA
         </button>
       </div>
@@ -149,35 +149,42 @@
     </main>
   </div>
 
-  <div id="modalCashea" class="fixed inset-0 z-150 hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Nuevo crédito Cashea</h3>
-          <button type="button" onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
+  <div id="modalCashea" class="fixed inset-0 z-[150] hidden overflow-y-auto" aria-hidden="true">
+    <div class="flex min-h-screen items-center justify-center px-4 py-8">
+      <button type="button" class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal(true)" aria-label="Cerrar formulario Cashea"></button>
+      <section role="dialog" aria-modal="true" aria-labelledby="modalCasheaTitle" class="relative w-full max-w-lg overflow-hidden rounded-[14px] bg-white shadow-xl">
+        <header class="flex items-center justify-between border-b bg-gray-50/50 px-6 py-4">
+          <h3 id="modalCasheaTitle" class="text-xl font-black text-navy-dark">Nuevo crédito Cashea</h3>
+          <button type="button" onclick="toggleModal(true)" aria-label="Cerrar" class="text-gray-400 hover:text-navy-dark">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </header>
         <form action="?url=cashea&type=register" method="POST" class="p-6" id="formCashea">
           <div class="mb-4">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Pedido existente <span class="text-red-500">*</span></label>
-            <select name="id_pedido" id="selectPedido" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+            <label for="selectPedido" class="mb-1 block text-xs font-black uppercase text-gray-400">Pedido existente <span class="text-red-500">*</span></label>
+            <select name="id_pedido" id="selectPedido" required class="w-full rounded-lg border bg-gray-50 px-4 py-2 text-sm font-bold outline-none focus:border-orange">
               <option value="">Seleccione un pedido</option>
-              <?php if (!empty($pedidosDisponibles)): foreach ($pedidosDisponibles as $p): ?>
-                <option value="<?= (int) $p['codigo_pedido'] ?>" data-total="<?= htmlspecialchars((string) $p['monto_total']) ?>">
-                  Pedido #<?= (int) $p['codigo_pedido'] ?> — <?= htmlspecialchars($p['nombre_cliente'] ?? 'Cliente') ?> — $<?= number_format((float) $p['monto_total'], 2, '.', ',') ?>
+              <?php foreach ($pedidosDisponibles as $pedidoDisponible): ?>
+                <option value="<?= (int) $pedidoDisponible['codigo_pedido'] ?>" data-total="<?= htmlspecialchars((string) $pedidoDisponible['monto_total'], ENT_QUOTES, 'UTF-8') ?>">
+                  Pedido #<?= (int) $pedidoDisponible['codigo_pedido'] ?> — <?= htmlspecialchars($pedidoDisponible['nombre_cliente'] ?? 'Cliente', ENT_QUOTES, 'UTF-8') ?> — $<?= number_format((float) $pedidoDisponible['monto_total'], 2, '.', ',') ?>
                 </option>
-              <?php endforeach; endif; ?>
+              <?php endforeach; ?>
             </select>
-            <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">Solo se listan pedidos activos sin crédito Cashea vigente.</p>
+            <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">Solo se muestran pedidos activos que aún no tienen un crédito Cashea activo.</p>
           </div>
-          <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="mb-4 grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
-              <input type="number" name="nivel_cashea" id="nivelCashea" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+              <label for="nivelCashea" class="mb-1 block text-xs font-black uppercase text-gray-400">Cantidad de cuotas <span class="text-red-500">*</span></label>
+              <select name="nivel_cashea" id="nivelCashea" required class="w-full rounded-lg border bg-gray-50 px-4 py-2 text-sm font-bold outline-none focus:border-orange">
+                <option value="">Seleccione cuotas</option>
+                <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
+                  <option value="<?= $nivel ?>"><?= $nivel ?> <?= $nivel === 1 ? 'cuota' : 'cuotas' ?></option>
+                <?php endfor; ?>
+              </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
-              <select name="porcentaje_inicial" id="porcentajeInicial" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+              <label for="porcentajeInicial" class="mb-1 block text-xs font-black uppercase text-gray-400">Porcentaje inicial <span class="text-red-500">*</span></label>
+              <select name="porcentaje_inicial" id="porcentajeInicial" required class="w-full rounded-lg border bg-gray-50 px-4 py-2 text-sm font-bold outline-none focus:border-orange">
                 <option value="">Seleccione inicial</option>
                 <?php foreach ([0, 10, 20, 30, 40, 50, 60] as $porcentaje): ?>
                   <option value="<?= $porcentaje ?>"><?= $porcentaje ?>%</option>
@@ -185,7 +192,7 @@
               </select>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4 mb-4">
+          <div class="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4">
             <div class="rounded-lg bg-white px-3 py-2">
               <p class="text-[0.65rem] font-black uppercase text-gray-400">Monto inicial</p>
               <p id="lblMontoInicial" class="mt-1 text-xl font-black text-navy-dark">$0.00</p>
@@ -195,16 +202,16 @@
               <p id="lblMontoFinanciado" class="mt-1 text-xl font-black text-orange-dk">$0.00</p>
             </div>
             <div class="col-span-2 rounded-lg bg-white px-3 py-2">
-              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas de referencia</p>
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Cuotas estimadas</p>
               <p id="lblCuotas" class="mt-1 text-sm font-bold text-navy-dark">Seleccione pedido, cuotas e inicial</p>
             </div>
           </div>
-          <div class="flex justify-end gap-3 mt-4">
-            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
+          <div class="flex justify-end gap-3">
+            <button type="button" onclick="toggleModal(true)" class="rounded-lg px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button type="submit" class="rounded-lg bg-navy-dark px-8 py-2 text-sm font-black text-white shadow-lg transition-all hover:bg-navy">Guardar crédito</button>
           </div>
         </form>
-      </div>
+      </section>
     </div>
   </div>
 
@@ -226,7 +233,7 @@
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Cantidad de Cuotas <span class="text-red-500">*</span></label>
-              <input type="number" name="nivel_cashea" id="edit_nivel" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+              <input type="number" name="nivel_cashea" id="edit_nivel" min="1" step="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Porcentaje inicial <span class="text-red-500">*</span></label>
@@ -329,26 +336,29 @@
   </div>
 
   <script>
-    const modal = document.getElementById('modalCashea');
-    const btnOpen = document.getElementById('btnOpenModal');
+    const modalCashea = document.getElementById('modalCashea');
+    const formCashea = document.getElementById('formCashea');
     const selectPedido = document.getElementById('selectPedido');
     const nivelCashea = document.getElementById('nivelCashea');
     const porcentajeInicial = document.getElementById('porcentajeInicial');
-    const formCashea = document.getElementById('formCashea');
-
-    const toggleModal = () => {
-      modal.classList.toggle('hidden');
-      if (!modal.classList.contains('hidden')) {
-        formCashea.reset();
-        calcularCashea();
-      }
-    };
-    btnOpen.onclick = toggleModal;
 
     function roundMoney(value) {
       const num = parseFloat(value);
       if (isNaN(num)) return 0;
       return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    function toggleModal(forceClose = false) {
+      if (forceClose) {
+        modalCashea.classList.add('hidden');
+        modalCashea.setAttribute('aria-hidden', 'true');
+        return;
+      }
+
+      formCashea.reset();
+      calcularCashea();
+      modalCashea.classList.remove('hidden');
+      modalCashea.setAttribute('aria-hidden', 'false');
     }
 
     function toCents(value) {
@@ -402,36 +412,29 @@
       return '$' + roundMoney(value).toFixed(2);
     }
 
-    function getMontoPedidoSeleccionado() {
-      const option = selectPedido.options[selectPedido.selectedIndex];
-      return option ? roundMoney(option.getAttribute('data-total') || '0') : 0;
-    }
-
-    function textoCuotas(nivel, financiado) {
-      if (!nivel || nivel < 1 || financiado <= 0) {
-        return 'Seleccione pedido, cuotas e inicial';
-      }
-      const montoCuota = roundMoney(financiado / nivel);
-      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota);
-    }
-
     function calcularCashea() {
-      const total = getMontoPedidoSeleccionado();
-      const percent = parseFloat(porcentajeInicial.value);
+      const option = selectPedido.options[selectPedido.selectedIndex];
+      const total = roundMoney(option ? option.dataset.total : 0);
+      const percent = parseInt(porcentajeInicial.value, 10);
       const nivel = parseInt(nivelCashea.value, 10);
-      const inicialValida = [0, 10, 20, 30, 40, 50, 60].includes(percent);
-      const montos = inicialValida ? calcularMontosCasheaJs(total, percent) : { inicial: 0, financiado: 0 };
-      const inicial = montos.inicial;
-      const financiado = total > 0 && inicialValida ? montos.financiado : 0;
+      const porcentajeValido = [0, 10, 20, 30, 40, 50, 60].includes(percent);
+      const montos = porcentajeValido
+        ? calcularMontosCasheaJs(total, percent)
+        : { inicial: 0, financiado: 0 };
+      const financiado = total > 0 && porcentajeValido ? montos.financiado : 0;
 
-      document.getElementById('lblMontoInicial').textContent = formatMoney(inicial);
+      document.getElementById('lblMontoInicial').textContent = formatMoney(montos.inicial);
       document.getElementById('lblMontoFinanciado').textContent = formatMoney(financiado);
       document.getElementById('lblCuotas').textContent = textoCuotas(nivel, financiado);
     }
 
-    nivelCashea.addEventListener('input', calcularCashea);
-    selectPedido.addEventListener('change', calcularCashea);
-    porcentajeInicial.addEventListener('change', calcularCashea);
+    function textoCuotas(nivel, financiado) {
+      if (!nivel || nivel < 1 || financiado <= 0) {
+        return 'Seleccione cuotas e inicial válidas';
+      }
+      const montoCuota = roundMoney(financiado / nivel);
+      return nivel + ' cuotas estimadas de ' + formatMoney(montoCuota);
+    }
 
     let currentRecord = null;
     let editTotal = 0;
@@ -531,6 +534,10 @@
 
     document.getElementById('edit_nivel').addEventListener('input', calcularEditCashea);
     document.getElementById('edit_porcentaje').addEventListener('change', calcularEditCashea);
+    document.getElementById('btnOpenModal').addEventListener('click', () => toggleModal());
+    selectPedido.addEventListener('change', calcularCashea);
+    nivelCashea.addEventListener('change', calcularCashea);
+    porcentajeInicial.addEventListener('change', calcularCashea);
 
     async function confirmDelete(id) {
       if (await showConfirm('¿Desea desactivar este crédito Cashea?', 'Desactivar crédito', 'Sí, desactivar')) {
@@ -541,7 +548,8 @@
           .then(r => r.json()).then(d => {
             if (d.status === 'success') location.reload();
             else showAlert(d.message || 'No se pudo desactivar el crédito.', 'error', 'Error');
-          });
+          })
+          .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el crédito.', 'error', 'Error'));
       }
     }
   </script>

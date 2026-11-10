@@ -31,12 +31,16 @@ trait CasheaTrait
         }
 
         $nivel = (int) ($datos['nivel_cashea'] ?? 0);
-        if ($nivel <= 0) {
-            return ['status' => 'error', 'message' => 'Debe indicar una cantidad de cuotas mayor a 0'];
+        if ($nivel < 1 || $nivel > 6) {
+            return ['status' => 'error', 'message' => 'La cantidad de cuotas debe estar entre 1 y 6'];
         }
 
         $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
-        if ($porcentajeInicial === null || !in_array((int) $porcentajeInicial, self::$porcentajesInicialValidos, true)) {
+        if (
+            !is_scalar($porcentajeInicial)
+            || !ctype_digit((string) $porcentajeInicial)
+            || !in_array((int) $porcentajeInicial, self::$porcentajesInicialValidos, true)
+        ) {
             return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje inicial válido'];
         }
 
@@ -65,6 +69,7 @@ trait CasheaTrait
             $pedido = $stmt->fetch(\PDO::FETCH_ASSOC);
             return $pedido ?: null;
         } catch (\PDOException $e) {
+            error_log('[CasheaTrait::obtenerPedidoActivo] ' . $e->getMessage());
             return null;
         }
     }
@@ -86,6 +91,7 @@ trait CasheaTrait
             }
             return (int) $stmt->fetchColumn() > 0;
         } catch (\PDOException $e) {
+            error_log('[CasheaTrait::pedidoYaTieneCredito] ' . $e->getMessage());
             return false;
         }
     }

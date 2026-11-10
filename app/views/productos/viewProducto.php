@@ -104,13 +104,11 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
-               <div class="flex gap-2 mb-2">
-                 <input type="search" id="buscarCategoriaProducto" aria-label="Buscar categoría por nombre" placeholder="Buscar categoría..." class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-                 <button type="button" id="btnBuscarCategoriaProducto" aria-label="Buscar categoría" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                 </button>
+               <div class="relative">
+                 <input type="search" id="buscarCategoriaProducto" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
                </div>
-               <select name="codigo_categoria" id="selectCategoriaProducto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+               <select name="codigo_categoria" id="selectCategoriaProducto" required class="hidden">
+                <option value="">Seleccione una categoría</option>
                 <?php foreach($categorias as $c): ?>
                   <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
                 <?php endforeach; ?>
@@ -134,12 +132,12 @@
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" id="new_stock_actual" value="0" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
+              <input type="number" name="stock_actual" id="new_stock_actual" value="0" step="1" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
               <span class="text-[0.65rem] font-bold text-gray-400">Solo se modifica desde Compras</span>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
-              <input type="number" name="stock_minimo" value="5" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+              <input type="number" name="stock_minimo" value="5" step="1" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
             </div>
           </div>
           <div class="flex justify-end gap-3 mt-8">
@@ -192,12 +190,12 @@
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
-              <input type="number" name="stock_actual" id="edit_stock_actual" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
+              <input type="number" name="stock_actual" id="edit_stock_actual" step="1" readonly class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-navy-dark font-bold cursor-not-allowed">
               <span class="text-[0.65rem] font-bold text-gray-400">Solo se modifica desde Compras</span>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Mínimo</label>
-              <input type="number" name="stock_minimo" id="edit_stock_minimo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+              <input type="number" name="stock_minimo" id="edit_stock_minimo" step="1" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
             </div>
             <div class="col-span-2 flex items-center gap-2 pt-4">
               <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
@@ -242,6 +240,7 @@
     </div>
   </div>
 
+  <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
   <script>
     const modal = document.getElementById('modalProduct');
     const btnOpen = document.getElementById('btnOpenModal');
@@ -254,42 +253,13 @@
     overlay.onclick = toggleModal;
 
     function resetCategoryFilter() {
-      const input = document.getElementById('buscarCategoriaProducto');
-      const select = document.getElementById('selectCategoriaProducto');
-      input.value = '';
-      [...select.options].forEach(option => { option.hidden = false; });
-      select.size = 1;
+      window.resetSearchableSelect(document.getElementById('selectCategoriaProducto'));
     }
 
-    function openFilteredCategories() {
-      const input = document.getElementById('buscarCategoriaProducto');
-      const select = document.getElementById('selectCategoriaProducto');
-      const query = input.value.trim().toLocaleLowerCase();
-      [...select.options].forEach(option => {
-        option.hidden = !option.textContent.toLocaleLowerCase().includes(query);
-      });
-      if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
-        select.value = '';
-      }
-      select.size = 5;
-      select.focus();
-      if (typeof select.showPicker === 'function') {
-        try {
-          select.showPicker();
-        } catch (error) {
-          // The focused list remains available if the browser blocks its native picker.
-        }
-      }
-    }
-
-    document.getElementById('btnBuscarCategoriaProducto').addEventListener('click', openFilteredCategories);
-    document.getElementById('buscarCategoriaProducto').addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        openFilteredCategories();
-      }
-    });
-    document.getElementById('selectCategoriaProducto').addEventListener('change', resetCategoryFilter);
+    window.attachSearchableSelect(
+      document.getElementById('buscarCategoriaProducto'),
+      document.getElementById('selectCategoriaProducto')
+    );
     document.getElementById('formProductoRegister').addEventListener('reset', () => window.setTimeout(resetCategoryFilter, 0));
     btnOpen.addEventListener('click', resetCategoryFilter);
 

@@ -122,21 +122,18 @@
            <div class="grid grid-cols-3 gap-4 mb-6">
              <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Cliente <span class="text-red-500">*</span></label>
-               <div class="flex gap-2 mb-2">
-                 <input type="search" id="buscarCliente" aria-label="Buscar cliente por nombre o cédula" placeholder="Buscar por nombre o cédula" class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-                 <button type="button" id="btnBuscarCliente" aria-label="Buscar cliente" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                 </button>
-               </div>
                <div class="flex gap-2">
-                 <select name="codigo_cliente" id="selectCliente" required class="min-w-0 flex-1 w-full px-4 py-2 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-orange/20 focus:border-orange outline-none font-bold">
+                 <div class="relative min-w-0 flex-1">
+                   <input type="search" id="buscarCliente" aria-label="Buscar cliente por nombre o cédula" placeholder="Escriba nombre o cédula" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+                 </div>
+                 <button type="button" id="btnNuevoClientePedido" title="Registrar un cliente nuevo" aria-label="Registrar un cliente nuevo" class="shrink-0 inline-flex items-center justify-center w-11 rounded-lg bg-orange text-navy-dark font-black text-2xl shadow-sm hover:bg-orange-dk transition-colors">+</button>
+               </div>
+               <select name="codigo_cliente" id="selectCliente" required class="hidden">
                   <option value="">— Seleccione un cliente —</option>
                   <?php foreach ($clientes as $cli): ?>
                     <option value="<?= htmlspecialchars((string) $cli['cedula_cliente']) ?>"><?= htmlspecialchars($cli['nombre']) ?> (<?= htmlspecialchars($cli['cedula_cliente']) ?>)</option>
                   <?php endforeach; ?>
-                 </select>
-                 <button type="button" id="btnNuevoClientePedido" title="Registrar un cliente nuevo" aria-label="Registrar un cliente nuevo" class="shrink-0 inline-flex items-center justify-center w-11 rounded-lg bg-orange text-navy-dark font-black text-2xl shadow-sm hover:bg-orange-dk transition-colors">+</button>
-               </div>
+               </select>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Fecha del Pedido <span class="text-red-500">*</span></label>
@@ -221,58 +218,13 @@
           <!-- Sección de Pago -->
           <div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 mb-6">
             <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider mb-4">Datos del Pago</h4>
-            <button type="button" id="btnCashea" class="mb-4 flex items-center gap-2 rounded-xl border border-orange/40 bg-white px-4 py-2.5 text-sm font-black text-navy-dark transition-colors hover:bg-orange/10">
-              <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-orange/15 text-orange-dk">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              </span>
-              <span id="btnCasheaLabel">Pagar con Cashea</span>
-            </button>
-            <div id="casheaConfig" class="mb-4 hidden rounded-xl border border-orange/30 bg-orange/5 p-4">
-              <div class="mb-3">
-                <p class="text-sm font-black text-navy-dark">Cashea</p>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label for="nivelCashea" class="mb-1 block text-xs font-black uppercase text-gray-500">Nivel</label>
-                  <select name="nivel_cashea" id="nivelCashea" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
-                    <option value="">Seleccione nivel</option>
-                    <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
-                      <option value="<?= $nivel ?>">Nivel <?= $nivel ?></option>
-                    <?php endfor; ?>
-                  </select>
-                </div>
-                <div>
-                  <label for="porcentajeInicial" class="mb-1 block text-xs font-black uppercase text-gray-500">Inicial</label>
-                  <select name="porcentaje_inicial" id="porcentajeInicial" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
-                    <option value="">Seleccione inicial</option>
-                    <?php foreach ([60, 50, 40, 30, 20, 10, 0] as $porcentajeInicial): ?>
-                      <option value="<?= $porcentajeInicial ?>"><?= $porcentajeInicial ?>%</option>
-                    <?php endforeach; ?>
-                  </select>
-                  <p class="mt-1 text-[0.65rem] font-semibold text-gray-500">El nivel sugiere una inicial; puedes cambiarla aquí.</p>
-                </div>
-                <div class="rounded-lg bg-white px-3 py-2">
-                  <p class="text-[0.65rem] font-black uppercase text-gray-400">Inicial que pagará</p>
-                  <p id="montoInicialCasheaBs" class="mt-1 text-xl font-black text-navy-dark">Bs 0.00</p>
-                  <p id="montoInicialCashea" class="text-xs font-semibold text-gray-500"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
-                </div>
-                <div class="rounded-lg bg-white px-3 py-2">
-                  <p class="text-[0.65rem] font-black uppercase text-gray-400">Saldo financiado</p>
-                  <p id="montoFinanciadoCasheaBs" class="mt-1 text-xl font-black text-orange-dk">Bs 0.00</p>
-                  <p id="montoFinanciadoCashea" class="text-xs font-semibold text-gray-500"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
-                </div>
-              </div>
-            </div>
             <div class="grid grid-cols-3 gap-4">
               <div id="wrapMetodoPago">
                 <label id="labelMetodoPago" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Método de Pago</label>
-                <div class="flex gap-2 mb-2">
-                  <input type="search" id="buscarMetodo" aria-label="Buscar método de pago por nombre" placeholder="Buscar método por nombre" class="min-w-0 flex-1 px-3 py-2 bg-white border rounded-lg outline-none text-sm focus:border-orange">
-                  <button type="button" id="btnBuscarMetodo" aria-label="Buscar método de pago" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
+                <div class="relative">
+                  <input type="search" id="buscarMetodo" aria-label="Buscar método de pago por nombre" placeholder="Escriba el método de pago" class="w-full px-3 py-2 bg-white border rounded-lg outline-none text-sm focus:border-orange">
                 </div>
-                <select name="codigo_metodo" id="selectMetodo" required class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
+                <select name="codigo_metodo" id="selectMetodo" required class="hidden">
                   <option value="">— Seleccione —</option>
                   <?php foreach ($metodos as $m): ?>
                     <option value="<?= $m['codigo_metodo'] ?>"><?= htmlspecialchars($m['nombre_metodo']) ?></option>
@@ -301,6 +253,64 @@
           </div>
         </form>
       </div>
+    </div>
+  </div>
+
+  <div id="casheaConfig" class="fixed inset-0 z-[170] hidden overflow-y-auto" aria-hidden="true">
+    <div class="flex min-h-screen items-center justify-center p-4">
+      <button type="button" class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-cashea-cancel aria-label="Cerrar configuración Cashea"></button>
+      <section role="dialog" aria-modal="true" aria-labelledby="casheaModalTitle" class="relative w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl">
+        <header class="flex items-center justify-between border-b bg-gray-50/50 px-6 py-4">
+          <h3 id="casheaModalTitle" class="text-xl font-black text-navy-dark">Añadir Cashea a este pedido</h3>
+          <button type="button" data-cashea-cancel aria-label="Cerrar" class="text-gray-400 hover:text-navy-dark">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </header>
+        <div class="space-y-4 p-6">
+          <div>
+            <label for="casheaPedidoActual" class="mb-1 block text-xs font-black uppercase text-gray-500">Pedido asociado</label>
+            <input id="casheaPedidoActual" type="text" disabled value="Este pedido" class="w-full rounded-lg border bg-gray-100 px-4 py-2 text-sm font-bold text-navy-dark disabled:cursor-not-allowed disabled:opacity-100">
+            <p id="casheaPedidoResumen" class="mt-1 text-xs font-semibold text-gray-500">El pedido actual se asociará automáticamente al guardar.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="nivelCashea" class="mb-1 block text-xs font-black uppercase text-gray-500">Cantidad de cuotas</label>
+              <select name="nivel_cashea" id="nivelCashea" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
+                <option value="">Seleccione cuotas</option>
+                <?php for ($nivel = 1; $nivel <= 6; $nivel++): ?>
+                  <option value="<?= $nivel ?>"><?= $nivel ?> cuotas</option>
+                <?php endfor; ?>
+              </select>
+            </div>
+            <div>
+              <label for="porcentajeInicial" class="mb-1 block text-xs font-black uppercase text-gray-500">Porcentaje inicial</label>
+              <select name="porcentaje_inicial" id="porcentajeInicial" class="w-full rounded-lg border bg-white px-3 py-2 font-bold outline-none focus:border-orange">
+                <option value="">Seleccione inicial</option>
+                <?php foreach ([60, 50, 40, 30, 20, 10, 0] as $porcentajeInicial): ?>
+                  <option value="<?= $porcentajeInicial ?>"><?= $porcentajeInicial ?>%</option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+          <p class="text-xs font-semibold text-gray-500">El pedido y su total se tomarán automáticamente del formulario actual.</p>
+          <div class="grid grid-cols-2 gap-3 rounded-xl border border-orange/30 bg-orange/5 p-4">
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Inicial</p>
+              <p id="montoInicialCashea" class="mt-1 text-lg font-black text-navy-dark"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
+              <p id="montoInicialCasheaBs" class="text-xs font-semibold text-gray-500">Bs 0.00</p>
+            </div>
+            <div class="rounded-lg bg-white px-3 py-2">
+              <p class="text-[0.65rem] font-black uppercase text-gray-400">Saldo financiado</p>
+              <p id="montoFinanciadoCashea" class="mt-1 text-lg font-black text-orange-dk"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?>0.00</p>
+              <p id="montoFinanciadoCasheaBs" class="text-xs font-semibold text-gray-500">Bs 0.00</p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" data-cashea-cancel class="rounded-lg px-5 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100">Cancelar</button>
+            <button type="button" id="btnConfirmarCashea" class="rounded-lg bg-navy-dark px-6 py-2 text-sm font-black text-white hover:bg-navy">Usar Cashea</button>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -393,6 +403,7 @@
     </div>
   </div>
 
+  <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
   <script>
     const productos = <?= json_encode($productos, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
     const servicios = <?= json_encode($servicios, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
@@ -420,12 +431,13 @@
     const codigoPedidoEdit = document.getElementById('codigoPedidoEdit');
     const selectMetodo = document.getElementById('selectMetodo');
     const wrapMetodoPago = document.getElementById('wrapMetodoPago');
-    const labelMetodoPago = document.getElementById('labelMetodoPago');
-    const btnCashea = document.getElementById('btnCashea');
     const casheaConfig = document.getElementById('casheaConfig');
+    document.body.appendChild(casheaConfig);
+    casheaConfig.style.zIndex = '10000';
     const inputEsCashea = document.getElementById('inputEsCashea');
     const nivelCashea = document.getElementById('nivelCashea');
     const porcentajeInicialCashea = document.getElementById('porcentajeInicial');
+    const buscarMetodoInput = document.getElementById('buscarMetodo');
     const wrapBanco = document.getElementById('wrapBanco');
     const wrapReferencia = document.getElementById('wrapReferencia');
     const selectIva = document.getElementById('selectIva');
@@ -440,6 +452,8 @@
     const btnNuevoClientePedido = document.getElementById('btnNuevoClientePedido');
     const btnGuardarClienteRegistro = document.getElementById('btnGuardarClienteRegistro');
     const buscarClienteInput = document.getElementById('buscarCliente');
+    window.attachSearchableSelect(buscarClienteInput, selectCliente);
+    window.attachSearchableSelect(buscarMetodoInput, selectMetodo);
 
     let itemCounter = 0;
     let editMode = false;
@@ -498,9 +512,7 @@
         }
 
         selectCliente.value = cedulaCliente;
-        if (buscarClienteInput) buscarClienteInput.value = '';
-        [...selectCliente.options].forEach(option => { option.hidden = false; });
-        selectCliente.size = 1;
+        window.syncSearchableSelect(selectCliente);
 
         cerrarModalNuevoClientePedido();
         formClienteRegistro.reset();
@@ -523,48 +535,6 @@
         btnGuardarClienteRegistro.textContent = originalText;
       }
     });
-
-    function attachSelectFilter(input, select, button) {
-      const openFilteredOptions = () => {
-        const query = input.value.trim().toLocaleLowerCase();
-        [...select.options].forEach((option, index) => {
-          option.hidden = index !== 0 && !option.textContent.toLocaleLowerCase().includes(query);
-        });
-        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
-          select.value = '';
-        }
-        select.size = 5;
-        select.focus();
-        if (typeof select.showPicker === 'function') {
-          try {
-            select.showPicker();
-          } catch (error) {
-            // Focused list remains available if the browser blocks its native picker.
-          }
-        }
-      };
-
-      button.addEventListener('click', openFilteredOptions);
-      input.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          openFilteredOptions();
-        }
-      });
-      select.addEventListener('change', () => {
-        input.value = '';
-        [...select.options].forEach(option => { option.hidden = false; });
-        select.size = 1;
-      });
-      formPedido.addEventListener('reset', () => window.setTimeout(() => {
-        input.value = '';
-        select.size = 1;
-        [...select.options].forEach(option => { option.hidden = false; });
-      }, 0));
-    }
-
-    attachSelectFilter(document.getElementById('buscarCliente'), selectCliente, document.getElementById('btnBuscarCliente'));
-    attachSelectFilter(document.getElementById('buscarMetodo'), selectMetodo, document.getElementById('btnBuscarMetodo'));
 
     function roundMoney(value) {
       const num = parseFloat(value);
@@ -633,7 +603,6 @@
       formPedido.action = '?url=pedido&type=register';
       modalPedidoTitulo.textContent = 'Nuevo Pedido';
       btnSubmitPedido.textContent = 'Registrar Pedido';
-      btnCashea.classList.remove('hidden');
       formPedido.reset();
       setCasheaMode(false);
       document.getElementById('tasaActualInput').value = formatMoney(tasaActual);
@@ -658,7 +627,7 @@
 
     function toggleCamposBanco() {
       const metodo = parseInt(selectMetodo.value, 10);
-      const requiere = METODOS_CON_BANCO.includes(metodo);
+      const requiere = !casheaMode && METODOS_CON_BANCO.includes(metodo);
       wrapBanco.classList.toggle('hidden', !requiere);
       wrapReferencia.classList.toggle('hidden', !requiere);
       document.getElementById('selectBanco').required = requiere;
@@ -668,31 +637,23 @@
     function setCasheaMode(enabled) {
       casheaMode = enabled && !editMode;
       inputEsCashea.value = casheaMode ? '1' : '0';
-      casheaConfig.classList.toggle('hidden', !casheaMode);
-      document.getElementById('btnCasheaLabel').textContent = casheaMode
-        ? 'Quitar pago con Cashea'
-        : 'Pagar con Cashea';
-      labelMetodoPago.textContent = casheaMode ? 'Método de pago de la inicial' : 'Método de Pago';
       nivelCashea.required = casheaMode;
       porcentajeInicialCashea.required = casheaMode;
-      updateCasheaPaymentFields();
       if (!casheaMode) {
         nivelCashea.value = '';
         porcentajeInicialCashea.value = '';
+        casheaConfig.classList.add('hidden');
+        casheaConfig.setAttribute('aria-hidden', 'true');
       }
+      toggleCamposBanco();
       updateCasheaAmounts(computeFinancialTotals().total);
     }
 
-    function updateCasheaPaymentFields() {
-      const esInicialCero = casheaMode && porcentajeInicialCashea.value === '0';
-      wrapMetodoPago.classList.toggle('hidden', esInicialCero);
-      selectMetodo.required = !esInicialCero;
-      if (esInicialCero) {
-        selectMetodo.value = '';
-        toggleCamposBanco();
-      } else {
-        toggleCamposBanco();
-      }
+    function updateCasheaPedidoResumen(total) {
+      const cliente = selectCliente.selectedOptions[0];
+      const nombreCliente = cliente && cliente.value ? cliente.textContent.trim() : 'Seleccione primero un cliente';
+      document.getElementById('casheaPedidoResumen').textContent =
+        `${nombreCliente} · Total: ${simboloMoneda}${formatMoney(total)}`;
     }
 
     function updateCasheaAmounts(total) {
@@ -705,6 +666,44 @@
       document.getElementById('montoInicialCashea').textContent = simboloMoneda + formatMoney(initial);
       document.getElementById('montoFinanciadoCasheaBs').textContent = 'Bs ' + formatMoney(financed * tasa);
       document.getElementById('montoFinanciadoCashea').textContent = simboloMoneda + formatMoney(financed);
+      updateCasheaPedidoResumen(total);
+    }
+
+    function esMetodoCashea() {
+      const option = selectMetodo.selectedOptions[0];
+      return Boolean(option && option.value && option.textContent.trim().toLocaleUpperCase().includes('CASHEA'));
+    }
+
+    function abrirModalCashea() {
+      updateCasheaAmounts(computeFinancialTotals().total);
+      casheaConfig.classList.remove('hidden');
+      casheaConfig.setAttribute('aria-hidden', 'false');
+    }
+
+    function cancelarCashea() {
+      selectMetodo.value = '';
+      window.syncSearchableSelect(selectMetodo);
+      setCasheaMode(false);
+    }
+
+    function cambiarMetodoPago() {
+      if (esMetodoCashea()) {
+        if (editMode) {
+          selectMetodo.value = '';
+          window.syncSearchableSelect(selectMetodo);
+          Swal.fire({ icon: 'warning', title: 'No disponible', text: 'Cashea solo se puede seleccionar al registrar un pedido nuevo.' });
+          return;
+        }
+        setCasheaMode(true);
+        abrirModalCashea();
+        return;
+      }
+
+      if (casheaMode) {
+        setCasheaMode(false);
+      } else {
+        toggleCamposBanco();
+      }
     }
 
     function buildOptions(tipo) {
@@ -766,6 +765,7 @@
       row.querySelector('.item-precio').value = '';
       row.querySelector('.item-cant').value = '1';
       row.querySelector('.item-search').value = '';
+      window.refreshSearchableSelect(row.querySelector('.item-select'));
       row.querySelector('.item-subtotal').textContent = simboloMoneda + '0.00';
       row.querySelector('.item-unidad-info').textContent = '';
       row.querySelector('.item-stock-info').textContent = '';
@@ -851,13 +851,10 @@
           </select>
         </td>
          <td class="px-2 py-2">
-           <div class="flex gap-1 mb-1">
-             <input type="search" class="item-search min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border rounded-lg text-xs focus:border-orange outline-none" placeholder="Buscar..." aria-label="Buscar producto o servicio">
-             <button type="button" class="item-search-button shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk" aria-label="Buscar producto o servicio" title="Buscar">
-               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-             </button>
+           <div class="relative mb-1">
+             <input type="search" class="item-search w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs focus:border-orange outline-none" placeholder="Escriba producto o servicio" aria-label="Buscar producto o servicio">
            </div>
-           <select class="item-select w-full px-2 py-1.5 bg-gray-50 border rounded-lg text-xs font-bold focus:border-orange outline-none" required></select>
+           <select class="item-select hidden" required></select>
            <div class="item-unidad-info text-[0.65rem] text-gray-500 font-semibold mt-1"></div>
            <div class="item-stock-info text-[0.65rem] text-orange font-semibold mt-0.5"></div>
          </td>
@@ -867,7 +864,7 @@
           </select>
         </td>
         <td class="px-2 py-2">
-          <input type="number" step="0.01" min="0.01" value="1" class="item-cant w-full px-2 py-1.5 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none">
+          <input type="number" step="1" min="1" value="1" class="item-cant w-full px-2 py-1.5 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none">
         </td>
         <td class="px-2 py-2">
           <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
@@ -882,7 +879,7 @@
 
       itemsBody.appendChild(tr);
       bindItemRow(tr);
-      attachSelectFilter(tr.querySelector('.item-search'), tr.querySelector('.item-select'), tr.querySelector('.item-search-button'));
+      window.attachSearchableSelect(tr.querySelector('.item-search'), tr.querySelector('.item-select'));
       populateUnidadSelect(tr);
 
       if (prefill) {
@@ -890,6 +887,7 @@
         tr.querySelector('.item-select').innerHTML = buildOptions(prefill.tipo);
          const selectVal = prefill.tipo === 'producto' ? prefill.codigo_producto : prefill.codigo_servicio;
          tr.querySelector('.item-select').value = String(selectVal);
+        window.syncSearchableSelect(tr.querySelector('.item-select'));
          const unidadCell = tr.querySelector('.item-unidad-cell');
          if (unidadCell) unidadCell.classList.toggle('hidden', prefill.tipo !== 'producto');
          const unidadSel = tr.querySelector('.item-unidad');
@@ -948,6 +946,22 @@
       if (!selectCliente.value) {
         Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Seleccione un cliente.' });
         return;
+      }
+
+      if (casheaMode) {
+        const nivel = parseInt(nivelCashea.value, 10);
+        const porcentaje = parseInt(porcentajeInicialCashea.value, 10);
+        if (
+          !esMetodoCashea()
+          || !Number.isInteger(nivel)
+          || nivel < 1
+          || nivel > 6
+          || !PORCENTAJES_INICIAL_CASHEA.includes(porcentaje)
+          || !casheaConfig.classList.contains('hidden')
+        ) {
+          Swal.fire({ icon: 'warning', title: 'Configuración incompleta', text: 'Confirme una configuración válida de Cashea antes de guardar el pedido.' });
+          return;
+        }
       }
 
       const collected = collectItemsFromRows();
@@ -1109,13 +1123,13 @@
 
           resetFormPedido();
           editMode = true;
-          btnCashea.classList.add('hidden');
           codigoPedidoEdit.value = h.codigo_pedido;
           formPedido.action = '?url=pedido&type=update';
           modalPedidoTitulo.textContent = 'Modificar Pedido #' + String(h.codigo_pedido).padStart(4, '0');
           btnSubmitPedido.textContent = 'Actualizar Pedido';
 
           document.getElementById('selectCliente').value = String(h.cedula_cliente);
+          window.syncSearchableSelect(selectCliente);
           setIvaSeleccionado(h.codigo_IVA || ivaDefaultCodigo);
 
           const tasaPed = parseFloat(h.tasa_actual ?? h.tasa_cambio ?? tasaActual);
@@ -1136,6 +1150,7 @@
 
           if (h.codigo_metodo) {
             selectMetodo.value = String(h.codigo_metodo);
+            window.syncSearchableSelect(selectMetodo);
           }
           toggleCamposBanco();
 
@@ -1193,7 +1208,25 @@
       });
     }
 
-    btnCashea.addEventListener('click', () => setCasheaMode(!casheaMode));
+    selectMetodo.addEventListener('change', cambiarMetodoPago);
+    selectCliente.addEventListener('change', () => updateCasheaPedidoResumen(computeFinancialTotals().total));
+    casheaConfig.querySelectorAll('[data-cashea-cancel]').forEach(button => {
+      button.addEventListener('click', cancelarCashea);
+    });
+    document.getElementById('btnConfirmarCashea').addEventListener('click', () => {
+      const nivel = parseInt(nivelCashea.value, 10);
+      const porcentaje = parseInt(porcentajeInicialCashea.value, 10);
+      if (!selectCliente.value) {
+        Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Seleccione un cliente antes de configurar Cashea.' });
+        return;
+      }
+      if (nivel < 1 || nivel > 6 || !PORCENTAJES_INICIAL_CASHEA.includes(porcentaje)) {
+        Swal.fire({ icon: 'warning', title: 'Configuración incompleta', text: 'Seleccione la cantidad de cuotas y el porcentaje inicial.' });
+        return;
+      }
+      casheaConfig.classList.add('hidden');
+      casheaConfig.setAttribute('aria-hidden', 'true');
+    });
     nivelCashea.addEventListener('change', () => {
       const inicialSugeridaPorNivel = {
         '1': '60',
@@ -1204,14 +1237,11 @@
         '6': '0',
       };
       porcentajeInicialCashea.value = inicialSugeridaPorNivel[nivelCashea.value] || '';
-      updateCasheaPaymentFields();
       updateCasheaAmounts(computeFinancialTotals().total);
     });
     porcentajeInicialCashea.addEventListener('change', () => {
-      updateCasheaPaymentFields();
       updateCasheaAmounts(computeFinancialTotals().total);
     });
-    selectMetodo.addEventListener('change', toggleCamposBanco);
     if (selectIva) {
       selectIva.addEventListener('change', recalcTotal);
     }

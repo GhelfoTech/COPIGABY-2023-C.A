@@ -434,7 +434,8 @@ INSERT INTO `metodo_pago` (`codigo_metodo`, `nombre_metodo`, `estado`) VALUES
 (562, 'EFECTIVO', 1),
 (563, 'TRANSFERENCIA', 1),
 (564, 'PAGO MOVIL', 1),
-(565, 'USTD', 1);
+(565, 'USTD', 1),
+(566, 'CASHEA', 1);
 
 -- --------------------------------------------------------
 
@@ -1030,7 +1031,7 @@ ALTER TABLE `iva`
 -- AUTO_INCREMENT de la tabla `metodo_pago`
 --
 ALTER TABLE `metodo_pago`
-  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=566;
+  MODIFY `codigo_metodo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=567;
 
 --
 -- AUTO_INCREMENT de la tabla `moneda`

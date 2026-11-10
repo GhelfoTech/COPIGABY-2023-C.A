@@ -96,13 +96,11 @@
           <div class="col-span-2 flex gap-2 items-end">
               <div class="flex-1">
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor <span class="text-red-500">*</span></label>
-              <div class="flex gap-2 mb-2">
-                <input type="search" id="buscarProveedorCompra" aria-label="Buscar proveedor por razón social" placeholder="Buscar proveedor por nombre" class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-                <button type="button" id="btnBuscarProveedorCompra" aria-label="Buscar proveedor" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
+              <div class="relative">
+                <input type="search" id="buscarProveedorCompra" aria-label="Buscar proveedor por razón social" placeholder="Escriba el nombre del proveedor" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
               </div>
-              <select name="codigo_proveedor" id="selectProveedorCompra" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              <select name="codigo_proveedor" id="selectProveedorCompra" required class="hidden">
+                <option value="">Seleccione un proveedor</option>
                 <?php foreach($proveedores as $p): ?>
                   <option value="<?= $p['codigo_proveedor'] ?>"><?= $p['razon_social'] ?></option>
                 <?php endforeach; ?>
@@ -126,13 +124,10 @@
               <div class="grid grid-cols-4 gap-2 items-end">
                   <div class="col-span-1">
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Producto</label>
-                      <div class="flex gap-1 mb-1">
-                          <input type="search" id="buscarProductoCompra" aria-label="Buscar producto por nombre" placeholder="Buscar producto..." class="min-w-0 flex-1 px-2 py-1.5 bg-white border rounded-lg text-xs focus:border-orange outline-none">
-                          <button type="button" id="btnBuscarProductoCompra" aria-label="Buscar producto" title="Buscar" class="shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                          </button>
+                      <div class="relative mb-1">
+                          <input type="search" id="buscarProductoCompra" aria-label="Buscar producto por nombre" placeholder="Escriba el nombre del producto" class="w-full px-2 py-1.5 bg-white border rounded-lg text-xs focus:border-orange outline-none">
                       </div>
-                      <select id="selProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange">
+                      <select id="selProd" class="hidden">
                           <option value="">Seleccione...</option>
                           <?php foreach($productos as $pr): ?>
                               <option value="<?= $pr['codigo_producto'] ?>" data-costo="<?= $pr['costo'] ?>"><?= htmlspecialchars($pr['nombre_producto']) ?></option>
@@ -147,7 +142,7 @@
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cantidad</label>
-                      <input type="number" id="cantProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange" value="1" min="1">
+                      <input type="number" id="cantProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange" value="1" min="1" step="1">
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Costo Unit. ($)</label>
@@ -193,13 +188,11 @@
           <input type="hidden" name="idcompra" id="edit_id">
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor</label>
-            <div class="flex gap-2 mb-2">
-              <input type="search" id="buscarProveedorEdicion" aria-label="Buscar proveedor por razón social" placeholder="Buscar proveedor por nombre" class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-              <button type="button" id="btnBuscarProveedorEdicion" aria-label="Buscar proveedor" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-              </button>
+            <div class="relative">
+              <input type="search" id="buscarProveedorEdicion" aria-label="Buscar proveedor por razón social" placeholder="Escriba el nombre del proveedor" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
             </div>
-            <select name="codigo_proveedor" id="edit_proveedor" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+            <select name="codigo_proveedor" id="edit_proveedor" required class="hidden">
+              <option value="">Seleccione un proveedor</option>
               <?php foreach($proveedores as $p): ?>
                 <option value="<?= $p['codigo_proveedor'] ?>"><?= htmlspecialchars($p['razon_social']) ?></option>
               <?php endforeach; ?>
@@ -343,13 +336,11 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Categoría <span class="text-red-500">*</span></label>
-            <div class="flex gap-2 mb-2">
-              <input type="search" id="buscarCategoriaCompra" aria-label="Buscar categoría por nombre" placeholder="Buscar categoría..." class="min-w-0 flex-1 px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-              <button type="button" id="btnBuscarCategoriaCompra" aria-label="Buscar categoría" title="Buscar" class="shrink-0 px-3 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-              </button>
+            <div class="relative">
+              <input type="search" id="buscarCategoriaCompra" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
             </div>
-            <select name="codigo_categoria" id="selectCategoriaCompra" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            <select name="codigo_categoria" id="selectCategoriaCompra" required class="hidden">
+              <option value="">Seleccione una categoría</option>
               <?php foreach($categorias as $categoria): ?>
                 <option value="<?= $categoria['codigo_categoria'] ?>"><?= htmlspecialchars($categoria['nombre_categoria']) ?></option>
               <?php endforeach; ?>
@@ -365,7 +356,7 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Stock Mínimo</label>
-            <input type="number" name="stock_minimo" min="0" value="5" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+            <input type="number" name="stock_minimo" min="0" value="5" step="1" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
           </div>
           <div class="flex items-end justify-end gap-3 col-span-1">
             <button type="button" onclick="closeProductoModal()" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -376,9 +367,10 @@
     </div>
   </div>
 
+  <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
   <script>
     function openProductoModal() {
-      resetSelectFilter(document.getElementById('buscarCategoriaCompra'), document.getElementById('selectCategoriaCompra'));
+      resetSelectFilter(document.getElementById('selectCategoriaCompra'));
       document.getElementById('modalProductoCompra').classList.remove('hidden');
     }
 
@@ -437,87 +429,43 @@
       closeProveedorModal();
     });
 
-    function resetSelectFilter(input, select) {
-      input.value = '';
-      [...select.options].forEach(option => { option.hidden = false; });
-      select.size = 1;
+    function resetSelectFilter(select) {
+      window.resetSearchableSelect(select);
     }
 
-    function attachSelectFilter(input, select, button, form) {
-      const resetFilter = () => {
-        resetSelectFilter(input, select);
-      };
-
-      const openFilteredOptions = () => {
-        const query = input.value.trim().toLocaleLowerCase();
-        [...select.options].forEach(option => {
-          option.hidden = option.value !== '' && !option.textContent.toLocaleLowerCase().includes(query);
-        });
-        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
-          select.value = '';
-        }
-        select.size = 5;
-        select.focus();
-        if (typeof select.showPicker === 'function') {
-          try {
-            select.showPicker();
-          } catch (error) {
-            // The focused list remains available if the browser blocks its native picker.
-          }
-        }
-      };
-
-      button.addEventListener('click', openFilteredOptions);
-      input.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          openFilteredOptions();
-        }
-      });
-      select.addEventListener('change', resetFilter);
-      form.addEventListener('reset', () => window.setTimeout(resetFilter, 0));
-    }
-
-    attachSelectFilter(
+    window.attachSearchableSelect(
       document.getElementById('buscarProveedorCompra'),
-      document.getElementById('selectProveedorCompra'),
-      document.getElementById('btnBuscarProveedorCompra'),
-      document.getElementById('formCompra')
+      document.getElementById('selectProveedorCompra')
     );
-    attachSelectFilter(
+    window.attachSearchableSelect(
       document.getElementById('buscarProveedorEdicion'),
-      document.getElementById('edit_proveedor'),
-      document.getElementById('btnBuscarProveedorEdicion'),
-      document.querySelector('#modalEditCompra form')
+      document.getElementById('edit_proveedor')
     );
-    attachSelectFilter(
+    window.attachSearchableSelect(
       document.getElementById('buscarProductoCompra'),
-      document.getElementById('selProd'),
-      document.getElementById('btnBuscarProductoCompra'),
-      document.getElementById('formCompra')
+      document.getElementById('selProd')
     );
-    attachSelectFilter(
+    window.attachSearchableSelect(
       document.getElementById('buscarCategoriaCompra'),
-      document.getElementById('selectCategoriaCompra'),
-      document.getElementById('btnBuscarCategoriaCompra'),
-      document.getElementById('formProductoCompra')
+      document.getElementById('selectCategoriaCompra')
     );
 
     const modal = document.getElementById('modalCompra');
     const btnOpen = document.getElementById('btnOpenModal');
     const toggleModal = () => {
       if (modal.classList.contains('hidden')) {
-        resetSelectFilter(document.getElementById('buscarProveedorCompra'), document.getElementById('selectProveedorCompra'));
-        resetSelectFilter(document.getElementById('buscarProductoCompra'), document.getElementById('selProd'));
+        resetSelectFilter(document.getElementById('selectProveedorCompra'));
+        resetSelectFilter(document.getElementById('selProd'));
       }
       modal.classList.toggle('hidden');
     };
     btnOpen.onclick = toggleModal;
 
     function openEditModal(id, proveedor, factura, fecha, total, estado) {
-      resetSelectFilter(document.getElementById('buscarProveedorEdicion'), document.getElementById('edit_proveedor'));
+      resetSelectFilter(document.getElementById('edit_proveedor'));
       document.getElementById('edit_id').value = id;
       document.getElementById('edit_proveedor').value = proveedor;
+      window.syncSearchableSelect(document.getElementById('edit_proveedor'));
       document.getElementById('edit_factura').value = factura;
       document.getElementById('edit_fecha').value = fecha;
       document.getElementById('edit_total').value = total;
@@ -612,10 +560,10 @@
         const cantInput = document.getElementById('cantProd');
         const costInput = document.getElementById('costProd');
         
-        const cant = parseFloat(cantInput.value);
+        const cant = Number(cantInput.value);
         const cost = parseFloat(costInput.value);
 
-        if(!sel.value || isNaN(cant) || cant <= 0 || isNaN(cost) || cost < 0) {
+        if(!sel.value || !Number.isInteger(cant) || cant <= 0 || isNaN(cost) || cost < 0) {
             showAlert('Por favor complete los datos del producto (Cantidad y Costo deben ser positivos).', 'warning', 'Datos incompletos');
             return;
         }

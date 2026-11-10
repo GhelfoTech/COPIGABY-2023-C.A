@@ -14,11 +14,11 @@
     if (isset($_GET['type'])) {
 
         if ($_GET['type'] === 'register') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pedido'])) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $resultado = $object->addCredito([
-                    'id_pedido'           => (int) $_POST['id_pedido'],
+                    'id_pedido'           => (int) ($_POST['id_pedido'] ?? 0),
                     'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
-                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
+                    'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? '',
                 ]);
                 $_SESSION['cashea_flash'] = is_array($resultado)
                     ? $resultado
@@ -31,8 +31,8 @@
         }
 
         elseif ($_GET['type'] === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'])) {
-                $resultado = $object->updateCredito((int) $_POST['id_cashea_credito'], [
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $resultado = $object->updateCredito((int) ($_POST['id_cashea_credito'] ?? 0), [
                     'id_pedido'           => (int) ($_POST['id_pedido'] ?? 0),
                     'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
                     'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
@@ -49,8 +49,8 @@
         }
 
         elseif ($_GET['type'] === 'main') {
-            if (isset($_POST['deleteCashea'])) {
-                $result = $object->deleteCredito((int) $_POST['id_cashea_credito']);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteCashea'])) {
+                $result = $object->deleteCredito((int) ($_POST['id_cashea_credito'] ?? 0));
                 header('Content-Type: application/json');
                 echo json_encode($result);
                 exit();
@@ -63,7 +63,7 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'], $_POST['monto_abonado'])) {
                 $resultado = $object->registrarPago(
                     (int) $_POST['id_cashea_credito'],
-                    (float) $_POST['monto_abonado']
+                    is_numeric($_POST['monto_abonado']) ? (float) $_POST['monto_abonado'] : 0
                 );
                 $_SESSION['cashea_flash'] = is_array($resultado)
                     ? $resultado

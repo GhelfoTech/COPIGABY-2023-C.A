@@ -106,13 +106,10 @@
              </div>
              <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
                <div class="flex-1 min-w-[200px]">
-                 <div class="flex gap-1 mb-1">
-                   <input type="search" id="buscarProductoServicio_register" aria-label="Buscar producto o insumo por nombre" placeholder="Buscar producto / insumo..." class="min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
-                   <button type="button" id="btnBuscarProductoServicio_register" aria-label="Buscar producto o insumo" title="Buscar" class="shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                   </button>
+                 <div class="relative mb-1">
+                   <input type="search" id="buscarProductoServicio_register" aria-label="Buscar producto o insumo por nombre" placeholder="Escriba el nombre del producto / insumo" class="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
                  </div>
-               <select id="selProducto_register" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+               <select id="selProducto_register" class="hidden">
                  <option value="">Seleccione un producto / insumo…</option>
                  <?php foreach ($productos as $p): ?>
                    <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
@@ -171,13 +168,10 @@
              </div>
              <div class="flex flex-wrap md:flex-nowrap gap-2 items-stretch">
                <div class="flex-1 min-w-[200px]">
-                 <div class="flex gap-1 mb-1">
-                   <input type="search" id="buscarProductoServicio_edit" aria-label="Buscar producto o insumo por nombre" placeholder="Buscar producto / insumo..." class="min-w-0 flex-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
-                   <button type="button" id="btnBuscarProductoServicio_edit" aria-label="Buscar producto o insumo" title="Buscar" class="shrink-0 px-2 bg-orange text-navy-dark rounded-lg hover:bg-orange-dk">
-                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="m20 20-4-4" stroke-width="2" stroke-linecap="round"/></svg>
-                   </button>
+                 <div class="relative mb-1">
+                   <input type="search" id="buscarProductoServicio_edit" aria-label="Buscar producto o insumo por nombre" placeholder="Escriba el nombre del producto / insumo" class="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none text-xs">
                  </div>
-               <select id="selProducto_edit" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm">
+               <select id="selProducto_edit" class="hidden">
                  <option value="">Seleccione un producto / insumo…</option>
                  <?php foreach ($productos as $p): ?>
                    <option value="<?= $p['codigo_producto'] ?>" data-nombre="<?= htmlspecialchars($p['nombre_producto']) ?>" data-stock="<?= (int)($p['stock_actual'] ?? 0) ?>">
@@ -238,6 +232,7 @@
     </div>
   </div>
 
+  <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
   <script>
     const toggleModal = (id) => document.getElementById(id).classList.toggle('hidden');
 
@@ -248,44 +243,8 @@
     function attachMaterialFilter(mode) {
       const input = document.getElementById('buscarProductoServicio_' + mode);
       const select = document.getElementById('selProducto_' + mode);
-      const button = document.getElementById('btnBuscarProductoServicio_' + mode);
-      const form = select.closest('form');
-
-      const resetFilter = () => {
-        input.value = '';
-        [...select.options].forEach(option => { option.hidden = false; });
-        select.size = 1;
-      };
-
-      const showFilteredOptions = () => {
-        const query = input.value.trim().toLocaleLowerCase();
-        [...select.options].forEach((option, index) => {
-          option.hidden = index !== 0 && !option.textContent.toLocaleLowerCase().includes(query);
-        });
-        if (select.selectedOptions.length && select.selectedOptions[0].hidden) {
-          select.value = '';
-        }
-        select.size = 5;
-        select.focus();
-        if (typeof select.showPicker === 'function') {
-          try {
-            select.showPicker();
-          } catch (error) {
-            // The focused list remains available if the browser blocks its native picker.
-          }
-        }
-      };
-
-      button.addEventListener('click', showFilteredOptions);
-      input.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          showFilteredOptions();
-        }
-      });
-      select.addEventListener('change', resetFilter);
-      form.addEventListener('reset', () => window.setTimeout(resetFilter, 0));
-      return resetFilter;
+      window.attachSearchableSelect(input, select);
+      return () => window.resetSearchableSelect(select);
     }
 
     const resetMaterialFilters = {
@@ -308,8 +267,12 @@
 
       const nombre = sel.options[sel.selectedIndex].dataset.nombre;
       const stockDisp = parseInt(sel.options[sel.selectedIndex].dataset.stock || '0', 10);
-      const cantidadRaw = parseFloat(cant.value);
-      const cantidad = isNaN(cantidadRaw) ? 0 : cantidadRaw;
+      const cantidadRaw = Number(cant.value);
+      if (!Number.isInteger(cantidadRaw) || cantidadRaw < 0) {
+        showAlert('La cantidad debe ser un número entero igual o mayor que cero.', 'warning', 'Cantidad no válida');
+        return;
+      }
+      const cantidad = cantidadRaw;
 
       const arr = mode === 'register' ? materialesRegister : materialesEdit;
       const existente = arr.find(m => String(m.codigo_producto) === String(codigo));
@@ -320,7 +283,7 @@
       }
 
       renderMateriales(mode);
-      sel.value = '';
+      window.resetSearchableSelect(sel);
       cant.value = 1;
     }
 

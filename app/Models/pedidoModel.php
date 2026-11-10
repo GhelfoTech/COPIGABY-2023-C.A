@@ -437,6 +437,18 @@ class pedidoModel extends ConectDB {
 
     public function getMetodosActivos() {
         try {
+            $stmtCashea = $this->conex->prepare(
+                "SELECT codigo_metodo FROM metodo_pago
+                 WHERE UPPER(TRIM(nombre_metodo)) = 'CASHEA'
+                 LIMIT 1"
+            );
+            $stmtCashea->execute();
+            if ($stmtCashea->fetchColumn() === false) {
+                $this->conex->prepare(
+                    "INSERT INTO metodo_pago (nombre_metodo, estado) VALUES ('CASHEA', 1)"
+                )->execute();
+            }
+
             $stmt = $this->conex->prepare('SELECT codigo_metodo, nombre_metodo FROM metodo_pago WHERE estado = 1 ORDER BY nombre_metodo ASC');
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -105,7 +105,7 @@
            </div>
            <div class="mb-4">
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Unidades por Caja <span class="text-xs text-gray-400 font-normal">(ej: 1 para Metro/Unidad, 12 para Docena, 500 para Resma)</span></label>
-              <input type="number" name="cantidad_unidad" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm">
+              <input type="number" name="cantidad_unidad" min="1" step="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm">
            </div>
           <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -136,7 +136,7 @@
            </div>
            <div class="mb-4">
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Unidades por Caja</label>
-              <input type="number" name="cantidad_unidad" id="edit_cantidad_unidad" min="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm">
+              <input type="number" name="cantidad_unidad" id="edit_cantidad_unidad" min="1" step="1" value="1" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm">
            </div>
           <div class="flex items-center gap-2 mb-4">
               <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">

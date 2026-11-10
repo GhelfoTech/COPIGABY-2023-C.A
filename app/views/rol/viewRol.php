@@ -79,6 +79,77 @@
           </tbody>
         </table>
       </div>
+
+      <?php
+        $nombresModulosPermisos = [
+          'dashboard' => 'Inicio',
+          'pedido' => 'Pedidos',
+          'cliente' => 'Clientes',
+          'cashea' => 'Cashea',
+          'compra' => 'Compras',
+          'producto' => 'Productos',
+          'categoria' => 'Categorías',
+          'servicio' => 'Servicios',
+          'proveedor' => 'Proveedores',
+          'reporte' => 'Reportes',
+          'user' => 'Usuarios',
+          'rol' => 'Roles',
+          'metodopago' => 'Métodos de pago',
+          'moneda' => 'Monedas',
+          'iva' => 'IVA',
+          'medida' => 'Unidades de medida',
+          'empresa' => 'Empresa',
+        ];
+        $permisosUsuario = defined('PERMISOS_EMPLEADO') ? PERMISOS_EMPLEADO : [];
+        $accionesPermiso = [
+          'add' => 'Añadir',
+          'consultar' => 'Consultar',
+          'update' => 'Modificar',
+          'delete' => 'Eliminar',
+        ];
+      ?>
+      <section class="mt-8" aria-labelledby="resumenPermisosTitle">
+        <div class="mb-4">
+          <h2 id="resumenPermisosTitle" class="text-xl font-black text-navy-dark">Permisos de los usuarios principales</h2>
+          <p class="mt-1 text-sm font-semibold text-gray-500">Resumen de los accesos para Administrador y Empleado.</p>
+        </div>
+        <div class="grid gap-5 lg:grid-cols-2">
+          <article class="overflow-hidden rounded-xl border border-orange/30 bg-white shadow-sm">
+            <header class="border-b border-orange/20 bg-orange/5 px-5 py-4">
+              <h3 class="font-black uppercase tracking-wide text-navy-dark">Usuario <span class="text-sm font-bold normal-case text-gray-500">(Empleado)</span></h3>
+              <p class="mt-1 text-xs font-semibold text-gray-500">Puede añadir y consultar en los módulos autorizados.</p>
+            </header>
+            <ul class="divide-y divide-gray-100 px-5">
+              <?php foreach ($permisosUsuario as $modulo => $acciones): ?>
+                <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <span class="text-sm font-bold text-navy-dark"><?= htmlspecialchars($nombresModulosPermisos[$modulo] ?? ucfirst($modulo), ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="flex flex-wrap gap-2">
+                    <?php foreach ($acciones as $accion): ?>
+                      <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700"><?= htmlspecialchars($accionesPermiso[$accion] ?? ucfirst($accion), ENT_QUOTES, 'UTF-8') ?></span>
+                    <?php endforeach; ?>
+                  </span>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </article>
+
+          <article class="overflow-hidden rounded-xl border border-blue-200 bg-white shadow-sm">
+            <header class="border-b border-blue-100 bg-blue-50 px-5 py-4">
+              <h3 class="font-black uppercase tracking-wide text-navy-dark">Administrador</h3>
+              <p class="mt-1 text-xs font-semibold text-gray-500">Acceso completo a todos los módulos y acciones del sistema.</p>
+            </header>
+            <ul class="grid gap-x-4 px-5 sm:grid-cols-2">
+              <?php foreach ($nombresModulosPermisos as $nombreModulo): ?>
+                <li class="flex items-center gap-2 border-b border-gray-100 py-3 text-sm font-bold text-navy-dark">
+                  <span class="text-blue-600" aria-hidden="true">✓</span>
+                  <?= htmlspecialchars($nombreModulo, ENT_QUOTES, 'UTF-8') ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+            <p class="px-5 pb-4 text-xs font-semibold text-blue-700">Añadir · Consultar · Modificar · Eliminar</p>
+          </article>
+        </div>
+      </section>
     </main>
   </div>
 
