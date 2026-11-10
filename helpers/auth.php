@@ -30,6 +30,7 @@ const PERMISOS_EMPLEADO = [
     'producto'  => ['add', 'consultar'],
     'categoria' => ['add', 'consultar'],
     'servicio'  => ['add', 'consultar'],
+    'reporte'   => ['consultar'],
 ];
 
 /**
