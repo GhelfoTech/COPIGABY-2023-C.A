@@ -34,13 +34,6 @@
         </button>
       </div>
 
-      <?php if (!empty($_SESSION['compra_error'])): ?>
-        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-          <?= htmlspecialchars($_SESSION['compra_error']) ?>
-        </div>
-        <?php unset($_SESSION['compra_error']); ?>
-      <?php endif; ?>
-
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
         <table data-datatable="true" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
@@ -176,67 +169,48 @@
     </div>
   </div>
 
-  <div id="modalEditCompra" class="fixed inset-0 z-[150] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
-      <div class="relative bg-white shadow-xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
-        <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-          <h3 class="text-xl font-black text-navy-dark">Editar Compra</h3>
-          <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
-        <form action="?url=compra&type=update" method="POST" class="p-6 grid grid-cols-2 gap-4">
-          <input type="hidden" name="idcompra" id="edit_id">
-          <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Proveedor</label>
-            <div class="relative">
-              <input type="search" id="buscarProveedorEdicion" aria-label="Buscar proveedor por razón social" placeholder="Escriba el nombre del proveedor" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
-            </div>
-            <select name="codigo_proveedor" id="edit_proveedor" required class="hidden">
-              <option value="">Seleccione un proveedor</option>
-              <?php foreach($proveedores as $p): ?>
-                <option value="<?= $p['codigo_proveedor'] ?>"><?= htmlspecialchars($p['razon_social']) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Factura #</label>
-            <input type="text" name="numero_factura_proveedor" id="edit_factura" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" maxlength="10">
-          </div>
-          <div>
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Fecha de Compra</label>
-            <input type="date" name="fecha_compra" id="edit_fecha" required max="<?= date('Y-m-d') ?>" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto Total de Factura ($)</label>
-            <input type="number" step="0.01" name="monto_total" id="edit_total" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-lg">
-          </div>
-          <div class="col-span-2 flex items-center gap-3">
-            <input type="checkbox" name="estado" id="edit_estado" class="w-4 h-4 accent-orange">
-            <span class="text-sm font-bold text-gray-700">Compra Activa</span>
-          </div>
-          <div class="col-span-2 flex justify-end gap-3 mt-4">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">CANCELAR</button>
-            <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">ACTUALIZAR</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-3xl animate-fade-up overflow-hidden">
         <div class="p-8">
-          <div class="flex justify-between items-start border-b pb-6 mb-6">
-            <div>
-              <h3 class="text-2xl font-black text-navy-dark uppercase tracking-tighter" id="det_factura">FACTURA #000</h3>
-              <p class="text-gray-400 font-bold text-sm" id="det_fecha">Fecha: --/--/----</p>
+          <div class="border-b pb-6 mb-6">
+            <div id="detalleCabeceraLectura" class="flex justify-between items-start">
+              <div>
+                <h3 class="text-2xl font-black text-navy-dark uppercase tracking-tighter" id="det_factura">FACTURA #000</h3>
+                <p class="text-gray-400 font-bold text-sm" id="det_fecha">Fecha: --/--/----</p>
+                <p class="mt-2 text-xs font-black uppercase text-gray-500" id="det_estado">Estado: --</p>
+              </div>
+              <div class="text-right">
+                 <p class="text-xs font-black text-orange uppercase tracking-widest">Proveedor</p>
+                 <h4 class="font-black text-navy-light uppercase" id="det_proveedor">Nombre Proveedor</h4>
+                 <p class="text-gray-500 text-xs font-bold" id="det_rif">RIF: --</p>
+              </div>
             </div>
-            <div class="text-right">
-               <p class="text-xs font-black text-orange uppercase tracking-widest">Proveedor</p>
-               <h4 class="font-black text-navy-light uppercase" id="det_proveedor">Nombre Proveedor</h4>
-               <p class="text-gray-500 text-xs font-bold" id="det_rif">RIF: --</p>
+
+            <div id="detalleCabeceraEdicion" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label for="buscarProveedorEdicion" class="block text-xs font-black text-gray-500 uppercase mb-1">Proveedor</label>
+                <input type="search" id="buscarProveedorEdicion" aria-label="Buscar proveedor por razón social" placeholder="Escriba el nombre del proveedor" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+                <select id="edit_proveedor" required class="hidden">
+                  <option value="">Seleccione un proveedor</option>
+                  <?php foreach($proveedores as $p): ?>
+                    <option value="<?= $p['codigo_proveedor'] ?>"><?= htmlspecialchars($p['razon_social']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div>
+                <label for="edit_factura" class="block text-xs font-black text-gray-500 uppercase mb-1">Factura #</label>
+                <input type="text" id="edit_factura" required maxlength="10" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              </div>
+              <div>
+                <label for="edit_fecha" class="block text-xs font-black text-gray-500 uppercase mb-1">Fecha de Compra</label>
+                <input type="date" id="edit_fecha" required max="<?= date('Y-m-d') ?>" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+              </div>
+              <label class="sm:col-span-2 flex items-center gap-3 text-sm font-bold text-gray-700">
+                <input type="checkbox" id="edit_estado" class="w-4 h-4 accent-orange">
+                Compra Activa
+              </label>
             </div>
           </div>
           
@@ -260,10 +234,12 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer bg-gray-50 px-8 py-4 flex justify-end gap-3 border-t">
+        <div class="modal-footer bg-gray-50 px-8 py-4 flex flex-wrap justify-end gap-3 border-t">
+          <button type="button" id="btnGuardarEdicionCompra" class="hidden px-5 py-2 text-sm font-black text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Guardar cambios</button>
+          <button type="button" id="btnCancelarEdicionCompra" class="hidden px-5 py-2 text-sm font-black text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">Cancelar</button>
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" id="btnCerrarDetalle" onclick="closeDetalleModal()" class="bg-navy-dark text-white font-black px-8 py-2 rounded-lg text-xs uppercase hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
@@ -297,7 +273,7 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-            <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm">
+            <?php $telefonoFieldConfig = ['id' => 'telefonoProveedorCompra']; include 'app/views/layouts/telefonoField.php'; ?>
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
@@ -336,10 +312,13 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Categoría <span class="text-red-500">*</span></label>
-            <div class="relative">
-              <input type="search" id="buscarCategoriaCompra" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+            <div class="flex gap-2">
+              <div class="relative min-w-0 flex-1">
+                <input type="search" id="buscarCategoriaCompra" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+              </div>
+              <button type="button" onclick="openQuickCategoryModal('selectCategoriaCompra')" aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
             </div>
-            <select name="codigo_categoria" id="selectCategoriaCompra" required class="hidden">
+            <select name="codigo_categoria" id="selectCategoriaCompra" data-categoria-select required class="hidden">
               <option value="">Seleccione una categoría</option>
               <?php foreach($categorias as $categoria): ?>
                 <option value="<?= $categoria['codigo_categoria'] ?>"><?= htmlspecialchars($categoria['nombre_categoria']) ?></option>
@@ -367,7 +346,9 @@
     </div>
   </div>
 
+  <?php include 'app/views/categorias/modalQuickCategory.php'; ?>
   <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
+  <script src="assets/js/quick-category.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/quick-category.js') ?>"></script>
   <script>
     function openProductoModal() {
       resetSelectFilter(document.getElementById('selectCategoriaCompra'));
@@ -381,20 +362,23 @@
     document.getElementById('formProductoCompra').addEventListener('submit', async function(event) {
       event.preventDefault();
       const formulario = event.currentTarget;
-      const respuesta = await fetch(formulario.action, { method: 'POST', body: new FormData(formulario) });
-      const resultado = await respuesta.json();
+      try {
+        const respuesta = await fetch(formulario.action, { method: 'POST', body: new FormData(formulario) });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok || resultado.status !== 'success') {
+          throw new Error(resultado.message || 'No se pudo registrar el producto');
+        }
 
-      if (resultado.status !== 'success') {
-        showAlert(resultado.message || 'No se pudo registrar el producto', 'error', 'Error');
-        return;
+        const nombreProducto = formulario.elements['nombre_producto'].value.trim().toUpperCase();
+        const opcion = new Option(nombreProducto, resultado.codigo_producto, true, true);
+        document.getElementById('selProd').add(opcion);
+        document.getElementById('selProd').dispatchEvent(new Event('change'));
+        formulario.reset();
+        closeProductoModal();
+        showAlert('El producto fue registrado y quedó seleccionado.', 'success', 'Producto registrado');
+      } catch (error) {
+        showAlert(error.message || 'No se pudo registrar el producto.', 'error', 'Error');
       }
-
-      const nombreProducto = formulario.elements['nombre_producto'].value.trim().toUpperCase();
-      const opcion = new Option(nombreProducto, resultado.codigo_producto, true, true);
-      document.getElementById('selProd').add(opcion);
-      document.getElementById('selProd').dispatchEvent(new Event('change'));
-      formulario.reset();
-      closeProductoModal();
     });
 
     function openProveedorModal() {
@@ -409,24 +393,27 @@
       event.preventDefault();
 
       const formulario = event.currentTarget;
-      const respuesta = await fetch(formulario.action, {
-        method: 'POST',
-        body: new FormData(formulario)
-      });
-      const resultado = await respuesta.json();
+      try {
+        const respuesta = await fetch(formulario.action, {
+          method: 'POST',
+          body: new FormData(formulario)
+        });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok || resultado.status !== 'success') {
+          throw new Error(resultado.message || 'No se pudo registrar el proveedor');
+        }
 
-      if (resultado.status !== 'success') {
-        showAlert(resultado.message || 'No se pudo registrar el proveedor', 'error', 'Error');
-        return;
+        const razonSocial = formulario.elements['razon_social'].value.trim().toUpperCase();
+        const selector = document.getElementById('selectProveedorCompra');
+        const opcion = new Option(razonSocial, resultado.codigo_proveedor, true, true);
+        selector.add(opcion);
+        selector.dispatchEvent(new Event('change'));
+        formulario.reset();
+        closeProveedorModal();
+        showAlert('El proveedor fue registrado y quedó seleccionado.', 'success', 'Proveedor registrado');
+      } catch (error) {
+        showAlert(error.message || 'No se pudo registrar el proveedor.', 'error', 'Error');
       }
-
-      const razonSocial = formulario.elements['razon_social'].value.trim().toUpperCase();
-      const selector = document.getElementById('selectProveedorCompra');
-      const opcion = new Option(razonSocial, resultado.codigo_proveedor, true, true);
-      selector.add(opcion);
-      selector.dispatchEvent(new Event('change'));
-      formulario.reset();
-      closeProveedorModal();
     });
 
     function resetSelectFilter(select) {
@@ -461,32 +448,15 @@
     };
     btnOpen.onclick = toggleModal;
 
-    function openEditModal(id, proveedor, factura, fecha, total, estado) {
-      resetSelectFilter(document.getElementById('edit_proveedor'));
-      document.getElementById('edit_id').value = id;
-      document.getElementById('edit_proveedor').value = proveedor;
-      window.syncSearchableSelect(document.getElementById('edit_proveedor'));
-      document.getElementById('edit_factura').value = factura;
-      document.getElementById('edit_fecha').value = fecha;
-      document.getElementById('edit_total').value = total;
-      document.getElementById('edit_estado').checked = (estado == 1);
-      document.getElementById('modalEditCompra').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-      document.getElementById('modalEditCompra').classList.add('hidden');
-    }
-
     async function confirmDelete(id) {
       if(await showConfirm('¿Desea anular este registro de compra? Esta acción no se puede deshacer.', 'Anular compra', 'Sí, anular')) {
         const f = new FormData();
         f.append('deleteCompra', 'true');
         f.append('idcompra', id);
         fetch('?url=compra&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar la anulación', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Compra anulada correctamente.', 'No se pudo anular la compra.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para anular la compra.', 'error', 'Error de conexión'));
       }
     }
 
@@ -496,13 +466,45 @@
       document.getElementById('modalDetalle').classList.add('hidden');
     }
 
-    function viewDetails(id) {
-      fetch(`?url=compra&type=details&id=${id}`)
-      .then(r => r.json())
-      .then(data => {
+    function setPurchaseEditMode(enabled) {
+      document.querySelectorAll('#tablaDetallesItems [data-purchase-quantity]').forEach(input => {
+        input.readOnly = !enabled;
+        input.classList.toggle('bg-gray-100', !enabled);
+        input.classList.toggle('bg-white', enabled);
+      });
+
+      const active = parseInt(detailContext.estado, 10) === 1;
+      document.getElementById('detalleCabeceraLectura').classList.toggle('hidden', enabled);
+      document.getElementById('detalleCabeceraEdicion').classList.toggle('hidden', !active || !enabled);
+      document.getElementById('btnGuardarEdicionCompra').classList.toggle('hidden', !active || !enabled);
+      document.getElementById('btnCancelarEdicionCompra').classList.toggle('hidden', !active || !enabled);
+      document.getElementById('btnDetalleEditar').classList.toggle('hidden', !active || enabled);
+      document.getElementById('btnDetalleEliminar').classList.toggle('hidden', !active || enabled);
+      document.getElementById('btnCerrarDetalle').classList.toggle('hidden', enabled);
+    }
+
+    function actualizarTotalesDetalleCompra() {
+      let total = 0;
+      document.querySelectorAll('#tablaDetallesItems [data-purchase-quantity]').forEach(input => {
+        const quantity = Number(input.value);
+        const cost = Number(input.dataset.purchaseCost);
+        const subtotal = Number.isFinite(quantity * cost) ? quantity * cost : 0;
+        input.closest('tr').querySelector('[data-purchase-subtotal]').textContent = `$${subtotal.toFixed(2)}`;
+        total += subtotal;
+      });
+      document.getElementById('det_total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    async function viewDetails(id) {
+      try {
+        const response = await fetch(`?url=compra&type=details&id=${id}`);
+        const data = await response.json();
+        if (!response.ok || !data.header || !Array.isArray(data.items)) {
+          throw new Error('No se pudieron cargar los detalles de la compra.');
+        }
+
           const h = data.header;
           const items = data.items;
-          if (!h) return;
 
           detailContext = {
             id: h.codigo_compra,
@@ -517,32 +519,121 @@
           document.getElementById('det_fecha').innerText = `Fecha de Compra: ${h.fecha_compra}`;
           document.getElementById('det_proveedor').innerText = h.razon_social;
           document.getElementById('det_rif').innerText = `RIF: ${h.rif_proveedor} | Tel: ${h.telefono}`;
+          document.getElementById('det_estado').innerText = Number(h.estado) === 1 ? 'Compra Activa' : 'Compra Anulada';
           document.getElementById('det_usuario').innerText = h.nombre_usuario;
           document.getElementById('det_total').innerText = `$${parseFloat(h.monto_total).toFixed(2)}`;
+          resetSelectFilter(document.getElementById('edit_proveedor'));
+          document.getElementById('edit_proveedor').value = h.codigo_proveedor;
+          window.syncSearchableSelect(document.getElementById('edit_proveedor'));
+          document.getElementById('edit_factura').value = h.numero_factura_proveedor;
+          document.getElementById('edit_fecha').value = h.fecha_compra;
+          document.getElementById('edit_estado').checked = Number(h.estado) === 1;
 
           const tbody = document.querySelector('#tablaDetallesItems tbody');
           tbody.innerHTML = '';
           items.forEach(it => {
-            tbody.innerHTML += `
-              <tr>
-                <td class="px-4 py-3 uppercase">${it.nombre_producto}</td>
-                <td class="px-4 py-3 text-center">${it.cantidad}</td>
-                <td class="px-4 py-3 text-right">$${parseFloat(it.costo_unitario).toFixed(2)}</td>
-                <td class="px-4 py-3 text-right font-black text-orange-dk">$${parseFloat(it.subtotal).toFixed(2)}</td>
-              </tr>`;
+            const row = document.createElement('tr');
+            const name = document.createElement('td');
+            name.className = 'px-4 py-3 uppercase';
+            name.textContent = it.nombre_producto;
+
+            const quantityCell = document.createElement('td');
+            quantityCell.className = 'px-4 py-3 text-center';
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'number';
+            quantityInput.min = '1';
+            quantityInput.step = '1';
+            quantityInput.value = String(it.cantidad);
+            quantityInput.readOnly = true;
+            quantityInput.dataset.purchaseQuantity = String(it.codigo_detalle_compra);
+            quantityInput.dataset.purchaseCost = String(it.costo_unitario);
+            quantityInput.setAttribute('aria-label', `Cantidad de ${it.nombre_producto}`);
+            quantityInput.className = 'w-24 rounded border bg-gray-100 px-2 py-1 text-center';
+            quantityInput.addEventListener('input', actualizarTotalesDetalleCompra);
+            quantityCell.appendChild(quantityInput);
+
+            const cost = document.createElement('td');
+            cost.className = 'px-4 py-3 text-right';
+            cost.textContent = `$${parseFloat(it.costo_unitario).toFixed(2)}`;
+            const subtotal = document.createElement('td');
+            subtotal.className = 'px-4 py-3 text-right font-black text-orange-dk';
+            subtotal.dataset.purchaseSubtotal = '';
+            subtotal.textContent = `$${parseFloat(it.subtotal).toFixed(2)}`;
+
+            row.append(name, quantityCell, cost, subtotal);
+            tbody.appendChild(row);
           });
 
-          const activa = parseInt(h.estado, 10) === 1;
-          document.getElementById('btnDetalleEditar').classList.toggle('hidden', !activa);
-          document.getElementById('btnDetalleEliminar').classList.toggle('hidden', !activa);
-          document.getElementById('btnDetalleEditar').onclick = () => {
-            closeDetalleModal();
-            openEditModal(detailContext.id, detailContext.proveedor, detailContext.factura, detailContext.fecha, detailContext.total, detailContext.estado);
-          };
+          document.getElementById('btnDetalleEditar').onclick = () => setPurchaseEditMode(true);
           document.getElementById('btnDetalleEliminar').onclick = () => confirmDelete(detailContext.id);
-
+          document.getElementById('btnCancelarEdicionCompra').onclick = () => viewDetails(detailContext.id);
+          document.getElementById('btnGuardarEdicionCompra').onclick = guardarEdicionCompra;
+          setPurchaseEditMode(false);
           document.getElementById('modalDetalle').classList.remove('hidden');
-      });
+          return true;
+      } catch (error) {
+        showAlert(error.message || 'No se pudieron cargar los detalles de la compra.', 'error', 'Error');
+        return false;
+      }
+    }
+
+    async function guardarEdicionCompra() {
+      const inputs = [...document.querySelectorAll('#tablaDetallesItems [data-purchase-quantity]')];
+      const items = inputs.map(input => ({
+        codigo_detalle_compra: Number(input.dataset.purchaseQuantity),
+        cantidad: Number(input.value)
+      }));
+      const invalidInput = inputs.find(input => !Number.isInteger(Number(input.value)) || Number(input.value) < 1);
+      if (invalidInput) {
+        invalidInput.focus();
+        showAlert('Todas las cantidades deben ser números enteros mayores a cero.', 'warning', 'Cantidad no válida');
+        return;
+      }
+
+      const proveedor = document.getElementById('edit_proveedor');
+      const factura = document.getElementById('edit_factura');
+      const fecha = document.getElementById('edit_fecha');
+      if (!proveedor.value) {
+        showAlert('Seleccione un proveedor para la compra.', 'warning', 'Proveedor requerido');
+        return;
+      }
+      if (!factura.value.trim()) {
+        factura.focus();
+        showAlert('Indique el número de factura.', 'warning', 'Factura requerida');
+        return;
+      }
+      if (!fecha.value || !fecha.checkValidity()) {
+        fecha.reportValidity();
+        return;
+      }
+
+      const idCompra = detailContext.id;
+      const button = document.getElementById('btnGuardarEdicionCompra');
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = 'Guardando...';
+      try {
+        const formData = new FormData();
+        formData.append('idcompra', String(idCompra));
+        formData.append('items', JSON.stringify(items));
+        formData.append('codigo_proveedor', proveedor.value);
+        formData.append('numero_factura_proveedor', factura.value.trim());
+        formData.append('fecha_compra', fecha.value);
+        formData.append('estado', document.getElementById('edit_estado').checked ? '1' : '0');
+        const response = await fetch('?url=compra&type=update_details', { method: 'POST', body: formData });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+          throw new Error(result.message || 'No se pudo actualizar la compra.');
+        }
+
+        await showAlert(result.message, 'success', 'Compra actualizada');
+        window.location.reload();
+      } catch (error) {
+        showAlert(error.message || 'No se pudo actualizar la compra.', 'error', 'Error');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
     }
 
     // Lógica dinámica para gestionar los productos de la compra
@@ -576,10 +667,10 @@
             costo: cost
         });
 
-        // Limpiar campos para la siguiente entrada
-        sel.value = "";
         cantInput.value = "1";
-        costInput.value = "";
+        sel.value = '';
+        window.syncSearchableSelect(sel);
+        costInput.value = '';
         
         renderTable();
     }
@@ -588,13 +679,37 @@
         const body = document.querySelector('#tablaTemp tbody');
         body.innerHTML = '';
         total = 0;
-        items.forEach((it) => {
+        items.forEach((it, index) => {
             const sub = it.cantidad * it.costo;
             total += sub;
-            body.innerHTML += `<tr><td class="px-4 py-2">${it.nombre}</td><td class="px-4 py-2">${it.cantidad}</td><td class="px-4 py-2">$${it.costo.toFixed(2)}</td><td class="px-4 py-2 text-right font-black">$${sub.toFixed(2)}</td></tr>`;
+            body.innerHTML += `<tr><td class="px-4 py-2">${it.nombre}</td><td class="px-4 py-2"><input type="number" min="1" step="1" required value="${it.cantidad}" data-item-quantity="${index}" aria-label="Cantidad de ${it.nombre}" class="w-20 rounded border px-2 py-1 text-center"></td><td class="px-4 py-2">$${it.costo.toFixed(2)}</td><td data-item-subtotal class="px-4 py-2 text-right font-black">$${sub.toFixed(2)}</td></tr>`;
         });
         document.getElementById('txtTotal').innerText = `$${total.toFixed(2)}`;
     }
+
+    const tablaItemsCompra = document.querySelector('#tablaTemp tbody');
+    tablaItemsCompra.addEventListener('input', function(event) {
+      const input = event.target.closest('[data-item-quantity]');
+      if (!input) return;
+      const index = Number(input.dataset.itemQuantity);
+      const quantity = Number(input.value);
+      if (!Number.isInteger(quantity) || quantity <= 0 || !items[index]) return;
+
+      items[index].cantidad = quantity;
+      const subtotal = quantity * items[index].costo;
+      input.closest('tr').querySelector('[data-item-subtotal]').textContent = `$${subtotal.toFixed(2)}`;
+      total = items.reduce((sum, item) => sum + item.cantidad * item.costo, 0);
+      document.getElementById('txtTotal').innerText = `$${total.toFixed(2)}`;
+    });
+
+    tablaItemsCompra.addEventListener('change', function(event) {
+      const input = event.target.closest('[data-item-quantity]');
+      if (!input) return;
+      const index = Number(input.dataset.itemQuantity);
+      if (!Number.isInteger(Number(input.value)) || Number(input.value) <= 0) {
+        input.value = String(items[index].cantidad);
+      }
+    });
 
     async function submitCompra() {
         if(items.length === 0) {
@@ -632,6 +747,7 @@
                 throw new Error(resultado.message || 'No se pudo registrar la compra');
             }
 
+            await showAlert(resultado.message || 'La compra fue registrada correctamente.', 'success', 'Compra registrada');
             window.location.replace('?url=compra');
         } catch (error) {
             clearTimeout(timeout);
@@ -647,6 +763,6 @@
         }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

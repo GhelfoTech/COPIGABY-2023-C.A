@@ -91,7 +91,8 @@
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre de Usuario <span class="text-red-500">*</span></label>
                      <input type="text" name="nombre_usuario" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="juan.perez"></div>
            <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
-                       <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567"></div>
+             <?php $telefonoFieldConfig = ['id' => 'telefonoRegistroUsuario']; include 'app/views/layouts/telefonoField.php'; ?>
+           </div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
           <div class="relative">
             <input type="search" id="buscarRolRegister" aria-label="Buscar rol por nombre" placeholder="Escriba el nombre del rol" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
@@ -129,7 +130,8 @@
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Nombre <span class="text-red-500">*</span></label>
           <input type="text" name="nombre_usuario" id="edit_nombre" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Teléfono <span class="text-red-500">*</span></label>
-          <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold"></div>
+            <?php $telefonoFieldConfig = ['id' => 'edit_telefono']; include 'app/views/layouts/telefonoField.php'; ?>
+          </div>
           <div><label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rol</label>
           <div class="relative">
             <input type="search" id="buscarRolEdit" aria-label="Buscar rol por nombre" placeholder="Escriba el nombre del rol" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
@@ -218,7 +220,7 @@
       document.getElementById('edit_id').value = data.cedula_usuario;
       document.getElementById('edit_cedula').value = data.cedula_usuario;
       document.getElementById('edit_nombre').value = data.nombre_usuario;
-      document.getElementById('edit_telefono').value = data.telefono;
+      window.setTelefonoFieldValue('edit_telefono', data.telefono);
       document.getElementById('edit_rol').value = data.codigo_rol;
       window.syncSearchableSelect(document.getElementById('edit_rol'));
       document.getElementById('edit_estado').checked = data.estado == 1;
@@ -227,12 +229,13 @@
     async function eliminar(id) {
       if(await showConfirm('¿Desea desactivar este usuario?', 'Desactivar usuario', 'Sí, desactivar')) {
         const f = new FormData(); f.append('deleteUser', 'true'); f.append('idUser', id);
-        fetch('?url=user&type=main', { method:'POST', body:f }).then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload(); else showAlert('Error al procesar', 'error', 'Error');
-        });
+        fetch('?url=user&type=main', { method:'POST', body:f })
+          .then(r => r.json())
+          .then(d => showMutationResultAndReload(d, 'Usuario desactivado correctamente.', 'No se pudo desactivar el usuario.'))
+          .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el usuario.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

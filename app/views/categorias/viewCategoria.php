@@ -23,17 +23,6 @@
     </header>
 
     <main class="p-8 flex-1 animate-fade-up">
-      <?php if (isset($_SESSION['flash_message'])): $flash = $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
-        <?php if (is_array($flash) && isset($flash['status'])): ?>
-          <script>
-            showFlashAlert(
-              <?= json_encode($flash['status'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-              <?= json_encode($flash['message'] ?? ($flash['status'] === 'success' ? 'Operación realizada con éxito' : 'No se pudo completar la operación'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-            );
-          </script>
-        <?php endif; ?>
-      <?php endif; ?>
-
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-[900] text-gray-800">Lista de Categorías</h1>
@@ -206,13 +195,12 @@
         f.append('deleteCategory', 'true');
         f.append('idcategoria', id);
         fetch('?url=categoria&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert(d.message || 'No se pudo procesar', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Categoría desactivada correctamente.', 'No se pudo desactivar la categoría.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar la categoría.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

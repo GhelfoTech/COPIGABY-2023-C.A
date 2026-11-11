@@ -109,7 +109,7 @@
            </div>
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="04121234567">
+              <?php $telefonoFieldConfig = ['id' => 'telefonoProveedorRegistro']; include 'app/views/layouts/telefonoField.php'; ?>
           </div>
           <div class="col-span-2">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
@@ -154,7 +154,7 @@
            </div>
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono</label>
-             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <?php $telefonoFieldConfig = ['id' => 'edit_telefono']; include 'app/views/layouts/telefonoField.php'; ?>
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo</label>
@@ -232,7 +232,7 @@
         document.getElementById('edit_codigo').value = data.codigo_proveedor;
         document.getElementById('edit_razon').value = data.razon_social;
         document.getElementById('edit_rif').value = data.rif_proveedor;
-        document.getElementById('edit_telefono').value = data.telefono;
+        window.setTelefonoFieldValue('edit_telefono', data.telefono);
         document.getElementById('edit_correo').value = data.correo;
         document.getElementById('edit_direccion').value = data.direccion;
         document.getElementById('edit_estado').checked = (data.estado == 1);
@@ -249,13 +249,12 @@
         f.append('deleteProveedor', 'true');
         f.append('idproveedor', id);
         fetch('?url=proveedor&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Proveedor desactivado correctamente.', 'No se pudo desactivar el proveedor.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el proveedor.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

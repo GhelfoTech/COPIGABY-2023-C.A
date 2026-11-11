@@ -113,12 +113,14 @@ if (!$errorMessage && $exportType === 'export') {
             $formatted = [];
             foreach ($visibleColumns as $key => $_label) {
                 $value = $row[$key] ?? '';
-                if (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'valor_stock'], true)) {
+                if ($key === 'tasa_cambio' && ($value === null || $value === '' || (float) $value <= 0)) {
+                    $value = 'No disponible';
+                } elseif (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'valor_stock', 'tasa_cambio'], true)) {
                     $value = number_format((float) $value, 2, ',', '.');
                 } elseif ($key === 'porcentaje_iva') {
                     $value = number_format((float) $value, 2, ',', '.') . '%';
                 } elseif (in_array($key, ['fecha_pedido', 'fecha_compra'], true) && $value !== '') {
-                    $value = date('d/m/Y H:i', strtotime((string) $value));
+                    $value = date($key === 'fecha_compra' ? 'd/m/Y' : 'd/m/Y H:i', strtotime((string) $value));
                 } elseif ($key === 'estado') {
                     $value = (int) $value === 1 ? 'Activo' : 'Anulado';
                 }

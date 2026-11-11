@@ -15,7 +15,7 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rif_empresa'])) {
-                $object->addEmpresa([
+                $resultado = $object->addEmpresa([
                     'rif_empresa'    => trim($_POST['rif_empresa']),
                     'nombre_empresa' => trim($_POST['nombre_empresa']),
                     'telefono'       => trim($_POST['telefono']),
@@ -23,6 +23,7 @@
                     'direccion'      => trim($_POST['direccion']),
                     'logo'           => trim($_POST['logo'] ?? ''),
                 ]);
+                setSystemFlashFromResult($resultado, 'Empresa registrada correctamente.', 'No se pudo registrar la empresa.');
                 header("Location: ?url=empresa");
                 exit();
             }
@@ -32,7 +33,7 @@
 
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_empresa'])) {
-                $object->updateEmpresa((int) $_POST['codigo_empresa'], [
+                $resultado = $object->updateEmpresa((int) $_POST['codigo_empresa'], [
                     'rif_empresa'    => trim($_POST['rif_empresa']),
                     'nombre_empresa' => trim($_POST['nombre_empresa']),
                     'telefono'       => trim($_POST['telefono']),
@@ -40,6 +41,7 @@
                     'direccion'      => trim($_POST['direccion']),
                     'logo'           => trim($_POST['logo'] ?? ''),
                 ]);
+                setSystemFlashFromResult($resultado, 'Empresa actualizada correctamente.', 'No se pudo actualizar la empresa.');
                 header("Location: ?url=empresa");
                 exit();
             }

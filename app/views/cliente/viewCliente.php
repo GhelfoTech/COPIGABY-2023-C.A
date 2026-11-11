@@ -35,13 +35,6 @@
         </button>
       </div>
 
-      <?php if (!empty($_SESSION['cliente_error'])): ?>
-        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-          <?= htmlspecialchars($_SESSION['cliente_error']) ?>
-        </div>
-        <?php unset($_SESSION['cliente_error']); ?>
-      <?php endif; ?>
-
       <div class="bg-white rounded-[14px] shadow-sm overflow-hidden border border-gray-100">
         <table data-datatable="true" class="w-full text-left">
             <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
@@ -107,7 +100,7 @@
           </div>
           <div class="mb-4">
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold">
+             <?php $telefonoFieldConfig = ['id' => 'edit_telefono']; include 'app/views/layouts/telefonoField.php'; ?>
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo</label>
@@ -202,7 +195,7 @@
         document.getElementById('edit_id_actual').value = data.cedula_cliente;
         document.getElementById('edit_cedula').value = data.cedula_cliente;
         document.getElementById('edit_nombre').value = data.nombre;
-        document.getElementById('edit_telefono').value = data.telefono;
+        window.setTelefonoFieldValue('edit_telefono', data.telefono);
         document.getElementById('edit_correo').value = data.correo;
         document.getElementById('edit_direccion').value = data.direccion;
         document.getElementById('edit_estado').checked = data.estado == 1;
@@ -219,13 +212,12 @@
         f.append('deleteCliente', 'true');
         f.append('idcliente', id);
         fetch('?url=cliente&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo eliminar el cliente.', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Cliente desactivado correctamente.', 'No se pudo desactivar el cliente.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el cliente.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

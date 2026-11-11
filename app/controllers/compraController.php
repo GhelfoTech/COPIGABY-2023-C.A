@@ -31,12 +31,7 @@
                     exit();
                 }
 
-                if (isset($resultado['status']) && $resultado['status'] === 'success') {
-                    header("Location: ?url=compra");
-                    exit();
-                }
-
-                $_SESSION['compra_error'] = $resultado['message'] ?? 'No se pudo registrar la compra';
+                setSystemFlashFromResult($resultado, 'Compra registrada correctamente.', 'No se pudo registrar la compra.');
                 header("Location: ?url=compra");
                 exit();
             }
@@ -47,13 +42,14 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idcompra'], $_POST['codigo_proveedor'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateCompra((int) $_POST['idcompra'], [
+                $resultado = $object->updateCompra((int) $_POST['idcompra'], [
                     'codigo_proveedor'          => (int) $_POST['codigo_proveedor'],
                     'numero_factura_proveedor'  => trim($_POST['numero_factura_proveedor']),
                     'fecha_compra'              => $_POST['fecha_compra'],
                     'monto_total'               => $_POST['monto_total'],
                     'estado'                    => $estado,
                 ]);
+                setSystemFlashFromResult($resultado, 'Compra actualizada correctamente.', 'No se pudo actualizar la compra.');
                 header("Location: ?url=compra");
                 exit();
             }
@@ -80,6 +76,46 @@
                 echo json_encode(['header' => $header, 'items' => $items]);
                 exit();
             }
+        }
+
+        elseif ($_GET['type'] === 'update_details') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['status' => 'error', 'message' => 'Método no permitido']);
+                exit();
+            }
+
+            $idCompra = filter_var($_POST['idcompra'] ?? null, FILTER_VALIDATE_INT);
+            $items = isset($_POST['items']) && is_string($_POST['items'])
+                ? json_decode($_POST['items'], true)
+                : null;
+            if ($idCompra === false || $idCompra <= 0 || !is_array($items)) {
+                http_response_code(422);
+                echo json_encode(['status' => 'error', 'message' => 'Los datos de la compra no son válidos']);
+                exit();
+            }
+
+            $camposCabecera = ['codigo_proveedor', 'numero_factura_proveedor', 'fecha_compra', 'estado'];
+            $camposCabeceraEnviados = array_filter(
+                $camposCabecera,
+                static fn($campo) => array_key_exists($campo, $_POST)
+            );
+            if ($camposCabeceraEnviados && count($camposCabeceraEnviados) !== count($camposCabecera)) {
+                http_response_code(422);
+                echo json_encode(['status' => 'error', 'message' => 'Los datos de la compra están incompletos']);
+                exit();
+            }
+
+            $datosCompra = $camposCabeceraEnviados
+                ? array_intersect_key($_POST, array_flip($camposCabecera))
+                : null;
+            $resultado = $object->updateCompraItems($idCompra, $items, $datosCompra);
+            if (($resultado['status'] ?? '') !== 'success') {
+                http_response_code(422);
+            }
+            echo json_encode($resultado);
+            exit();
         }
 
         else {

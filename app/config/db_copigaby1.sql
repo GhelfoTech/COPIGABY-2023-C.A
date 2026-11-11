@@ -154,6 +154,7 @@ CREATE TABLE `compra` (
   `numero_factura_proveedor` varchar(10) NOT NULL,
   `fecha_compra` date NOT NULL,
   `monto_total` decimal(10,2) NOT NULL,
+  `tasa_cambio` decimal(10,2) DEFAULT NULL,
   `estado` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

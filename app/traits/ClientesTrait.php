@@ -42,9 +42,10 @@ trait ClientesTrait
             return ['status' => 'error', 'message' => 'La cédula ya está registrada en el sistema'];
         }
 
-        // Correo: formato de email válido (obligatorio si se registra)
-        if (!empty($datos['correo']) && !filter_var(trim($datos['correo']), FILTER_VALIDATE_EMAIL)) {
-            return ['status' => 'error', 'message' => 'El correo electrónico no tiene un formato válido'];
+        // Correo opcional: formato válido y dominio terminado en .com
+        $correo = trim((string) ($datos['correo'] ?? ''));
+        if ($correo !== '' && (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo))) {
+            return ['status' => 'error', 'message' => 'El correo electrónico debe tener un formato válido y terminar en .com'];
         }
 
         return true;

@@ -72,7 +72,7 @@
                     <span class="text-gray-400 text-xs italic">Sin logo</span>
                   <?php endif; ?>
                 </td>
-                <td class="px-6 py-4 text-center flex justify-center">
+                <td class="px-6 py-4 text-center">
                    <button onclick="viewDetails(<?= $e['codigo_empresa'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -113,7 +113,7 @@
             </div>
            <div>
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-              <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="04121234567">
+              <?php $telefonoFieldConfig = ['id' => 'telefonoEmpresaRegistro']; include 'app/views/layouts/telefonoField.php'; ?>
            </div>
            <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
@@ -162,7 +162,7 @@
            </div>
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase mb-1">Teléfono <span class="text-red-500">*</span></label>
-             <input type="tel" inputmode="numeric" pattern="[0-9]*" name="telefono" id="edit_telefono" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
+             <?php $telefonoFieldConfig = ['id' => 'edit_telefono']; include 'app/views/layouts/telefonoField.php'; ?>
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Correo <span class="text-red-500">*</span></label>
@@ -231,7 +231,7 @@
         const rifTipoSelect = document.getElementById('edit_rif_tipo');
         if (rifTipoSelect) rifTipoSelect.value = rifTipo;
         document.getElementById('edit_rif').value = rifNumero;
-        document.getElementById('edit_telefono').value = data.telefono;
+        window.setTelefonoFieldValue('edit_telefono', data.telefono);
         document.getElementById('edit_correo').value = data.correo;
         document.getElementById('edit_direccion').value = data.direccion;
         document.getElementById('edit_logo').value = data.logo;
@@ -291,10 +291,9 @@
         f.append('deleteEmpresa', 'true');
         f.append('codigo_empresa', id);
         fetch('?url=empresa&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar la eliminación.', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Empresa eliminada correctamente.', 'No se pudo eliminar la empresa.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para eliminar la empresa.', 'error', 'Error de conexión'));
       }
     }
 
@@ -313,6 +312,6 @@
       setRifForEmpresa(this);
     });
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

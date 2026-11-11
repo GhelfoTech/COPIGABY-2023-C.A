@@ -36,6 +36,7 @@
                     exit();
                 }
 
+                setSystemFlashFromResult($resultado, 'Proveedor registrado correctamente.', 'No se pudo registrar el proveedor.');
                 header("Location: ?url=proveedor");
                 exit();
             }
@@ -46,7 +47,8 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_proveedor'])) {
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
-                $object->updateProveedor((int) $_POST['codigo_proveedor'], $_POST);
+                $resultado = $object->updateProveedor((int) $_POST['codigo_proveedor'], $_POST);
+                setSystemFlashFromResult($resultado, 'Proveedor actualizado correctamente.', 'No se pudo actualizar el proveedor.');
                 header("Location: ?url=proveedor");
                 exit();
             }

@@ -29,8 +29,8 @@ $clienteModalActionFinal = $clienteModalAction ?? '?url=cliente&type=register';
         </div>
 
         <div class="mb-4">
-          <label for="clienteRegistroTelefono" class="mb-1 block text-xs font-black uppercase text-gray-400">Teléfono <span class="text-red-500">*</span></label>
-          <input type="tel" inputmode="numeric" pattern="[0-9]*" id="clienteRegistroTelefono" name="telefono" required class="w-full rounded-lg border bg-gray-50 px-4 py-2 text-sm font-bold outline-hidden focus:border-orange" placeholder="04121234567">
+          <label for="clienteRegistroTelefono_numero" class="mb-1 block text-xs font-black uppercase text-gray-400">Teléfono <span class="text-red-500">*</span></label>
+          <?php $telefonoFieldConfig = ['id' => 'clienteRegistroTelefono']; include 'app/views/layouts/telefonoField.php'; ?>
         </div>
 
         <div class="mb-4">

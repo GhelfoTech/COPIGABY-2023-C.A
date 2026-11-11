@@ -37,6 +37,10 @@ class servicioModel extends ConectDB {
         if ($validacion !== true) {
             return $validacion;
         }
+        $validacionMateriales = $this->validarMateriales($materiales);
+        if ($validacionMateriales !== true) {
+            return $validacionMateriales;
+        }
 
         try {
             $this->conex->beginTransaction();
@@ -72,6 +76,10 @@ class servicioModel extends ConectDB {
         $validacion = $this->validarServicio($datos);
         if ($validacion !== true) {
             return $validacion;
+        }
+        $validacionMateriales = $this->validarMateriales($materiales);
+        if ($validacionMateriales !== true) {
+            return $validacionMateriales;
         }
 
         try {
@@ -128,5 +136,26 @@ class servicioModel extends ConectDB {
         } catch (PDOException $e) {
             return [];
         }
+    }
+
+    private function validarMateriales(array $materiales) {
+        foreach ($materiales as $index => $material) {
+            if (!is_array($material)) {
+                return ['status' => 'error', 'message' => 'Los datos de los materiales no son válidos'];
+            }
+            $cantidad = $material['cantidad_usada'] ?? null;
+            if (
+                !isset($material['codigo_producto'])
+                || (int) $material['codigo_producto'] <= 0
+                || !is_numeric($cantidad)
+                || !is_finite((float) $cantidad)
+                || (float) $cantidad <= 0
+                || floor((float) $cantidad) !== (float) $cantidad
+            ) {
+                $linea = (int) $index + 1;
+                return ['status' => 'error', 'message' => "La cantidad de material debe ser un número entero mayor a cero en la línea {$linea}"];
+            }
+        }
+        return true;
     }
 }

@@ -27,7 +27,8 @@ class reporteModel extends ConectDB
                 'subtotal' => 'Subtotal',
                 'monto_iva' => 'Monto IVA',
                 'porcentaje_iva' => '% IVA',
-                'monto_total' => 'Total',
+                'monto_total' => 'Monto general',
+                'tasa_cambio' => 'Precio del dólar (Bs)',
                 'metodo_pago' => 'Método de pago',
                 'estado' => 'Estado',
             ],
@@ -56,7 +57,8 @@ class reporteModel extends ConectDB
                 'numero_factura_proveedor' => 'Factura',
                 'nombre_proveedor' => 'Proveedor',
                 'nombre_usuario' => 'Registrada por',
-                'monto_total' => 'Total',
+                'monto_total' => 'Monto general',
+                'tasa_cambio' => 'Precio del dólar (Bs)',
                 'estado' => 'Estado',
             ],
         ];
@@ -99,7 +101,8 @@ class reporteModel extends ConectDB
         }
 
         $sql = "SELECT p.codigo_pedido, p.fecha_pedido, p.cedula_cliente, c.nombre AS nombre_cliente,
-                       u.nombre_usuario, p.subtotal, p.monto_iva, p.porcentaje_iva, p.monto_total, p.estado,
+                       u.nombre_usuario, p.subtotal, p.monto_iva, p.porcentaje_iva, p.monto_total,
+                       p.tasa_cambio, p.estado,
                        COALESCE(
                            (SELECT GROUP_CONCAT(DISTINCT mp.nombre_metodo SEPARATOR ', ')
                             FROM pagos pg
@@ -151,7 +154,16 @@ class reporteModel extends ConectDB
         $this->addDateFilter($where, $params, 'c.fecha_compra', $filters);
 
         $sql = "SELECT c.codigo_compra, c.fecha_compra, c.numero_factura_proveedor,
-                       p.razon_social AS nombre_proveedor, u.nombre_usuario, c.monto_total, c.estado
+                       p.razon_social AS nombre_proveedor, u.nombre_usuario, c.monto_total,
+                       COALESCE(
+                           c.tasa_cambio,
+                           (SELECT t.monto_bolivares
+                            FROM tasa_cambio t
+                            WHERE t.fecha < DATE_ADD(c.fecha_compra, INTERVAL 1 DAY)
+                            ORDER BY t.fecha DESC, t.codigo_tasa DESC
+                            LIMIT 1)
+                       ) AS tasa_cambio,
+                       c.estado
                 FROM compra c
                 INNER JOIN proveedor p ON p.codigo_proveedor = c.codigo_proveedor
                 INNER JOIN usuario u ON u.cedula_usuario = c.cedula_usuario

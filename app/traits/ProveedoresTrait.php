@@ -32,13 +32,14 @@ trait ProveedoresTrait
             return ['status' => 'error', 'message' => 'El teléfono debe tener 11 dígitos numéricos'];
         }
 
-        // Correo: formato válido
-        if (!filter_var(trim((string) $datos['correo']), FILTER_VALIDATE_EMAIL)) {
-            return ['status' => 'error', 'message' => 'El correo electrónico no tiene un formato válido'];
+        // Correo: formato válido y dominio terminado en .com
+        $correo = trim((string) $datos['correo']);
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo)) {
+            return ['status' => 'error', 'message' => 'El correo electrónico debe tener un formato válido y terminar en .com'];
         }
 
         // Evitar duplicidad de correos corporativos
-        if ($this->correoProveedorDuplicado(trim((string) $datos['correo']), $idProveedor)) {
+        if ($this->correoProveedorDuplicado($correo, $idProveedor)) {
             return ['status' => 'error', 'message' => 'El correo ya está registrado para otro proveedor'];
         }
 

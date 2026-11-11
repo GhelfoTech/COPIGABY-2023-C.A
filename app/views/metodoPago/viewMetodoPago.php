@@ -183,13 +183,12 @@
         f.append('deleteMetodo', 'true');
         f.append('codigo_metodo', id);
         fetch('?url=metodopago&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar la solicitud.', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Método de pago desactivado correctamente.', 'No se pudo desactivar el método de pago.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el método de pago.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

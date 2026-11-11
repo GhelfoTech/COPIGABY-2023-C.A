@@ -4,6 +4,7 @@
 
     // Helpers de autenticación y permisos por rol
     require_once __DIR__ . '/../../helpers/auth.php';
+    require_once __DIR__ . '/../../helpers/alerts.php';
 
     class FrontControllers {
 

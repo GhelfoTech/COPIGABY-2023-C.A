@@ -20,6 +20,7 @@
             if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
                 $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
                 $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
+                setSystemFlashFromResult($result, 'Usuario registrado correctamente.', 'No se pudo registrar el usuario.');
                 header("Location: ?url=user");
                 exit();
             }
@@ -28,7 +29,7 @@
         elseif ($_GET['type'] == 'update') {
             if (isset($_POST['idUser']) && isset($_POST['nombre_usuario'])) {
                 $estado = isset($_POST['estado']) && $_POST['estado'] == 'on' ? 1 : 0; 
-                $object->updateUser( // idUser ahora es codigo_usuario
+                $result = $object->updateUser( // idUser ahora es codigo_usuario
                     $_POST['idUser'], 
                     $_POST['cedula'], 
                     $_POST['nombre_usuario'], 
@@ -36,6 +37,7 @@
                     $_POST['codigo_rol'], 
                     $estado
                 );
+                setSystemFlashFromResult($result, 'Usuario actualizado correctamente.', 'No se pudo actualizar el usuario.');
                 header("Location: ?url=user");
                 exit();
             }

@@ -25,9 +25,10 @@ trait EmpresaTrait
             return ['status' => 'error', 'message' => 'El RIF de la empresa no tiene un formato válido (ej. J-12345678-9)'];
         }
 
-        // Correo con formato válido
-        if (!filter_var(trim((string) $datos['correo']), FILTER_VALIDATE_EMAIL)) {
-            return ['status' => 'error', 'message' => 'El correo electrónico de la empresa no tiene un formato válido'];
+        // Correo con formato válido y dominio terminado en .com
+        $correo = trim((string) $datos['correo']);
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo)) {
+            return ['status' => 'error', 'message' => 'El correo de la empresa debe tener un formato válido y terminar en .com'];
         }
 
         // Registro único de configuración

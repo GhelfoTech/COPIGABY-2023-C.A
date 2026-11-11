@@ -17,10 +17,7 @@
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula_cliente'])) {
                 $resultado = $object->addCliente($_POST);
-
-                if (is_array($resultado) && isset($resultado['status']) && $resultado['status'] === 'error') {
-                    $_SESSION['cliente_error'] = $resultado['message'] ?? 'No se pudo registrar el cliente';
-                }
+                setSystemFlashFromResult($resultado, 'Cliente registrado correctamente.', 'No se pudo registrar el cliente.');
                 header("Location: ?url=cliente");
                 exit();
             }
@@ -31,7 +28,8 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_actual'])) {
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
-                $object->updateCliente($_POST['id_actual'], $_POST);
+                $resultado = $object->updateCliente($_POST['id_actual'], $_POST);
+                setSystemFlashFromResult($resultado, 'Cliente actualizado correctamente.', 'No se pudo actualizar el cliente.');
                 header("Location: ?url=cliente");
                 exit();
             }

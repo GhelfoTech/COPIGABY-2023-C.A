@@ -35,8 +35,8 @@ trait ComprasTrait
                 $costo    = (float) ($item['costo'] ?? 0);
 
                 // Costo unitario y cantidad estrictamente mayores a cero
-                if ($cantidad <= 0) {
-                    return ['status' => 'error', 'message' => "La cantidad debe ser mayor a cero en la línea {$linea}"];
+                if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
+                    return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
                 }
                 if ($costo <= 0) {
                     return ['status' => 'error', 'message' => "El costo unitario debe ser mayor a cero en la línea {$linea}"];

@@ -193,13 +193,12 @@
         f.append('deleteIva', 'true');
         f.append('codigo_IVA', id);
         fetch('?url=iva&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Registro de IVA desactivado correctamente.', 'No se pudo desactivar el registro de IVA.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el IVA.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

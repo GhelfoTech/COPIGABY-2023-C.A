@@ -17,8 +17,12 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $materiales = isset($_POST['materiales']) ? json_decode($_POST['materiales'], true) : [];
-                $object->addServicio($_POST, $materiales);
+                $materialesJson = $_POST['materiales'] ?? '[]';
+                $materiales = is_string($materialesJson) ? json_decode($materialesJson, true) : null;
+                $resultado = is_array($materiales)
+                    ? $object->addServicio($_POST, $materiales)
+                    : ['status' => 'error', 'message' => 'No se pudieron leer las cantidades de los materiales'];
+                setSystemFlashFromResult($resultado, 'Servicio registrado correctamente.', 'No se pudo registrar el servicio.');
                 header("Location: ?url=servicio");
                 exit();
             }
@@ -26,9 +30,13 @@
 
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idservicio'])) {
-                $materiales = isset($_POST['materiales']) ? json_decode($_POST['materiales'], true) : [];
+                $materialesJson = $_POST['materiales'] ?? '[]';
+                $materiales = is_string($materialesJson) ? json_decode($materialesJson, true) : null;
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
-                $object->updateServicio((int)$_POST['idservicio'], $_POST, $materiales);
+                $resultado = is_array($materiales)
+                    ? $object->updateServicio((int) $_POST['idservicio'], $_POST, $materiales)
+                    : ['status' => 'error', 'message' => 'No se pudieron leer las cantidades de los materiales'];
+                setSystemFlashFromResult($resultado, 'Servicio actualizado correctamente.', 'No se pudo actualizar el servicio.');
                 header("Location: ?url=servicio");
                 exit();
             }

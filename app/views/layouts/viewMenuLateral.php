@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../../../helpers/auth.php';
 
+$systemFlash = $_SESSION['system_flash'] ?? $_SESSION['flash_message'] ?? null;
+unset($_SESSION['system_flash'], $_SESSION['flash_message']);
+
 $currentUrl = $_REQUEST['url'] ?? '';
 $pedidoOpen = in_array($currentUrl, ['pedido', 'cliente', 'cashea'], true) && (puedeVerModulo('pedido') || puedeVerModulo('cashea'));
 $productoOpen = in_array($currentUrl, ['producto', 'categoria'], true) && puedeVerModulo('producto');
@@ -35,7 +38,17 @@ function navIconClass(bool $active): string {
 }
 ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="assets/js/alerts.js"></script>
+<script src="assets/js/alerts.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/alerts.js') ?>"></script>
+<?php if (is_array($systemFlash)): ?>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    showFlashAlert(
+      <?= json_encode($systemFlash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
+      <?= json_encode($systemFlash['message'] ?? 'No se pudo completar la operación.', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
+    );
+  });
+</script>
+<?php endif; ?>
 <aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl">
   <header class="border-b border-white/10 px-5 py-6">
     <div class="flex items-center gap-3">
@@ -192,7 +205,7 @@ function navIconClass(bool $active): string {
         focusConfirm: false
       }).then(function (result) {
         if (result.isConfirmed) {
-          window.location.href = '?url=ayuda&descargar=pdf';
+          window.location.assign('?url=ayuda&descargar=pdf');
         }
       });
     });
@@ -225,3 +238,4 @@ function navIconClass(bool $active): string {
   });
 })();
 </script>
+<script src="assets/js/telefono-input.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/telefono-input.js') ?>" defer></script>

@@ -154,8 +154,8 @@
 
           <div class="mb-4 flex justify-between items-center">
             <h4 class="text-sm font-black text-navy-dark uppercase tracking-wider">Detalle del Pedido</h4>
-            <button type="button" id="btnAddItem" class="flex items-center gap-1 text-xs font-black uppercase text-orange hover:text-orange-dk transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+            <button type="button" id="btnAddItem" class="flex items-center gap-2 rounded-xl border border-orange/30 bg-orange/10 px-4 py-2.5 text-sm font-black uppercase text-orange-dk shadow-sm hover:bg-orange/20 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
               Agregar ítem
             </button>
           </div>
@@ -694,6 +694,12 @@
           Swal.fire({ icon: 'warning', title: 'No disponible', text: 'Cashea solo se puede seleccionar al registrar un pedido nuevo.' });
           return;
         }
+        if (computeFinancialTotals().total <= 25) {
+          selectMetodo.value = '';
+          window.syncSearchableSelect(selectMetodo);
+          Swal.fire({ icon: 'warning', title: 'Monto mínimo', text: 'Cashea solo está disponible para pedidos mayores a $25.' });
+          return;
+        }
         setCasheaMode(true);
         abrirModalCashea();
         return;
@@ -726,6 +732,13 @@
       const { subtotal, porcentajeIva, iva, total } = computeFinancialTotals();
       const tasa = getTasaFormulario();
 
+      if (casheaMode && total <= 25) {
+        selectMetodo.value = '';
+        window.syncSearchableSelect(selectMetodo);
+        setCasheaMode(false);
+        Swal.fire({ icon: 'warning', title: 'Monto mínimo', text: 'Cashea solo está disponible para pedidos mayores a $25.' });
+      }
+
       subtotalGeneral.textContent = simboloMoneda + formatMoney(subtotal);
       montoIva.textContent = simboloMoneda + formatMoney(iva);
       totalGeneral.textContent = 'Bs ' + formatMoney(total * tasa);
@@ -734,20 +747,18 @@
       updateCasheaAmounts(total);
     }
 
-    function normalizeCantidad(input) {
-      let value = parseFloat(input.value);
-      if (isNaN(value) || value <= 0) value = 1;
-      input.value = String(value);
-      return value;
-    }
-
     function getCantidadTotal(row) {
-      const cant = normalizeCantidad(row.querySelector('.item-cant'));
-      return cant;
+      return Number(row.querySelector('.item-cant').value);
     }
 
     function updateRowSubtotal(row) {
+      const inputCantidad = row.querySelector('.item-cant');
       const cantidadTotal = getCantidadTotal(row);
+      if (!Number.isInteger(cantidadTotal) || cantidadTotal <= 0) {
+        inputCantidad.setCustomValidity('La cantidad debe ser un número entero mayor a cero.');
+        return;
+      }
+      inputCantidad.setCustomValidity('');
       const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
       const subtotal = roundMoney(cantidadTotal * precio);
       row.querySelector('.item-subtotal').textContent = simboloMoneda + formatMoney(subtotal);
@@ -758,9 +769,12 @@
     function onTipoChange(row) {
       const tipo = row.querySelector('.item-tipo').value;
       row.querySelector('.item-select').innerHTML = buildOptions(tipo);
-      const unidadCell = row.querySelector('.item-unidad-cell');
-      if (unidadCell) {
-        unidadCell.classList.toggle('hidden', tipo !== 'producto');
+      const unidadSelect = row.querySelector('.item-unidad');
+      if (unidadSelect) {
+        unidadSelect.value = '';
+        unidadSelect.disabled = tipo === 'servicio';
+        unidadSelect.classList.toggle('bg-gray-100', unidadSelect.disabled);
+        unidadSelect.classList.toggle('cursor-not-allowed', unidadSelect.disabled);
       }
       row.querySelector('.item-precio').value = '';
       row.querySelector('.item-cant').value = '1';
@@ -784,11 +798,10 @@
 
       if (unidadSel && option) {
         const codigoMedia = option.getAttribute('data-codigo-media');
-
-        // Si el producto tiene unidad asignada en el módulo de productos, se preselecciona;
-        // el usuario puede cambiarla o dejarla vacía.
         if (codigoMedia) {
           unidadSel.value = codigoMedia;
+        } else if (row.querySelector('.item-tipo').value === 'producto') {
+          unidadSel.value = '';
         }
 
         const stockInfo = row.querySelector('.item-stock-info');
@@ -801,7 +814,14 @@
       updateRowSubtotal(row);
     }
 
-    function removeItemRow(tr) {
+    async function removeItemRow(tr) {
+      const confirmado = await showConfirm(
+        '¿Desea quitar este producto o servicio del pedido?',
+        'Quitar elemento',
+        'Sí, quitar'
+      );
+      if (!confirmado || !tr || !tr.parentNode) return;
+
       tr.remove();
       if (!itemsBody.querySelector('tr[data-item]')) {
         itemsBody.innerHTML = '<tr id="emptyRow"><td colspan="7" class="px-4 py-6 text-center text-gray-400 italic">Agregue al menos un producto o servicio</td></tr>';
@@ -888,10 +908,13 @@
          const selectVal = prefill.tipo === 'producto' ? prefill.codigo_producto : prefill.codigo_servicio;
          tr.querySelector('.item-select').value = String(selectVal);
         window.syncSearchableSelect(tr.querySelector('.item-select'));
-         const unidadCell = tr.querySelector('.item-unidad-cell');
-         if (unidadCell) unidadCell.classList.toggle('hidden', prefill.tipo !== 'producto');
          const unidadSel = tr.querySelector('.item-unidad');
          if (unidadSel && prefill.codigo_unidad_medida) unidadSel.value = String(prefill.codigo_unidad_medida);
+        if (unidadSel) {
+          unidadSel.disabled = prefill.tipo === 'servicio';
+          unidadSel.classList.toggle('bg-gray-100', unidadSel.disabled);
+          unidadSel.classList.toggle('cursor-not-allowed', unidadSel.disabled);
+        }
 
          tr.querySelector('.item-cant').value = String(parseFloat(prefill.cantidad) || 1);
 
@@ -917,6 +940,9 @@
         const precio = parseFloat(row.querySelector('.item-precio').value);
 
         if (!id) return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
+        if (!Number.isInteger(cantidadTotal) || cantidadTotal <= 0) {
+          return { ok: false, message: 'Cada cantidad debe ser un número entero mayor a cero.', items: [] };
+        }
         if (isNaN(precio) || precio < 0) return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
 
         const item = { tipo, cantidad: cantidadTotal, precio_venta: roundMoney(precio) };
@@ -972,6 +998,10 @@
 
       recalcTotal();
       const totals = computeFinancialTotals();
+      if (casheaMode && totals.total <= 25) {
+        Swal.fire({ icon: 'warning', title: 'Monto mínimo', text: 'Cashea solo está disponible para pedidos mayores a $25.' });
+        return;
+      }
 
       const formData = new FormData(formPedido);
       const esCashea = casheaMode && !editMode;
@@ -1249,6 +1279,6 @@
     document.getElementById('btnAddItem').addEventListener('click', () => addItemRow());
     formPedido.addEventListener('submit', submitPedido);
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

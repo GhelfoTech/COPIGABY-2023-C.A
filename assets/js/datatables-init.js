@@ -37,14 +37,14 @@
       .catch((error) => console.error('No se pudo cargar el estilo base de DataTables.', error)),
     loadStylesheet('https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css')
       .catch((error) => console.error('No se pudo cargar el estilo responsive de DataTables.', error)),
-    loadStylesheet('assets/css/datatables-custom.css?v=2')
+    loadStylesheet('assets/css/datatables-custom.css?v=3')
       .catch((error) => console.error('No se pudo cargar el estilo personalizado de DataTables.', error))
   ]);
 
   const initialize = () => {
     window.jQuery(tables).each(function () {
       if (window.jQuery.fn.DataTable.isDataTable(this)) return;
-      window.jQuery(this).DataTable({
+      const dataTable = window.jQuery(this).DataTable({
         responsive: true,
         language: {
           decimal: '',
@@ -74,7 +74,12 @@
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'Todos']],
         order: [],
-        autoWidth: false
+        autoWidth: true
+      });
+
+      window.requestAnimationFrame(() => {
+        dataTable.columns.adjust();
+        if (dataTable.responsive) dataTable.responsive.recalc();
       });
     });
   };

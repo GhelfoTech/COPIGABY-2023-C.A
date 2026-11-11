@@ -25,6 +25,7 @@
                     exit();
                 }
 
+                setSystemFlashFromResult($resultado, 'Producto registrado correctamente.', 'No se pudo registrar el producto.');
                 header("Location: ?url=producto");
                 exit();
             }
@@ -37,7 +38,8 @@
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
                 $_POST['porcentaje_ganancia'] = $_POST['porcentaje_ganancia'] ?? 0;
                 $_POST['costo'] = $_POST['costo'] ?? 0;
-                $object->updateProduct((int) $_POST['idproducto'], $_POST);
+                $resultado = $object->updateProduct((int) $_POST['idproducto'], $_POST);
+                setSystemFlashFromResult($resultado, 'Producto actualizado correctamente.', 'No se pudo actualizar el producto.');
                 header("Location: ?url=producto");
                 exit();
             }

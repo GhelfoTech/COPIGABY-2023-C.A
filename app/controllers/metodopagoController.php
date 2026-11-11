@@ -25,11 +25,12 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_metodo'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updateMetodo(
+                $resultado = $object->updateMetodo(
                     (int) $_POST['codigo_metodo'],
                     $_POST['nombre_metodo'],
                     $estado
                 );
+                setSystemFlashFromResult($resultado, 'Método de pago actualizado correctamente.', 'No se pudo actualizar el método de pago.');
                 header("Location: ?url=metodopago");
                 exit();
             }

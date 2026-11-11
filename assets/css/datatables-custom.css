@@ -63,6 +63,12 @@
   padding: 13px 16px;
 }
 
+.dataTables_wrapper table.dataTable th,
+.dataTables_wrapper table.dataTable td {
+  text-align: center !important;
+  vertical-align: middle;
+}
+
 .dataTables_wrapper table.dataTable tbody tr {
   border-bottom: 1px solid #e5e7eb;
 }

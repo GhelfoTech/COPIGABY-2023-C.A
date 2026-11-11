@@ -219,13 +219,12 @@
         f.append('deleteMedida', 'true');
         f.append('codigo_media', id);
         fetch('?url=medida&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Unidad desactivada correctamente.', 'No se pudo desactivar la unidad.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar la unidad.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

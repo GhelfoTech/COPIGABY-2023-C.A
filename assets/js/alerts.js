@@ -28,3 +28,16 @@ async function showConfirm(message, title = '¿Está seguro?', confirmButtonText
 
   return result.isConfirmed;
 }
+
+function showMutationResultAndReload(result, successMessage, errorMessage) {
+  const success = result && result.status === 'success';
+  const message = result && result.message
+    ? result.message
+    : (success ? successMessage : errorMessage);
+
+  return showAlert(message, success ? 'success' : 'error', success ? 'Operación completada' : 'Error')
+    .then(() => {
+      if (success) window.location.reload();
+      return success;
+    });
+}

@@ -15,11 +15,12 @@
 
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_metodo'])) {
-                $object->addPago([
+                $resultado = $object->addPago([
                     'codigo_pedido' => (int) $_POST['codigo_pedido'],
                     'codigo_metodo' => (int) $_POST['codigo_metodo'],
                     'fecha_pago'    => $_POST['fecha_pago'] ?? date('Y-m-d H:i:s'),
                 ]);
+                setSystemFlashFromResult($resultado, 'Pago registrado correctamente.', 'No se pudo registrar el pago.');
                 header("Location: ?url=pagos");
                 exit();
             }
@@ -30,12 +31,13 @@
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pago'])) {
                 $estado = isset($_POST['estado']) ? 1 : 0;
-                $object->updatePago((int) $_POST['codigo_pago'], [
+                $resultado = $object->updatePago((int) $_POST['codigo_pago'], [
                     'codigo_pedido' => (int) $_POST['codigo_pedido'],
                     'codigo_metodo' => (int) $_POST['codigo_metodo'],
                     'fecha_pago'    => $_POST['fecha_pago'],
                     'estado'        => $estado,
                 ]);
+                setSystemFlashFromResult($resultado, 'Pago actualizado correctamente.', 'No se pudo actualizar el pago.');
                 header("Location: ?url=pagos");
                 exit();
             }

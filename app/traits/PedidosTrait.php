@@ -46,8 +46,8 @@ trait PedidosTrait
             $cantidad   = (float) ($item['cantidad'] ?? 0);
             $precioVenta = (float) ($item['precio_venta'] ?? 0);
 
-            if ($cantidad <= 0) {
-                return ['status' => 'error', 'message' => "Cantidad inválida en la línea {$linea}"];
+            if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
+                return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
             }
             if ($precioVenta <= 0) {
                 return ['status' => 'error', 'message' => "Precio inválido en la línea {$linea}"];
@@ -65,6 +65,9 @@ trait PedidosTrait
         }
 
         if ($esCashea) {
+            if ($montoTotal <= 25) {
+                return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos mayores a $25'];
+            }
             $nivelCashea = (int) ($datos['nivel_cashea'] ?? 0);
             if ($nivelCashea < 1 || $nivelCashea > 6) {
                 return ['status' => 'error', 'message' => 'Debe seleccionar un nivel Cashea válido'];
@@ -84,6 +87,20 @@ trait PedidosTrait
         // Validación del pago asociado
         $pago = func_get_args()[2] ?? null;
         if (is_array($pago)) {
+            $codigoMetodo = (int) ($pago['codigo_metodo'] ?? 0);
+            if (!$esCashea && $codigoMetodo > 0) {
+                try {
+                    $stmtMetodo = $this->conex->prepare(
+                        'SELECT UPPER(TRIM(nombre_metodo)) FROM metodo_pago WHERE codigo_metodo = ? AND estado = 1'
+                    );
+                    $stmtMetodo->execute([$codigoMetodo]);
+                    if ($stmtMetodo->fetchColumn() === 'CASHEA') {
+                        return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos mayores a $25'];
+                    }
+                } catch (\PDOException $e) {
+                    return ['status' => 'error', 'message' => 'No se pudo validar el método de pago seleccionado'];
+                }
+            }
             $montoInicial = round($montoTotal * ((int) $porcentajeInicial / 100), 2);
             if (!$esCashea || $montoInicial > 0) {
                 $validacionPago = $this->validarDatosPago($pago);

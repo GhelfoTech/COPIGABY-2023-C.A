@@ -104,10 +104,13 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
-               <div class="relative">
-                 <input type="search" id="buscarCategoriaProducto" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+               <div class="flex gap-2">
+                 <div class="relative min-w-0 flex-1">
+                   <input type="search" id="buscarCategoriaProducto" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
+                 </div>
+                 <button type="button" onclick="openQuickCategoryModal('selectCategoriaProducto')" aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
                </div>
-               <select name="codigo_categoria" id="selectCategoriaProducto" required class="hidden">
+               <select name="codigo_categoria" id="selectCategoriaProducto" data-categoria-select required class="hidden">
                 <option value="">Seleccione una categoría</option>
                 <?php foreach($categorias as $c): ?>
                   <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
@@ -166,11 +169,14 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Categoría <span class="text-red-500">*</span></label>
-               <select name="codigo_categoria" id="edit_categoria" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
-                <?php foreach($categorias as $c): ?>
-                  <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
-                <?php endforeach; ?>
-              </select>
+               <div class="flex gap-2">
+                 <select name="codigo_categoria" id="edit_categoria" data-categoria-select required class="min-w-0 w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold">
+                  <?php foreach($categorias as $c): ?>
+                    <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
+                  <?php endforeach; ?>
+                </select>
+                <button type="button" onclick="openQuickCategoryModal('edit_categoria')" aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
+               </div>
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
@@ -241,6 +247,8 @@
   </div>
 
   <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
+  <?php include 'app/views/categorias/modalQuickCategory.php'; ?>
+  <script src="assets/js/quick-category.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/quick-category.js') ?>"></script>
   <script>
     const modal = document.getElementById('modalProduct');
     const btnOpen = document.getElementById('btnOpenModal');
@@ -339,13 +347,12 @@
         f.append('deleteProduct', 'true');
         f.append('idproducto', id);
         fetch('?url=producto&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Producto desactivado correctamente.', 'No se pudo desactivar el producto.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el producto.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

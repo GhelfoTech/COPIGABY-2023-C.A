@@ -13,6 +13,28 @@
 
     if (isset($_GET['type'])) {
 
+        if ($_GET['type'] === 'quick_register') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['status' => 'error', 'message' => 'Método no permitido']);
+                exit();
+            }
+
+            $nombre = trim((string) ($_POST['nombre_categoria'] ?? ''));
+            $result = $object->addCategory($nombre);
+            if (($result['status'] ?? '') === 'success') {
+                $result['categoria'] = [
+                    'codigo_categoria' => $result['codigo_categoria'],
+                    'nombre_categoria' => $nombre,
+                ];
+            } else {
+                http_response_code(422);
+            }
+            echo json_encode($result);
+            exit();
+        }
+
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_categoria'])) {
                 $result = $object->addCategory(trim($_POST['nombre_categoria']));

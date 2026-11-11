@@ -118,7 +118,7 @@
                  <?php endforeach; ?>
                </select>
                </div>
-               <input type="number" id="cantProducto_register" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
+               <input type="number" id="cantProducto_register" min="1" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
                <button type="button" onclick="agregarMaterial('register')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
                  Agregar
@@ -180,7 +180,7 @@
                  <?php endforeach; ?>
                </select>
                </div>
-               <input type="number" id="cantProducto_edit" min="0" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
+               <input type="number" id="cantProducto_edit" min="1" step="1" value="1" class="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Cantidad">
                <button type="button" onclick="agregarMaterial('edit')" class="flex items-center gap-1 px-4 py-2 text-sm font-black bg-gradient-to-r from-orange to-orange-dk text-navy-dark rounded-lg hover:-translate-y-0.5 transition-all shadow-sm">
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
                  Agregar
@@ -268,8 +268,8 @@
       const nombre = sel.options[sel.selectedIndex].dataset.nombre;
       const stockDisp = parseInt(sel.options[sel.selectedIndex].dataset.stock || '0', 10);
       const cantidadRaw = Number(cant.value);
-      if (!Number.isInteger(cantidadRaw) || cantidadRaw < 0) {
-        showAlert('La cantidad debe ser un número entero igual o mayor que cero.', 'warning', 'Cantidad no válida');
+      if (!Number.isInteger(cantidadRaw) || cantidadRaw < 1) {
+        showAlert('La cantidad debe ser un número entero mayor a cero.', 'warning', 'Cantidad no válida');
         return;
       }
       const cantidad = cantidadRaw;
@@ -277,7 +277,11 @@
       const arr = mode === 'register' ? materialesRegister : materialesEdit;
       const existente = arr.find(m => String(m.codigo_producto) === String(codigo));
       if (existente) {
-        existente.cantidad_usada += cantidad;
+        if (!Number.isInteger(Number(existente.cantidad_usada)) || Number(existente.cantidad_usada) < 1) {
+          showAlert('Corrija la cantidad fraccionaria del material antes de agregar más unidades.', 'warning', 'Cantidad no válida');
+          return;
+        }
+        existente.cantidad_usada = Number(existente.cantidad_usada) + cantidad;
       } else {
         arr.push({ codigo_producto: codigo, nombre: nombre, cantidad_usada: cantidad, stock: stockDisp });
       }
@@ -287,13 +291,42 @@
       cant.value = 1;
     }
 
-    function quitarMaterial(mode, codigo) {
+    async function quitarMaterial(mode, codigo) {
+      const arr = mode === 'register' ? materialesRegister : materialesEdit;
+      const material = arr.find(m => String(m.codigo_producto) === String(codigo));
+      if (!material) return;
+
+      const confirmado = await showConfirm(
+        '¿Desea quitar "' + material.nombre + '" de los materiales del servicio?',
+        'Quitar material',
+        'Sí, quitar'
+      );
+      if (!confirmado) return;
+
       if (mode === 'register') {
         materialesRegister = materialesRegister.filter(m => String(m.codigo_producto) !== String(codigo));
       } else {
         materialesEdit = materialesEdit.filter(m => String(m.codigo_producto) !== String(codigo));
       }
       renderMateriales(mode);
+    }
+
+    function actualizarCantidadMaterial(mode, codigo, input) {
+      const cantidad = Number(input.value);
+      if (!Number.isInteger(cantidad) || cantidad < 1) {
+        input.setCustomValidity('La cantidad debe ser un número entero mayor a cero.');
+        return;
+      }
+
+      input.setCustomValidity('');
+      const arr = mode === 'register' ? materialesRegister : materialesEdit;
+      const material = arr.find(m => String(m.codigo_producto) === String(codigo));
+      if (!material) return;
+
+      material.cantidad_usada = cantidad;
+      document.getElementById('materiales_' + mode).value = JSON.stringify(
+        arr.map(m => ({ codigo_producto: m.codigo_producto, cantidad_usada: m.cantidad_usada }))
+      );
     }
 
     function renderMateriales(mode) {
@@ -308,25 +341,47 @@
         arr.forEach(m => {
           const card = document.createElement('div');
           card.className = 'flex items-center justify-between gap-2 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm';
-          card.innerHTML =
-            '<div class="min-w-0">' +
-              '<p class="font-bold text-navy-dark text-sm truncate">' + m.nombre + '</p>' +
-              '<p class="text-[0.65rem] text-gray-400">Stock disponible: ' + (m.stock ?? '—') + '</p>' +
-            '</div>' +
-            '<div class="flex items-center gap-2 shrink-0">' +
-              '<span class="text-xs font-black text-orange-dk bg-orange/10 px-2 py-1 rounded-lg">Usa: ' + m.cantidad_usada + '</span>' +
-              '<button type="button" onclick="quitarMaterial(\'' + mode + '\', ' + m.codigo_producto + ')" class="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Quitar">' +
-                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>' +
-              '</button>' +
-            '</div>';
+          const info = document.createElement('div');
+          info.className = 'min-w-0';
+          const name = document.createElement('p');
+          name.className = 'font-bold text-navy-dark text-sm truncate';
+          name.textContent = m.nombre;
+          const stock = document.createElement('p');
+          stock.className = 'text-[0.65rem] text-gray-400';
+          stock.textContent = 'Stock disponible: ' + (m.stock ?? '—');
+          info.append(name, stock);
+
+          const controls = document.createElement('div');
+          controls.className = 'flex items-center gap-2 shrink-0';
+          const quantityLabel = document.createElement('span');
+          quantityLabel.className = 'text-[0.65rem] font-black text-gray-500';
+          quantityLabel.textContent = 'Unid.';
+          const quantityInput = document.createElement('input');
+          quantityInput.type = 'number';
+          quantityInput.min = '1';
+          quantityInput.step = '1';
+          quantityInput.value = String(m.cantidad_usada);
+          quantityInput.className = 'w-20 rounded border px-2 py-1 text-center';
+          quantityInput.setAttribute('aria-label', 'Unidades usadas de ' + m.nombre);
+          quantityInput.addEventListener('input', () => actualizarCantidadMaterial(mode, m.codigo_producto, quantityInput));
+          actualizarCantidadMaterial(mode, m.codigo_producto, quantityInput);
+
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors';
+          remove.title = 'Quitar';
+          remove.setAttribute('aria-label', 'Quitar ' + m.nombre);
+          remove.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+          remove.addEventListener('click', () => quitarMaterial(mode, m.codigo_producto));
+          controls.append(quantityLabel, quantityInput, remove);
+          card.append(info, controls);
           lista.appendChild(card);
         });
       }
 
-      const limpios = arr
-        .filter(m => parseFloat(m.cantidad_usada) > 0)
-        .map(m => ({ codigo_producto: m.codigo_producto, cantidad_usada: m.cantidad_usada }));
-      hidden.value = JSON.stringify(limpios);
+      hidden.value = JSON.stringify(
+        arr.map(m => ({ codigo_producto: m.codigo_producto, cantidad_usada: m.cantidad_usada }))
+      );
     }
 
     function cargarMaterialesServicio(codigo, callback) {
@@ -397,13 +452,12 @@
         f.append('deleteServicio', 'true');
         f.append('idservicio', id);
         fetch('?url=servicio&type=main', { method:'POST', body:f })
-        .then(r => r.json()).then(d => {
-          if(d.status === 'success') location.reload();
-          else showAlert('No se pudo procesar la solicitud.', 'error', 'Error');
-        });
+        .then(r => r.json())
+        .then(d => showMutationResultAndReload(d, 'Servicio desactivado correctamente.', 'No se pudo desactivar el servicio.'))
+        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el servicio.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js"></script>
+  <script src="assets/js/datatables-init.js?v=3"></script>
 </body>
 </html>

@@ -47,7 +47,11 @@ class categoriaModel extends ConectDB {
             $stmt->bindValue(1, $nombre);
             
             if ($stmt->execute()) {
-                return ["status" => "success", "message" => "Categoría registrada exitosamente"];
+                return [
+                    "status" => "success",
+                    "message" => "Categoría registrada exitosamente",
+                    "codigo_categoria" => (int) $this->conex->lastInsertId(),
+                ];
             }
             return ["status" => "error", "message" => "Error al registrar"];
         } catch (PDOException $e) {
