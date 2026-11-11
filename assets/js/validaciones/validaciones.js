@@ -1,4 +1,3 @@
-
 /**
  * Validador frontend centralizado de CopiGabi.
  * - Presenta mensajes debajo de cada campo.
@@ -62,6 +61,21 @@
     return esFlex && estilo.flexDirection !== 'column' && estilo.flexDirection !== 'column-reverse';
   }
 
+  function contieneAdornoPosicionado(contenedor, campo) {
+    if (!contenedor || !window.getComputedStyle) return false;
+
+    return Array.from(contenedor.children).some(function (hijo) {
+      if (hijo === campo || window.getComputedStyle(hijo).position !== 'absolute') {
+        return false;
+      }
+
+      // Detecta iconos SVG, elementos decorativos accesibles y botones auxiliares
+      // (por ejemplo, el ojo de contraseña) anclados al contenedor del input.
+      return hijo.matches('svg, i, button, [aria-hidden="true"], [class*="icon"]')
+        || Boolean(hijo.querySelector('svg, i'));
+    });
+  }
+
   function obtenerAncla(campo) {
     // El componente telefónico tiene un grupo propio con prefijo y número.
     if (campo.matches('[data-telefono-number]')) {
@@ -81,19 +95,22 @@
       controlVisual = campo.previousElementSibling;
     }
 
-    // Se inserta después del propio control para mantener el aviso dentro de su
-    // grupo (incluidos los elementos de una rejilla). Si está dentro de una fila
-    // flex horizontal, se usa esa fila como ancla para que el aviso pase debajo
-    // del buscador, prefijo o botón auxiliar, nunca al lado del campo.
-    let ancla = controlVisual;
     const padre = controlVisual.parentElement;
-    if (esFilaHorizontal(padre)) {
+    let ancla = controlVisual;
+
+    // Si el input comparte un contenedor con iconos/botones posicionados de forma
+    // absoluta, la alerta debe colocarse DESPUÉS de ese contenedor, nunca dentro.
+    // Así el alto de la alerta no altera el centro vertical del icono ni del ojo.
+    if (contieneAdornoPosicionado(padre, controlVisual)) {
+      ancla = padre;
+    } else if (esFilaHorizontal(padre)) {
       ancla = padre;
     } else if (esFilaHorizontal(padre && padre.parentElement)) {
       ancla = padre.parentElement;
     }
 
-    // Si hay filas flex horizontales anidadas, toma la fila exterior inmediata.
+    // Evita que el mensaje se convierta en un elemento lateral de otra fila flex.
+    // Solo se sube mientras sea necesario salir de filas horizontales anidadas.
     while (ancla && esFilaHorizontal(ancla.parentElement)) {
       ancla = ancla.parentElement;
     }

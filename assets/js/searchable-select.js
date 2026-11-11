@@ -129,9 +129,17 @@
 
     input.addEventListener('focus', render);
     input.addEventListener('input', () => {
+      const teniaSeleccion = Boolean(select.value);
       select.value = '';
       input.setCustomValidity(input.required ? 'Seleccione una opción de la lista.' : '');
       activeIndex = -1;
+
+      // Notifica el borrado de la selección para limpiar datos dependientes
+      // (stock, precio, unidad y subtotal) sin esperar a elegir otro producto.
+      if (teniaSeleccion) {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
       render();
     });
     input.addEventListener('keydown', event => {

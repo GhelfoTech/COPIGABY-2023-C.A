@@ -149,7 +149,26 @@ body::before {
   margin-bottom: 8px;
 }
 
-.input-wrap { position: relative; }
+.input-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  /* El ancla de los iconos conserva exactamente la altura del control,
+     aunque el mensaje de validación aumente la altura del campo .field. */
+  min-height: 48px;
+}
+
+.input-wrap input {
+  display: block;
+  min-height: 48px;
+}
+
+.input-wrap .input-icon,
+.input-wrap .icon-lock,
+.input-wrap .toggle-pw {
+  top: 24px;
+  transform: translateY(-50%);
+}
 
 .input-wrap .input-icon,
 .input-wrap .icon-lock {
