@@ -413,6 +413,7 @@
     const simboloMoneda = <?= json_encode($monedaActiva['simbolo'] ?? '$') ?>;
     const METODOS_CON_BANCO = [563, 564];
     const PORCENTAJES_INICIAL_CASHEA = [60, 50, 40, 30, 20, 10, 0];
+    const MENSAJE_STOCK_INSUFICIENTE = 'No hay stock, no hay stock existente para esta cantidad.';
 
     const modalPedido = document.getElementById('modalPedido');
     const modalDetalle = document.getElementById('modalDetalle');
@@ -759,6 +760,21 @@
         return;
       }
       inputCantidad.setCustomValidity('');
+
+      const tipoItem = row.querySelector('.item-tipo')?.value;
+      const selectorItem = row.querySelector('.item-select');
+      const opcionItem = selectorItem && selectorItem.options[selectorItem.selectedIndex];
+      const stockTexto = opcionItem && opcionItem.getAttribute('data-stock');
+      if (tipoItem === 'producto' && opcionItem && opcionItem.value && stockTexto !== null && stockTexto !== '') {
+        const stockDisponible = Number(stockTexto);
+        if (Number.isFinite(stockDisponible) && cantidadTotal > stockDisponible) {
+          row.querySelector('.item-subtotal').textContent = simboloMoneda + '0.00';
+          row.dataset.subtotal = '0';
+          recalcTotal();
+          return;
+        }
+      }
+
       const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
       const subtotal = roundMoney(cantidadTotal * precio);
       row.querySelector('.item-subtotal').textContent = simboloMoneda + formatMoney(subtotal);
@@ -784,6 +800,8 @@
       row.querySelector('.item-unidad-info').textContent = '';
       row.querySelector('.item-stock-info').textContent = '';
       row.dataset.subtotal = '0';
+      const cantidadInput = row.querySelector('.item-cant');
+      if (cantidadInput) cantidadInput.dispatchEvent(new Event('input', { bubbles: true }));
       recalcTotal();
     }
 
@@ -812,6 +830,8 @@
       }
 
       updateRowSubtotal(row);
+      const cantidadInput = row.querySelector('.item-cant');
+      if (cantidadInput) cantidadInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     async function removeItemRow(tr) {
@@ -920,6 +940,8 @@
 
         tr.querySelector('.item-precio').value = formatMoney(prefill.precio_venta);
         updateRowSubtotal(tr);
+        const cantidadInput = tr.querySelector('.item-cant');
+        if (cantidadInput) cantidadInput.dispatchEvent(new Event('input', { bubbles: true }));
      } else {
          tr.querySelector('.item-select').innerHTML = buildOptions('producto');
      }
@@ -952,7 +974,18 @@
           const stockAttr = option.getAttribute('data-stock');
           const stock = stockAttr !== null ? parseInt(stockAttr, 10) : null;
           if (stock !== null && cantidadTotal > stock) {
-            return { ok: false, message: 'Stock insuficiente para: ' + option.text, items: [] };
+            const campoCantidad = row.querySelector('.item-cant');
+            if (campoCantidad) {
+              campoCantidad.dispatchEvent(new Event('input', { bubbles: true }));
+              campoCantidad.focus({ preventScroll: true });
+              campoCantidad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return {
+              ok: false,
+              message: MENSAJE_STOCK_INSUFICIENTE,
+              items: [],
+              campo: campoCantidad
+            };
           }
           const unidadSelect = row.querySelector('.item-unidad');
           if (unidadSelect) {
@@ -992,7 +1025,12 @@
 
       const collected = collectItemsFromRows();
       if (!collected.ok) {
-        Swal.fire({ icon: 'warning', title: 'Detalle incompleto', text: collected.message });
+        if (collected.campo) {
+          collected.campo.focus({ preventScroll: true });
+          collected.campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          Swal.fire({ icon: 'warning', title: 'Detalle incompleto', text: collected.message });
+        }
         return;
       }
 

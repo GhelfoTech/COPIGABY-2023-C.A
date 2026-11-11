@@ -86,5 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+<script src="assets/js/validaciones/regex.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/regex.js') ?>" defer></script>
+<script src="assets/js/validaciones/validaciones.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/validaciones.js') ?>" defer></script>
+
 </body>
 </html>

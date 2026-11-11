@@ -1,0 +1,41 @@
+/* Estilos de retroalimentación para validaciones frontend de CopiGabi. */
+.cg-validation-error {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  clear: both;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0.35rem 0 0;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.cg-field-invalid {
+  border-color: #dc2626 !important;
+  outline-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.12) !important;
+}
+
+.cg-field-invalid:focus {
+  border-color: #dc2626 !important;
+  outline-color: #dc2626 !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cg-validation-error {
+    animation: cg-validation-appear 0.16s ease-out;
+  }
+
+  @keyframes cg-validation-appear {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
