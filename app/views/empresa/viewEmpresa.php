@@ -108,7 +108,8 @@
                   <option value="J-">J-</option>
                   <option value="V-">V-</option>
                 </select>
-                <input type="tel" inputmode="numeric" pattern="[0-9]*" name="rif_empresa" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold text-sm" placeholder="123456789">
+                <input type="tel" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" name="rif_numero" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold text-sm" placeholder="123456789">
+                <input type="hidden" name="rif_empresa">
               </div>
             </div>
            <div>
@@ -157,7 +158,8 @@
                  <option value="J-">J-</option>
                  <option value="V-">V-</option>
                </select>
-               <input type="tel" inputmode="numeric" pattern="[0-9]*" name="rif_empresa" id="edit_rif" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+               <input type="tel" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" name="rif_numero" id="edit_rif" required class="w-full px-4 py-2 bg-gray-50 border rounded-r-lg focus:border-orange outline-none font-bold no-spinner">
+               <input type="hidden" name="rif_empresa" id="edit_rif_completo">
              </div>
            </div>
           <div>
@@ -227,7 +229,7 @@
         document.getElementById('edit_nombre').value = data.nombre_empresa;
         const rif = String(data.rif_empresa || '').trim();
         const rifTipo = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(0, 2) : 'J-';
-        const rifNumero = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(2) : rif;
+        const rifNumero = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(2).replace(/[^0-9]/g, '') : rif.replace(/[^0-9]/g, '');
         const rifTipoSelect = document.getElementById('edit_rif_tipo');
         if (rifTipoSelect) rifTipoSelect.value = rifTipo;
         document.getElementById('edit_rif').value = rifNumero;
@@ -236,13 +238,6 @@
         document.getElementById('edit_direccion').value = data.direccion;
         document.getElementById('edit_logo').value = data.logo;
         document.getElementById('modalEditEmpresa').classList.remove('hidden');
-    }
-
-    function setRifForEmpresa(form) {
-        const rifTipo = (form.querySelector('#edit_rif_tipo') || {}).value || 'J-';
-        const rifNumero = (form.querySelector('#edit_rif') || {}).value || '';
-        const rifInput = form.querySelector('input[name="rif_empresa"]');
-        if (rifInput) rifInput.value = rifTipo + rifNumero;
     }
 
     function viewDetails(id) {
@@ -299,7 +294,7 @@
 
     function setRifForEmpresa(form) {
         const rifTipo = (form.querySelector('select[name="rif_tipo"]') || {}).value || 'J-';
-        const rifNumero = (form.querySelector('input[name="rif_empresa"]') || {}).value || '';
+        const rifNumero = (form.querySelector('input[name="rif_numero"]') || {}).value || '';
         const rifInput = form.querySelector('input[name="rif_empresa"]');
         if (rifInput) rifInput.value = rifTipo + rifNumero;
     }
