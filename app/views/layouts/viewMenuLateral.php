@@ -154,6 +154,13 @@ function navIconClass(bool $active): string {
     <?php endif; ?>
   </nav>
 
+  <button type="button" id="btnAyudaManual" class="<?= navItemClass('ayuda', $currentUrl) ?> w-[calc(100%-1rem)] text-left">
+    <svg class="<?= navIconClass($currentUrl === 'ayuda') ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    Ayuda
+  </button>
+
   <footer class="mt-auto border-t border-white/10 p-4">
     <a href="?url=login" class="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition-all duration-200 ease-in-out hover:bg-red-500/10 hover:text-red-300">
       <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -166,6 +173,31 @@ function navIconClass(bool $active): string {
 
 <script>
 (function () {
+  var btnAyuda = document.getElementById('btnAyudaManual');
+  if (btnAyuda) {
+    btnAyuda.addEventListener('click', function () {
+      Swal.fire({
+        title: 'Ayuda del sistema',
+        html:
+          '<p style="font-size:1rem;line-height:1.7;color:#374151">Si necesita orientación sobre el funcionamiento de los procesos, módulos o la navegación general del sistema, ' +
+          'le invitamos a consultar nuestro <b>manual de usuario</b>.</p>' +
+          '<p style="font-size:1rem;line-height:1.7;color:#374151">Descargue la guía completa para conocer el detalle de cada interfaz, botones de acción y flujos de trabajo.</p>',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: '📥 Descargar Manual',
+        confirmButtonColor: '#3085d6',
+        cancelButtonText: 'Cancelar',
+        cancelButtonColor: '#aaa',
+        reverseButtons: true,
+        focusConfirm: false
+      }).then(function (result) {
+        if (result.isConfirmed) {
+          window.location.href = '?url=ayuda&descargar=pdf';
+        }
+      });
+    });
+  }
+
   document.querySelectorAll('.dropdown-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var parent = btn.closest('.dropdown-parent');

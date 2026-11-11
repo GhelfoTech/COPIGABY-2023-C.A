@@ -1,6 +1,9 @@
 {
-    "name": "elian/copigaby-2023-c.a",
+    "name": "yeilyn/projecto",
     "type": "project",
+    "require": {
+        "composer/composer": "2.11.x-dev"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -9,8 +12,8 @@
     },
     "authors": [
         {
-            "name": "eliannys"
+            "name": "yeilyn"
         }
     ],
-    "require": {}
+    "minimum-stability": "dev"
 }

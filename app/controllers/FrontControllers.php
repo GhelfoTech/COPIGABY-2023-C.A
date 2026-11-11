@@ -11,7 +11,7 @@
         private $moduloPublico = 'login';
 
         /** Módulos accesibles por cualquier usuario autenticado (páginas de inicio) */
-        private $modulosBase = ['dashboard'];
+        private $modulosBase = ['dashboard', 'ayuda'];
 
         // Definicion de atributos que serán constantes
         private $dir;
