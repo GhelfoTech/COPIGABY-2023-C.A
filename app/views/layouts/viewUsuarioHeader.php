@@ -5,7 +5,7 @@ $inicial = strtoupper(substr($nombreUsuario, 0, 1));
 ?>
 <div class="flex items-center">
   <button type="button" id="btnOpenCredenciales" class="flex items-center gap-3 bg-slate-900 rounded-xl px-4 py-2 border border-slate-700 shadow-lg hover:bg-slate-800 transition-colors">
-    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-orange-500 bg-orange-100 text-sm font-black text-orange-600">
+    <div id="inicialUsuario" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-orange-500 bg-orange-100 text-sm font-black text-orange-600">
       <?= htmlspecialchars($inicial) ?>
     </div>
     <span class="text-xs font-black text-slate-300 uppercase tracking-wide">BIENVENIDO, <?= htmlspecialchars($nombreCompleto) ?></span>
@@ -23,7 +23,7 @@ $inicial = strtoupper(substr($nombreUsuario, 0, 1));
         </div>
       <div class="px-6 py-5 border-b border-gray-100">
         <h3 class="text-center text-lg font-black text-slate-900 uppercase tracking-tight">Gestión de Credenciales de Usuario</h3>
-        <p class="mt-1 text-center text-xs font-medium text-gray-500">Usted está visualizando los datos de: <?= htmlspecialchars($nombreCompleto) ?></p>
+        <p id="nombreUsuarioCredenciales" class="mt-1 text-center text-xs font-medium text-gray-500">Usted está visualizando los datos de: <?= htmlspecialchars($nombreCompleto) ?></p>
       </div>
       <form id="formCredenciales" class="p-6 space-y-4">
         <input type="hidden" name="username_actual" value="<?= htmlspecialchars($nombreCompleto) ?>">
@@ -97,9 +97,19 @@ $inicial = strtoupper(substr($nombreUsuario, 0, 1));
     .then(r => r.json())
     .then(data => {
       if (data.status === 'success') {
-        const nuevoNombre = new FormData(form).get('nuevo_nombre');
+        const nuevoNombre = String(new FormData(form).get('nuevo_nombre') || '').trim();
         if (nuevoNombre) {
-          document.querySelector('#btnOpenCredenciales span').textContent = 'BIENVENIDO, ' + String(nuevoNombre).toUpperCase();
+          document.getElementById('inicialUsuario').textContent = nuevoNombre.charAt(0).toUpperCase();
+          document.querySelector('#btnOpenCredenciales span').textContent = 'BIENVENIDO, ' + nuevoNombre.toUpperCase();
+          document.getElementById('nombreUsuarioCredenciales').textContent = 'Usted está visualizando los datos de: ' + nuevoNombre.toUpperCase();
+
+          ['username_actual', 'nuevo_nombre'].forEach(function (name) {
+            const input = form.elements.namedItem(name);
+            if (input) {
+              input.value = nuevoNombre;
+              input.defaultValue = nuevoNombre;
+            }
+          });
         }
         showAlert(data.message, 'success', 'Credenciales actualizadas');
         closeModal();

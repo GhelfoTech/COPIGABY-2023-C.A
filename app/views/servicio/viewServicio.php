@@ -91,7 +91,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio ($) <span class="text-red-500">*</span></label>
-                <input type="number" step="1" min="1" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5">
+                <input type="number" step="0.01" min="0.01" name="precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
             </div>
           </div>
            <div>
@@ -154,7 +154,7 @@
           </div>
           <div>
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Precio <span class="text-red-500">*</span></label>
-             <input type="number" step="1" min="1" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5">
+             <input type="number" step="0.01" min="0.01" name="precio" id="edit_precio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="5.00">
           </div>
            <div>
              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>

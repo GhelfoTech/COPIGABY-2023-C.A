@@ -155,6 +155,7 @@ class casheaModel extends ConectDB {
                       FROM pedido p
                       LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
                       WHERE p.estado = 1
+                        AND p.monto_total >= 25
                         AND (
                             NOT EXISTS (
                                 SELECT 1 FROM cashea_credito cc
@@ -191,6 +192,11 @@ class casheaModel extends ConectDB {
             if (!$pedido) {
                 $this->conex->rollBack();
                 return ['status' => 'error', 'message' => 'El pedido seleccionado ya no está disponible.'];
+            }
+            $validacionMonto = $this->validarMontoPedidoCashea($pedido['monto_total'] ?? null);
+            if ($validacionMonto !== true) {
+                $this->conex->rollBack();
+                return ['status' => 'error', 'message' => $validacionMonto];
             }
             if ($this->pedidoYaTieneCredito((int) $datos['id_pedido'])) {
                 $this->conex->rollBack();

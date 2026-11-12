@@ -139,7 +139,7 @@
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Costo Unit. ($)</label>
-                      <input type="number" step="1" min="1" id="costProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange">
+                      <input type="number" step="0.01" min="0.01" id="costProd" placeholder="0.00" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange">
                   </div>
                   <button type="button" onclick="addItem()" class="col-span-3 bg-navy-light text-white font-bold py-2 rounded-lg text-xs hover:bg-navy transition-colors mt-1 uppercase">Agregar a la lista</button>
               </div>
@@ -652,19 +652,21 @@
         const costInput = document.getElementById('costProd');
         
         const cant = Number(cantInput.value);
-        const cost = parseFloat(costInput.value);
+        const cost = Number(costInput.value);
 
-        if(!sel.value || !Number.isInteger(cant) || cant <= 0 || isNaN(cost) || !Number.isInteger(cost) || cost <= 0) {
-            showAlert('Por favor complete los datos del producto (Cantidad y Costo deben ser enteros positivos).', 'warning', 'Datos incompletos');
+        if(!sel.value || !Number.isInteger(cant) || cant <= 0 || !Number.isFinite(cost) || cost <= 0 || !costInput.validity.valid) {
+            showAlert('Seleccione un producto e indique una cantidad entera positiva y un costo positivo con hasta dos decimales.', 'warning', 'Datos incompletos');
             return;
         }
+
+        const costoNormalizado = Math.round(cost * 100) / 100;
 
         // Agregar al arreglo de items
         items.push({
             codigo_producto: sel.value,
             nombre: sel.options[sel.selectedIndex].text,
             cantidad: cant,
-            costo: cost
+            costo: costoNormalizado
         });
 
         cantInput.value = "1";
@@ -680,8 +682,8 @@
         body.innerHTML = '';
         total = 0;
         items.forEach((it, index) => {
-            const sub = it.cantidad * it.costo;
-            total += sub;
+            const sub = Math.round(it.cantidad * it.costo * 100) / 100;
+            total = Math.round((total + sub) * 100) / 100;
             body.innerHTML += `<tr><td class="px-4 py-2">${it.nombre}</td><td class="px-4 py-2"><input type="number" min="1" step="1" required value="${it.cantidad}" data-item-quantity="${index}" aria-label="Cantidad de ${it.nombre}" class="w-20 rounded border px-2 py-1 text-center"></td><td class="px-4 py-2">$${it.costo.toFixed(2)}</td><td data-item-subtotal class="px-4 py-2 text-right font-black">$${sub.toFixed(2)}</td></tr>`;
         });
         document.getElementById('txtTotal').innerText = `$${total.toFixed(2)}`;
@@ -696,9 +698,9 @@
       if (!Number.isInteger(quantity) || quantity <= 0 || !items[index]) return;
 
       items[index].cantidad = quantity;
-      const subtotal = quantity * items[index].costo;
+      const subtotal = Math.round(quantity * items[index].costo * 100) / 100;
       input.closest('tr').querySelector('[data-item-subtotal]').textContent = `$${subtotal.toFixed(2)}`;
-      total = items.reduce((sum, item) => sum + item.cantidad * item.costo, 0);
+      total = Math.round(items.reduce((sum, item) => sum + item.cantidad * item.costo, 0) * 100) / 100;
       document.getElementById('txtTotal').innerText = `$${total.toFixed(2)}`;
     });
 
@@ -733,6 +735,7 @@
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
 
+        let resultado;
         try {
             const respuesta = await CopiGabyAjax.fetch(formulario.action, {
                 method: 'POST',
@@ -740,19 +743,12 @@
                 body: new FormData(formulario),
                 signal: controller.signal
             });
-            clearTimeout(timeout);
 
-            const resultado = await respuesta.json();
+            resultado = await respuesta.json();
             if (!respuesta.ok || resultado.status !== 'success') {
                 throw new Error(resultado.message || 'No se pudo registrar la compra');
             }
-
-            await showAlert(resultado.message || 'La compra fue registrada correctamente.', 'success', 'Compra registrada');
-            CopiGabyAjax.refresh();
         } catch (error) {
-            clearTimeout(timeout);
-            boton.disabled = false;
-            boton.textContent = 'REGISTRAR COMPRA';
             showAlert(
               error.name === 'AbortError'
                 ? 'El registro tardó demasiado tiempo. Revisa si la compra se registró antes de intentar nuevamente.'
@@ -760,6 +756,24 @@
               'error',
               error.name === 'AbortError' ? 'Tiempo agotado' : 'Error al registrar'
             );
+            return;
+        } finally {
+            clearTimeout(timeout);
+            boton.disabled = false;
+            boton.textContent = 'REGISTRAR COMPRA';
+        }
+
+        formulario.reset();
+        items = [];
+        renderTable();
+        modal.classList.add('hidden');
+        await showAlert(resultado.message || 'La compra fue registrada correctamente.', 'success', 'Compra registrada');
+
+        try {
+            await CopiGabyAjax.refresh();
+        } catch (error) {
+            console.error('La compra se registró, pero no se pudo actualizar la lista.', error);
+            showAlert('La compra se registró, pero no se pudo actualizar la lista. Actualice la vista manualmente.', 'warning', 'Compra registrada');
         }
     }
   </script>

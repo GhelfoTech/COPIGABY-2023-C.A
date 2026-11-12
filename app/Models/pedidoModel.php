@@ -58,7 +58,7 @@ class pedidoModel extends ConectDB {
                       LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
                       LEFT JOIN detalle_pago dpg ON dpg.codigo_pago = pg.codigo_pago
                       LEFT JOIN metodo_pago mp ON dpg.codigo_metodo = mp.codigo_metodo
-                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido
+                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido AND cc.estado = 1
                       ORDER BY p.codigo_pedido DESC";
             $stmt = $this->conex->prepare($query);
             $stmt->execute();
@@ -291,7 +291,7 @@ class pedidoModel extends ConectDB {
                       LEFT JOIN pagos pg ON pg.codigo_pedido = p.codigo_pedido AND pg.estado = 1
                       LEFT JOIN detalle_pago dpg ON dpg.codigo_pago = pg.codigo_pago
                       LEFT JOIN metodo_pago mp ON dpg.codigo_metodo = mp.codigo_metodo
-                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido
+                      LEFT JOIN cashea_credito cc ON cc.id_pedido = p.codigo_pedido AND cc.estado = 1
                       WHERE p.codigo_pedido = ?";
             $stmt = $this->conex->prepare($query);
             $stmt->execute([(int) $id]);

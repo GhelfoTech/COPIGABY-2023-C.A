@@ -25,15 +25,11 @@ trait CasheaTrait
             return ['status' => 'error', 'message' => 'El pedido seleccionado no existe o no está activo'];
         }
 
-        $montoTotal = round((float) ($pedido['monto_total'] ?? 0), 2);
-        if ($montoTotal <= 0) {
-            return ['status' => 'error', 'message' => 'El monto total del pedido debe ser mayor a cero'];
+        $validacionMonto = $this->validarMontoPedidoCashea($pedido['monto_total'] ?? null);
+        if ($validacionMonto !== true) {
+            return ['status' => 'error', 'message' => $validacionMonto];
         }
-
-        // Cashea solo aplica a pedidos mayores a $25 (montos menores no se financian)
-        if ($montoTotal <= 25) {
-            return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos mayores a $25'];
-        }
+        $montoTotal = round((float) $pedido['monto_total'], 2);
 
         $nivel = (int) ($datos['nivel_cashea'] ?? 0);
         if ($nivel < 1 || $nivel > 6) {
@@ -57,6 +53,19 @@ trait CasheaTrait
         $montos = $this->calcularMontosCashea($montoTotal, (float) $porcentajeInicial);
         if ($montos['monto_financiado'] <= 0) {
             return ['status' => 'error', 'message' => 'El monto financiado debe ser mayor a cero'];
+        }
+
+        return true;
+    }
+
+    protected function validarMontoPedidoCashea($monto): bool|string
+    {
+        if (!is_numeric($monto) || !is_finite((float) $monto)) {
+            return 'El monto total del pedido no es válido';
+        }
+
+        if (round((float) $monto, 2) < 25) {
+            return 'Cashea solo está disponible para pedidos de $25 o más';
         }
 
         return true;

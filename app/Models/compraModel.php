@@ -85,9 +85,8 @@ class compraModel extends ConectDB {
             $stmtStock = $this->conex->prepare($queryStock);
 
             foreach ($items as $item) {
-                // El costo unitario se maneja por unidad (enteros): 1, 2, 3...
-                $item['costo'] = round((float) $item['costo']);
-                $subtotal = $item['cantidad'] * $item['costo'];
+                $item['costo'] = round((float) $item['costo'], 2);
+                $subtotal = round($item['cantidad'] * $item['costo'], 2);
 
                 // Guardar detalle
                 $stmtDetalle->execute([

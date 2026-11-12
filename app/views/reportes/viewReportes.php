@@ -13,13 +13,13 @@
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
   <?php include 'app/views/layouts/viewMenuLateral.php'; ?>
 
-  <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
+  <div class="ml-[260px] min-w-0 flex-1 flex flex-col min-h-screen">
     <header class="h-16 bg-white border-b-2 border-orange flex items-center justify-between px-8 sticky top-0 z-50 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <h2 class="text-navy-dark font-extrabold text-xl uppercase tracking-tighter">Reportes</h2>
-      <div class="flex items-center"><?php include 'app/views/layouts/viewUsuarioHeader.php'; ?></div>
+      <div class="flex items-center"><?php include __DIR__ . '/../layouts/viewUsuarioHeader.php'; ?></div>
     </header>
 
-    <main class="p-8 flex-1 animate-fade-up">
+    <main class="min-w-0 p-8 flex-1 animate-fade-up">
       <div class="mb-6">
         <h1 class="text-2xl font-black text-gray-800">Centro de reportes</h1>
         <p class="text-sm font-semibold text-gray-500">Consulta la información del negocio y descárgala en PDF o Word.</p>

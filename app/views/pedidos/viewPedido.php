@@ -239,7 +239,7 @@
                 <select name="codigo_banco" id="selectBanco" class="w-full px-4 py-2 bg-white border rounded-lg focus:border-orange outline-none font-bold">
                   <option value="">— Seleccione banco —</option>
                   <?php foreach ($bancos as $b): ?>
-                    <option value="<?= (int) $b['codigo_banco'] ?>"><?= (int) $b['codigo_banco'] ?> - <?= htmlspecialchars($b['nombre_banco']) ?></option>
+                    <option value="<?= (int) $b['codigo_banco'] ?>"><?= sprintf('%04d', (int) $b['codigo_banco']) ?> - <?= htmlspecialchars($b['nombre_banco']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -1059,8 +1059,6 @@
         const data = await response.json();
 
         if (data.status === 'success') {
-          // Cierra y limpia el formulario tanto al registrar como al modificar.
-          // El modal está fuera de <main>, por lo que CopiGabyAjax.refresh() no lo reemplaza.
           modalPedido.classList.add('hidden');
           resetFormPedido();
 
@@ -1116,7 +1114,7 @@
           const refWrap = document.getElementById('det_ref_wrap');
           if (pago && pago.nombre_banco) {
             bancoWrap.classList.remove('hidden');
-            document.getElementById('det_banco').innerText = `${pago.codigo_banco} - ${pago.nombre_banco}`;
+            document.getElementById('det_banco').innerText = `${String(pago.codigo_banco ?? '').padStart(4, '0')} - ${pago.nombre_banco}`;
           } else {
             bancoWrap.classList.add('hidden');
           }
@@ -1176,12 +1174,14 @@
     function openEditPedido(id) {
       CopiGabyAjax.fetch(`?url=pedido&type=details&id=${id}`)
         .then(r => r.json())
-        .then(data => {
+        .then(async data => {
           const h = data.header;
           const items = data.items;
           if (!h) return;
 
           resetFormPedido();
+          // searchable-select completes its native form reset on the next task.
+          await new Promise(resolve => window.setTimeout(resolve, 0));
           editMode = true;
           codigoPedidoEdit.value = h.codigo_pedido;
           formPedido.action = '?url=pedido&type=update';

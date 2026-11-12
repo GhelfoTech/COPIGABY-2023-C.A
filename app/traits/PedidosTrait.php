@@ -65,8 +65,8 @@ trait PedidosTrait
         }
 
         if ($esCashea) {
-            if ($montoTotal <= 25) {
-                return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos mayores a $25'];
+            if ($montoTotal < 25) {
+                return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos de $25 o más'];
             }
             $nivelCashea = (int) ($datos['nivel_cashea'] ?? 0);
             if ($nivelCashea < 1 || $nivelCashea > 6) {

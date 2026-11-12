@@ -53,7 +53,7 @@
                 Última actualización: <?= !empty($tasaActual['fecha']) ? date('d/m/Y H:i', strtotime($tasaActual['fecha'])) : 'Sin registros' ?>
               </p>
             </div>
-            <form method="POST" action="?url=dashboard" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form method="POST" action="?url=dashboard" data-ajax="off" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input type="hidden" name="guardar_tasa" value="1">
               <div>
                 <label class="block text-xs font-black text-gray-400 uppercase mb-1">Tipo de moneda</label>

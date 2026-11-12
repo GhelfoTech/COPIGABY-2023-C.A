@@ -32,13 +32,14 @@ trait ComprasTrait
             foreach ($items as $index => $item) {
                 $linea    = (int) $index + 1;
                 $cantidad = (float) ($item['cantidad'] ?? 0);
-                $costo    = (float) ($item['costo'] ?? 0);
+                $costoValor = $item['costo'] ?? null;
+                $costo = is_numeric($costoValor) ? round((float) $costoValor, 2) : 0;
 
                 // Costo unitario y cantidad estrictamente mayores a cero
                 if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
                     return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
                 }
-                if ($costo <= 0) {
+                if (!is_numeric($costoValor) || !is_finite((float) $costoValor) || $costo <= 0) {
                     return ['status' => 'error', 'message' => "El costo unitario debe ser mayor a cero en la línea {$linea}"];
                 }
                 $subtotal = $cantidad * $costo;

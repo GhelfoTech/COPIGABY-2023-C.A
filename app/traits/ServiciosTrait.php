@@ -19,7 +19,12 @@ trait ServiciosTrait
         }
 
         // Precio: estrictamente numérico y mayor a cero (no letras)
-        if (!isset($datos['precio']) || !is_numeric($datos['precio']) || (float) $datos['precio'] <= 0) {
+        if (
+            !isset($datos['precio'])
+            || !is_numeric($datos['precio'])
+            || !is_finite((float) $datos['precio'])
+            || round((float) $datos['precio'], 2) <= 0
+        ) {
             return ['status' => 'error', 'message' => 'El precio debe ser un valor numérico mayor a cero'];
         }
 
