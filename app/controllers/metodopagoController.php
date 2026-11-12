@@ -16,6 +16,7 @@
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_metodo'])) {
                 $resultado = $object->addMetodo($_POST['nombre_metodo']);
+                copigabyAjaxRespond($resultado, 'Método de pago registrado correctamente.', 'No se pudo registrar el método de pago.');
                 $_SESSION['metodopago_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=metodopago");
                 exit();
@@ -30,6 +31,7 @@
                     $_POST['nombre_metodo'],
                     $estado
                 );
+                copigabyAjaxRespond($resultado, 'Método de pago actualizado correctamente.', 'No se pudo actualizar el método de pago.');
                 setSystemFlashFromResult($resultado, 'Método de pago actualizado correctamente.', 'No se pudo actualizar el método de pago.');
                 header("Location: ?url=metodopago");
                 exit();

@@ -23,13 +23,7 @@
                 }
                 $resultado = $object->addCompra($_POST, $items);
 
-                $esAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-
-                if ($esAjax) {
-                    header('Content-Type: application/json; charset=utf-8');
-                    echo json_encode($resultado);
-                    exit();
-                }
+                copigabyAjaxRespond($resultado, 'Compra registrada correctamente.', 'No se pudo registrar la compra.');
 
                 setSystemFlashFromResult($resultado, 'Compra registrada correctamente.', 'No se pudo registrar la compra.');
                 header("Location: ?url=compra");
@@ -49,6 +43,7 @@
                     'monto_total'               => $_POST['monto_total'],
                     'estado'                    => $estado,
                 ]);
+                copigabyAjaxRespond($resultado, 'Compra actualizada correctamente.', 'No se pudo actualizar la compra.');
                 setSystemFlashFromResult($resultado, 'Compra actualizada correctamente.', 'No se pudo actualizar la compra.');
                 header("Location: ?url=compra");
                 exit();

@@ -363,7 +363,7 @@
       event.preventDefault();
       const formulario = event.currentTarget;
       try {
-        const respuesta = await fetch(formulario.action, { method: 'POST', body: new FormData(formulario) });
+        const respuesta = await CopiGabyAjax.fetch(formulario.action, { method: 'POST', body: new FormData(formulario) });
         const resultado = await respuesta.json();
         if (!respuesta.ok || resultado.status !== 'success') {
           throw new Error(resultado.message || 'No se pudo registrar el producto');
@@ -394,7 +394,7 @@
 
       const formulario = event.currentTarget;
       try {
-        const respuesta = await fetch(formulario.action, {
+        const respuesta = await CopiGabyAjax.fetch(formulario.action, {
           method: 'POST',
           body: new FormData(formulario)
         });
@@ -453,7 +453,7 @@
         const f = new FormData();
         f.append('deleteCompra', 'true');
         f.append('idcompra', id);
-        fetch('?url=compra&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=compra&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Compra anulada correctamente.', 'No se pudo anular la compra.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para anular la compra.', 'error', 'Error de conexión'));
@@ -497,7 +497,7 @@
 
     async function viewDetails(id) {
       try {
-        const response = await fetch(`?url=compra&type=details&id=${id}`);
+        const response = await CopiGabyAjax.fetch(`?url=compra&type=details&id=${id}`);
         const data = await response.json();
         if (!response.ok || !data.header || !Array.isArray(data.items)) {
           throw new Error('No se pudieron cargar los detalles de la compra.');
@@ -620,14 +620,14 @@
         formData.append('numero_factura_proveedor', factura.value.trim());
         formData.append('fecha_compra', fecha.value);
         formData.append('estado', document.getElementById('edit_estado').checked ? '1' : '0');
-        const response = await fetch('?url=compra&type=update_details', { method: 'POST', body: formData });
+        const response = await CopiGabyAjax.fetch('?url=compra&type=update_details', { method: 'POST', body: formData });
         const result = await response.json();
         if (!response.ok || result.status !== 'success') {
           throw new Error(result.message || 'No se pudo actualizar la compra.');
         }
 
         await showAlert(result.message, 'success', 'Compra actualizada');
-        window.location.reload();
+        window.CopiGabyAjax.refresh();
       } catch (error) {
         showAlert(error.message || 'No se pudo actualizar la compra.', 'error', 'Error');
       } finally {
@@ -734,7 +734,7 @@
         const timeout = setTimeout(() => controller.abort(), 15000);
 
         try {
-            const respuesta = await fetch(formulario.action, {
+            const respuesta = await CopiGabyAjax.fetch(formulario.action, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: new FormData(formulario),
@@ -748,7 +748,7 @@
             }
 
             await showAlert(resultado.message || 'La compra fue registrada correctamente.', 'success', 'Compra registrada');
-            window.location.replace('?url=compra');
+            CopiGabyAjax.refresh();
         } catch (error) {
             clearTimeout(timeout);
             boton.disabled = false;
@@ -763,6 +763,6 @@
         }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

@@ -346,13 +346,13 @@
         const f = new FormData();
         f.append('deleteProduct', 'true');
         f.append('idproducto', id);
-        fetch('?url=producto&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=producto&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Producto desactivado correctamente.', 'No se pudo desactivar el producto.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el producto.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

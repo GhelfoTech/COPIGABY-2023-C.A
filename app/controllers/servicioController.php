@@ -22,6 +22,7 @@
                 $resultado = is_array($materiales)
                     ? $object->addServicio($_POST, $materiales)
                     : ['status' => 'error', 'message' => 'No se pudieron leer las cantidades de los materiales'];
+                copigabyAjaxRespond($resultado, 'Servicio registrado correctamente.', 'No se pudo registrar el servicio.');
                 setSystemFlashFromResult($resultado, 'Servicio registrado correctamente.', 'No se pudo registrar el servicio.');
                 header("Location: ?url=servicio");
                 exit();
@@ -36,6 +37,7 @@
                 $resultado = is_array($materiales)
                     ? $object->updateServicio((int) $_POST['idservicio'], $_POST, $materiales)
                     : ['status' => 'error', 'message' => 'No se pudieron leer las cantidades de los materiales'];
+                copigabyAjaxRespond($resultado, 'Servicio actualizado correctamente.', 'No se pudo actualizar el servicio.');
                 setSystemFlashFromResult($resultado, 'Servicio actualizado correctamente.', 'No se pudo actualizar el servicio.');
                 header("Location: ?url=servicio");
                 exit();

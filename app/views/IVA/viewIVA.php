@@ -192,13 +192,13 @@
         const f = new FormData();
         f.append('deleteIva', 'true');
         f.append('codigo_IVA', id);
-        fetch('?url=iva&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=iva&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Registro de IVA desactivado correctamente.', 'No se pudo desactivar el registro de IVA.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el IVA.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

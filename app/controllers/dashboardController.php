@@ -21,6 +21,7 @@
             $codigoMoneda,
             (float) ($_POST['monto_bolivares'] ?? 0)
         );
+        copigabyAjaxRespond($resultado, 'Tasa de cambio actualizada correctamente.', 'No se pudo actualizar la tasa de cambio.');
         $_SESSION['tasa_flash'] = $resultado;
         header('Location: ?url=dashboard');
         exit();

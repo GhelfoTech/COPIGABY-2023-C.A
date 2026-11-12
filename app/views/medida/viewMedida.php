@@ -218,13 +218,13 @@
         const f = new FormData();
         f.append('deleteMedida', 'true');
         f.append('codigo_media', id);
-        fetch('?url=medida&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=medida&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Unidad desactivada correctamente.', 'No se pudo desactivar la unidad.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar la unidad.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_rol'])) {
                 $resultado = $object->addRol($_POST);
+                copigabyAjaxRespond($resultado, 'Rol registrado correctamente.', 'No se pudo registrar el rol.');
                 $_SESSION['rol_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=rol");
                 exit();
@@ -30,6 +31,7 @@
                     'descripcion' => $_POST['descripcion'],
                     'estado'      => $estado
                 ]);
+                copigabyAjaxRespond($resultado, 'Rol actualizado correctamente.', 'No se pudo actualizar el rol.');
                 $_SESSION['rol_flash'] = is_array($resultado) ? $resultado : ['status' => $resultado === true ? 'success' : 'error'];
                 header("Location: ?url=rol");
                 exit();

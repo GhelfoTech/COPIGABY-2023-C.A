@@ -20,6 +20,7 @@
                     'codigo_metodo' => (int) $_POST['codigo_metodo'],
                     'fecha_pago'    => $_POST['fecha_pago'] ?? date('Y-m-d H:i:s'),
                 ]);
+                copigabyAjaxRespond($resultado, 'Pago registrado correctamente.', 'No se pudo registrar el pago.');
                 setSystemFlashFromResult($resultado, 'Pago registrado correctamente.', 'No se pudo registrar el pago.');
                 header("Location: ?url=pagos");
                 exit();
@@ -37,6 +38,7 @@
                     'fecha_pago'    => $_POST['fecha_pago'],
                     'estado'        => $estado,
                 ]);
+                copigabyAjaxRespond($resultado, 'Pago actualizado correctamente.', 'No se pudo actualizar el pago.');
                 setSystemFlashFromResult($resultado, 'Pago actualizado correctamente.', 'No se pudo actualizar el pago.');
                 header("Location: ?url=pagos");
                 exit();

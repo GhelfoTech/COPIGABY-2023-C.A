@@ -36,6 +36,7 @@
                     exit();
                 }
 
+                copigabyAjaxRespond($resultado, 'Proveedor registrado correctamente.', 'No se pudo registrar el proveedor.');
                 setSystemFlashFromResult($resultado, 'Proveedor registrado correctamente.', 'No se pudo registrar el proveedor.');
                 header("Location: ?url=proveedor");
                 exit();
@@ -48,6 +49,7 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_proveedor'])) {
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
                 $resultado = $object->updateProveedor((int) $_POST['codigo_proveedor'], $_POST);
+                copigabyAjaxRespond($resultado, 'Proveedor actualizado correctamente.', 'No se pudo actualizar el proveedor.');
                 setSystemFlashFromResult($resultado, 'Proveedor actualizado correctamente.', 'No se pudo actualizar el proveedor.');
                 header("Location: ?url=proveedor");
                 exit();

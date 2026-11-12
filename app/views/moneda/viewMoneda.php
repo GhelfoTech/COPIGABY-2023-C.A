@@ -221,7 +221,7 @@
     let currentRecord = null;
 
     function viewDetails(id) {
-      fetch(`?url=moneda&type=details&id=${id}`)
+      CopiGabyAjax.fetch(`?url=moneda&type=details&id=${id}`)
         .then(r => r.json())
         .then(data => {
           if (!data || data.status === 'error') {
@@ -274,12 +274,12 @@
         if (!result.isConfirmed) return;
         const f = new FormData();
         f.append('idmoneda', String(id));
-        fetch('?url=moneda&type=setActive', { method: 'POST', body: f })
+        CopiGabyAjax.fetch('?url=moneda&type=setActive', { method: 'POST', body: f })
           .then(r => r.json())
           .then(d => {
             if (d.status === 'success') {
               Swal.fire({ icon: 'success', title: 'Moneda activa', text: d.message, timer: 1500, showConfirmButton: false })
-                .then(() => location.reload());
+                .then(() => CopiGabyAjax.refresh());
             } else {
               Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo activar la moneda.' });
             }
@@ -303,12 +303,12 @@
         const f = new FormData();
         f.append('deleteMoneda', 'true');
         f.append('idmoneda', String(id));
-        fetch('?url=moneda&type=main', { method: 'POST', body: f })
+        CopiGabyAjax.fetch('?url=moneda&type=main', { method: 'POST', body: f })
           .then(r => r.json())
           .then(d => {
             if (d.status === 'success') {
               Swal.fire({ icon: 'success', title: 'Desactivada', timer: 1200, showConfirmButton: false })
-                .then(() => location.reload());
+                .then(() => CopiGabyAjax.refresh());
             } else {
               Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo procesar.' });
             }
@@ -317,6 +317,6 @@
       });
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

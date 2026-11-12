@@ -229,13 +229,13 @@
     async function eliminar(id) {
       if(await showConfirm('¿Desea desactivar este usuario?', 'Desactivar usuario', 'Sí, desactivar')) {
         const f = new FormData(); f.append('deleteUser', 'true'); f.append('idUser', id);
-        fetch('?url=user&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=user&type=main', { method:'POST', body:f })
           .then(r => r.json())
           .then(d => showMutationResultAndReload(d, 'Usuario desactivado correctamente.', 'No se pudo desactivar el usuario.'))
           .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el usuario.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

@@ -36,8 +36,14 @@ function showMutationResultAndReload(result, successMessage, errorMessage) {
     : (success ? successMessage : errorMessage);
 
   return showAlert(message, success ? 'success' : 'error', success ? 'Operación completada' : 'Error')
-    .then(() => {
-      if (success) window.location.reload();
+    .then(async () => {
+      if (success && window.CopiGabyAjax) {
+        try {
+          await window.CopiGabyAjax.refresh();
+        } catch (error) {
+          console.error('La operación se completó, pero no se pudo actualizar el módulo.', error);
+        }
+      }
       return success;
     });
 }

@@ -17,6 +17,7 @@
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula_cliente'])) {
                 $resultado = $object->addCliente($_POST);
+                copigabyAjaxRespond($resultado, 'Cliente registrado correctamente.', 'No se pudo registrar el cliente.');
                 setSystemFlashFromResult($resultado, 'Cliente registrado correctamente.', 'No se pudo registrar el cliente.');
                 header("Location: ?url=cliente");
                 exit();
@@ -29,6 +30,7 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_actual'])) {
                 $_POST['estado'] = isset($_POST['estado']) ? 1 : 0;
                 $resultado = $object->updateCliente($_POST['id_actual'], $_POST);
+                copigabyAjaxRespond($resultado, 'Cliente actualizado correctamente.', 'No se pudo actualizar el cliente.');
                 setSystemFlashFromResult($resultado, 'Cliente actualizado correctamente.', 'No se pudo actualizar el cliente.');
                 header("Location: ?url=cliente");
                 exit();

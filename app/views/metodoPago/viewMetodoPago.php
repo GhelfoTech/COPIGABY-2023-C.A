@@ -182,13 +182,13 @@
         const f = new FormData();
         f.append('deleteMetodo', 'true');
         f.append('codigo_metodo', id);
-        fetch('?url=metodopago&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=metodopago&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Método de pago desactivado correctamente.', 'No se pudo desactivar el método de pago.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el método de pago.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

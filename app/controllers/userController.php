@@ -20,6 +20,7 @@
             if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
                 $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
                 $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
+                copigabyAjaxRespond($result, 'Usuario registrado correctamente.', 'No se pudo registrar el usuario.');
                 setSystemFlashFromResult($result, 'Usuario registrado correctamente.', 'No se pudo registrar el usuario.');
                 header("Location: ?url=user");
                 exit();
@@ -37,6 +38,7 @@
                     $_POST['codigo_rol'], 
                     $estado
                 );
+                copigabyAjaxRespond($result, 'Usuario actualizado correctamente.', 'No se pudo actualizar el usuario.');
                 setSystemFlashFromResult($result, 'Usuario actualizado correctamente.', 'No se pudo actualizar el usuario.');
                 header("Location: ?url=user");
                 exit();

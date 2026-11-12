@@ -89,7 +89,7 @@ $inicial = strtoupper(substr($nombreUsuario, 0, 1));
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
-    fetch('?url=user&type=credenciales', {
+    CopiGabyAjax.fetch('?url=user&type=credenciales', {
       method: 'POST',
       body: new FormData(form),
       headers: { 'Accept': 'application/json' }

@@ -1,10 +1,4 @@
-/**
- * Validador frontend centralizado de CopiGabi.
- * - Presenta mensajes debajo de cada campo.
- * - Valida al escribir, al salir del campo y antes de enviar.
- * - Intercepta también el botón personalizado de registrar compras.
- * - No realiza peticiones ni modifica los datos del formulario.
- */
+
 (function (window, document) {
   'use strict';
 

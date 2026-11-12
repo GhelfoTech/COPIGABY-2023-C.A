@@ -22,6 +22,7 @@
                     'simbolo'       => trim((string) ($_POST['simbolo'] ?? '')),
                     'tasa_cambio'   => (float) ($_POST['tasa_cambio'] ?? 0),
                 ]);
+                copigabyAjaxRespond($result, 'Moneda registrada correctamente.', 'No se pudo registrar la moneda.');
                 $_SESSION['moneda_flash'] = $result;
                 header('Location: ?url=moneda');
                 exit();
@@ -34,6 +35,7 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['idmoneda'], $_POST['nombre_moneda'])) {
                 $idMoneda = (int) $_POST['idmoneda'];
                 if ($idMoneda <= 0) {
+                    copigabyAjaxRespond(['status' => 'error', 'message' => 'Identificador de moneda no válido.'], 'Moneda actualizada correctamente.', 'Identificador de moneda no válido.');
                     $_SESSION['moneda_flash'] = ['status' => 'error', 'message' => 'Identificador de moneda no válido.'];
                     header('Location: ?url=moneda');
                     exit();
@@ -46,6 +48,7 @@
                     'tasa_cambio'   => (float) ($_POST['tasa_cambio'] ?? 0),
                     'estado'        => $estado,
                 ]);
+                copigabyAjaxRespond($result, 'Moneda actualizada correctamente.', 'No se pudo actualizar la moneda.');
                 $_SESSION['moneda_flash'] = $result;
                 header('Location: ?url=moneda');
                 exit();

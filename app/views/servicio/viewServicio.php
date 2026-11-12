@@ -388,7 +388,7 @@
       const f = new FormData();
       f.append('getMaterials', 'true');
       f.append('idservicio', codigo);
-      fetch('?url=servicio&type=main', { method: 'POST', body: f })
+      CopiGabyAjax.fetch('?url=servicio&type=main', { method: 'POST', body: f })
         .then(r => r.json())
         .then(d => { if (typeof callback === 'function') callback(d); })
         .catch(() => { if (typeof callback === 'function') callback([]); });
@@ -451,13 +451,13 @@
         const f = new FormData();
         f.append('deleteServicio', 'true');
         f.append('idservicio', id);
-        fetch('?url=servicio&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=servicio&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Servicio desactivado correctamente.', 'No se pudo desactivar el servicio.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el servicio.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

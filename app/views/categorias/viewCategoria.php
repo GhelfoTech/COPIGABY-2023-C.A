@@ -194,13 +194,13 @@
         const f = new FormData();
         f.append('deleteCategory', 'true');
         f.append('idcategoria', id);
-        fetch('?url=categoria&type=main', { method:'POST', body:f })
+        CopiGabyAjax.fetch('?url=categoria&type=main', { method:'POST', body:f })
         .then(r => r.json())
         .then(d => showMutationResultAndReload(d, 'Categoría desactivada correctamente.', 'No se pudo desactivar la categoría.'))
         .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar la categoría.', 'error', 'Error de conexión'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

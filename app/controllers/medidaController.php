@@ -27,6 +27,7 @@
                 } else {
                     $flash = ['status' => 'error', 'message' => 'No se pudo registrar la unidad'];
                 }
+                copigabyAjaxRespond($result, 'Unidad registrada correctamente.', 'No se pudo registrar la unidad.');
                 $_SESSION['medida_flash'] = $flash;
             }
             session_write_close();
@@ -41,6 +42,7 @@
                 $cantidadUnidad = isset($_POST['cantidad_unidad']) ? max(1, (int) $_POST['cantidad_unidad']) : 1;
                 $result = $object->updateMedida((int) $_POST['codigo_media'], $_POST['nombre'], $abreviatura ?: null, $cantidadUnidad, $estado);
                 $flash = $result === true ? ['status' => 'success', 'message' => 'Unidad actualizada correctamente'] : ['status' => 'error', 'message' => 'No se pudo actualizar la unidad'];
+                copigabyAjaxRespond($result, 'Unidad actualizada correctamente.', 'No se pudo actualizar la unidad.');
                 $_SESSION['medida_flash'] = $flash;
             }
             session_write_close();

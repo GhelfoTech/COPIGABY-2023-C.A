@@ -485,7 +485,7 @@
       btnGuardarClienteRegistro.textContent = 'Guardando...';
 
       try {
-        const response = await fetch(formClienteRegistro.action, {
+        const response = await CopiGabyAjax.fetch(formClienteRegistro.action, {
           method: 'POST',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           body: new FormData(formClienteRegistro),
@@ -1044,7 +1044,7 @@
       const url = editMode ? '?url=pedido&type=update' : '?url=pedido&type=register';
 
       try {
-        const response = await fetch(url, {
+        const response = await CopiGabyAjax.fetch(url, {
           method: 'POST',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           body: formData,
@@ -1053,7 +1053,7 @@
 
         if (data.status === 'success') {
           Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Operación completada.', timer: 1500, showConfirmButton: false })
-            .then(() => location.reload());
+            .then(() => CopiGabyAjax.refresh());
           return;
         }
         Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido.' });
@@ -1068,7 +1068,7 @@
     let detailPedidoId = null;
 
     function viewDetails(id) {
-      fetch(`?url=pedido&type=details&id=${id}`)
+      CopiGabyAjax.fetch(`?url=pedido&type=details&id=${id}`)
         .then(r => r.json())
         .then(data => {
           const h = data.header;
@@ -1157,7 +1157,7 @@
     }
 
     function openEditPedido(id) {
-      fetch(`?url=pedido&type=details&id=${id}`)
+      CopiGabyAjax.fetch(`?url=pedido&type=details&id=${id}`)
         .then(r => r.json())
         .then(data => {
           const h = data.header;
@@ -1237,12 +1237,12 @@
         const f = new FormData();
         f.append('deletePedido', 'true');
         f.append('idpedido', String(id));
-        fetch('?url=pedido&type=main', { method: 'POST', body: f })
+        CopiGabyAjax.fetch('?url=pedido&type=main', { method: 'POST', body: f })
           .then(r => r.json())
           .then(d => {
             if (d.status === 'success') {
               Swal.fire({ icon: 'success', title: 'Anulado', text: d.message || 'Pedido anulado.', timer: 1500, showConfirmButton: false })
-                .then(() => location.reload());
+                .then(() => CopiGabyAjax.refresh());
             } else {
               Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo anular el pedido.' });
             }
@@ -1292,6 +1292,6 @@
     document.getElementById('btnAddItem').addEventListener('click', () => addItemRow());
     formPedido.addEventListener('submit', submitPedido);
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

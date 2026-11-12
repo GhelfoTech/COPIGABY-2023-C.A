@@ -20,6 +20,7 @@
                     'nivel_cashea'        => (int) ($_POST['nivel_cashea'] ?? 0),
                     'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? '',
                 ]);
+                copigabyAjaxRespond($resultado, 'Crédito Cashea registrado correctamente.', 'No se pudo registrar el crédito Cashea.');
                 $_SESSION['cashea_flash'] = is_array($resultado)
                     ? $resultado
                     : ['status' => 'error', 'message' => 'No se pudo registrar el crédito Cashea.'];
@@ -38,6 +39,7 @@
                     'porcentaje_inicial'  => $_POST['porcentaje_inicial'] ?? null,
                     'estado'              => isset($_POST['estado']) ? 1 : 0,
                 ]);
+                copigabyAjaxRespond($resultado, 'Crédito Cashea actualizado correctamente.', 'No se pudo actualizar el crédito Cashea.');
                 $_SESSION['cashea_flash'] = is_array($resultado)
                     ? $resultado
                     : ['status' => 'error', 'message' => 'No se pudo actualizar el crédito Cashea.'];
@@ -65,6 +67,7 @@
                     (int) $_POST['id_cashea_credito'],
                     is_numeric($_POST['monto_abonado']) ? (float) $_POST['monto_abonado'] : 0
                 );
+                copigabyAjaxRespond($resultado, 'Abono registrado correctamente.', 'No se pudo registrar el abono.');
                 $_SESSION['cashea_flash'] = is_array($resultado)
                     ? $resultado
                     : ['status' => 'error', 'message' => 'No se pudo registrar el pago.'];

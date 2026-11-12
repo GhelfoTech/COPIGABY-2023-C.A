@@ -30,7 +30,7 @@
     button.textContent = 'Guardando...';
 
     try {
-      const response = await fetch(form.action, {
+      const response = await CopiGabyAjax.fetch(form.action, {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
         body: new FormData(form),

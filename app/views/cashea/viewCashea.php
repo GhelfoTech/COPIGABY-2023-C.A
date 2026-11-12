@@ -544,13 +544,13 @@
         const f = new FormData();
         f.append('deleteCashea', 'true');
         f.append('id_cashea_credito', id);
-        fetch('?url=cashea&type=main', { method: 'POST', body: f })
+        CopiGabyAjax.fetch('?url=cashea&type=main', { method: 'POST', body: f })
           .then(r => r.json())
           .then(d => showMutationResultAndReload(d, 'Crédito Cashea desactivado correctamente.', 'No se pudo desactivar el crédito.'))
           .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el crédito.', 'error', 'Error'));
       }
     }
   </script>
-  <script src="assets/js/datatables-init.js?v=3"></script>
+  <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

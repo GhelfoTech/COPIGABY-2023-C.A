@@ -64,10 +64,7 @@
                 exit();
             }
 
-            $isAjax = (
-                !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-                && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
-            ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
+            $isAjax = copigabyIsAjaxRequest();
 
             $esCashea = ($_POST['es_cashea'] ?? '') === '1';
             $porcentajeInicialRaw = $_POST['porcentaje_inicial'] ?? '';
@@ -158,10 +155,7 @@
 
         elseif ($_GET['type'] === 'update') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['codigo_pedido'], $_POST['codigo_cliente'], $_POST['items'])) {
-                $isAjax = (
-                    !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-                    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
-                ) || (isset($_POST['ajax']) && $_POST['ajax'] === '1');
+                $isAjax = copigabyIsAjaxRequest();
 
                 $items = json_decode((string) $_POST['items'], true);
                 if (!is_array($items) || $items === []) {

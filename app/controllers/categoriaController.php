@@ -38,6 +38,7 @@
         if ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_categoria'])) {
                 $result = $object->addCategory(trim($_POST['nombre_categoria']));
+                copigabyAjaxRespond($result, 'Categoría registrada correctamente.', 'No se pudo registrar la categoría.');
                 $_SESSION['flash_message'] = $result;
                 header("Location: ?url=categoria");
                 exit();
@@ -54,6 +55,7 @@
                     trim($_POST['nombre_categoria']),
                     $estado
                 );
+                copigabyAjaxRespond($result, 'Categoría actualizada correctamente.', 'No se pudo actualizar la categoría.');
                 $_SESSION['flash_message'] = $result;
                 header("Location: ?url=categoria");
                 exit();

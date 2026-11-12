@@ -23,6 +23,7 @@
                     'direccion'      => trim($_POST['direccion']),
                     'logo'           => trim($_POST['logo'] ?? ''),
                 ]);
+                copigabyAjaxRespond($resultado, 'Empresa registrada correctamente.', 'No se pudo registrar la empresa.');
                 setSystemFlashFromResult($resultado, 'Empresa registrada correctamente.', 'No se pudo registrar la empresa.');
                 header("Location: ?url=empresa");
                 exit();
@@ -41,6 +42,7 @@
                     'direccion'      => trim($_POST['direccion']),
                     'logo'           => trim($_POST['logo'] ?? ''),
                 ]);
+                copigabyAjaxRespond($resultado, 'Empresa actualizada correctamente.', 'No se pudo actualizar la empresa.');
                 setSystemFlashFromResult($resultado, 'Empresa actualizada correctamente.', 'No se pudo actualizar la empresa.');
                 header("Location: ?url=empresa");
                 exit();

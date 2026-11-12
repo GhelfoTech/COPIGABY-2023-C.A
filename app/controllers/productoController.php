@@ -20,11 +20,12 @@
                 $resultado = $object->addProduct($_POST);
 
                 if (($_POST['origen'] ?? '') === 'compra') {
-                    header('Content-Type: application/json');
+                    header('Content-Type: application/json; charset=utf-8');
                     echo json_encode($resultado);
                     exit();
                 }
 
+                copigabyAjaxRespond($resultado, 'Producto registrado correctamente.', 'No se pudo registrar el producto.');
                 setSystemFlashFromResult($resultado, 'Producto registrado correctamente.', 'No se pudo registrar el producto.');
                 header("Location: ?url=producto");
                 exit();
@@ -39,6 +40,7 @@
                 $_POST['porcentaje_ganancia'] = $_POST['porcentaje_ganancia'] ?? 0;
                 $_POST['costo'] = $_POST['costo'] ?? 0;
                 $resultado = $object->updateProduct((int) $_POST['idproducto'], $_POST);
+                copigabyAjaxRespond($resultado, 'Producto actualizado correctamente.', 'No se pudo actualizar el producto.');
                 setSystemFlashFromResult($resultado, 'Producto actualizado correctamente.', 'No se pudo actualizar el producto.');
                 header("Location: ?url=producto");
                 exit();
