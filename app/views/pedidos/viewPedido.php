@@ -1037,7 +1037,6 @@
       }
       itemsJsonInput.value = JSON.stringify(collected.items);
 
-      const originalLabel = btnSubmitPedido.textContent;
       btnSubmitPedido.disabled = true;
       btnSubmitPedido.textContent = 'Guardando...';
 
@@ -1052,8 +1051,17 @@
         const data = await response.json();
 
         if (data.status === 'success') {
-          Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Operación completada.', timer: 1500, showConfirmButton: false })
-            .then(() => CopiGabyAjax.refresh());
+          // Cierra y limpia el formulario tanto al registrar como al modificar.
+          // El modal está fuera de <main>, por lo que CopiGabyAjax.refresh() no lo reemplaza.
+          modalPedido.classList.add('hidden');
+          resetFormPedido();
+
+          await Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Operación completada.', timer: 1500, showConfirmButton: false });
+          try {
+            await CopiGabyAjax.refresh();
+          } catch (refreshError) {
+            console.error('El pedido se guardó, pero no se pudo actualizar el listado.', refreshError);
+          }
           return;
         }
         Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo procesar el pedido.' });
@@ -1061,7 +1069,7 @@
         Swal.fire({ icon: 'error', title: 'Error de comunicación', text: 'Revise la consola o el log de PHP.' });
       } finally {
         btnSubmitPedido.disabled = false;
-        btnSubmitPedido.textContent = originalLabel;
+        btnSubmitPedido.textContent = editMode ? 'Actualizar Pedido' : 'Registrar Pedido';
       }
     }
 
