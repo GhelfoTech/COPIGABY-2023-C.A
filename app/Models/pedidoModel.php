@@ -102,7 +102,7 @@ class pedidoModel extends ConectDB {
             $stmtPedido->execute([
                 $cedulaCliente,
                 $cedulaUsuario,
-                $datos['fecha_pedido'],
+                $datos['fecha_pedido'] . date(' H:i:s'),
                 $this->formatearMontoDecimal($subtotal),
                 $this->formatearMontoDecimal($montoIva),
                 $this->formatearMontoDecimal($porcentajeIva),
@@ -160,9 +160,13 @@ class pedidoModel extends ConectDB {
             return ['status' => 'error', 'message' => 'El pedido debe incluir al menos un ítem'];
         }
 
-        $validacionPago = $this->validarDatosPago($pago);
-        if ($validacionPago !== true) {
-            return $validacionPago;
+        // Si no se envió un método de pago (edición sin tocar el pago), se conserva el pago existente
+        $mantenerPago = empty((int) ($pago['codigo_metodo'] ?? 0));
+        if (!$mantenerPago) {
+            $validacionPago = $this->validarDatosPago($pago);
+            if ($validacionPago !== true) {
+                return $validacionPago;
+            }
         }
 
         $estado = isset($datos['estado']) ? ((int) $datos['estado'] ? 1 : 0) : 1;
@@ -190,11 +194,14 @@ class pedidoModel extends ConectDB {
             $stmtDelDetalle = $this->conex->prepare('DELETE FROM detalle_pedido WHERE codigo_pedido = ?');
             $stmtDelDetalle->execute([$id]);
 
-            $stmtDelPagos = $this->conex->prepare('DELETE FROM pagos WHERE codigo_pedido = ?');
-            $stmtDelPagos->execute([$id]);
+            if (!$mantenerPago) {
+                $stmtDelPagos = $this->conex->prepare('DELETE FROM pagos WHERE codigo_pedido = ?');
+                $stmtDelPagos->execute([$id]);
+            }
 
             $stmtUpdate = $this->conex->prepare(
                 'UPDATE pedido SET cedula_cliente = ?, estado = ?,
+                                   fecha_pedido = ?,
                                    subtotal = ?, monto_iva = ?, porcentaje_iva = ?,
                                    monto_total = ?, tasa_cambio = ?
                  WHERE codigo_pedido = ?'
@@ -202,6 +209,7 @@ class pedidoModel extends ConectDB {
             $stmtUpdate->execute([
                 $cedulaCliente,
                 $estado,
+                ($datos['fecha_pedido'] ?? date('Y-m-d')) . date(' H:i:s'),
                 $this->formatearMontoDecimal($subtotal),
                 $this->formatearMontoDecimal($montoIva),
                 $this->formatearMontoDecimal($porcentajeIva),
@@ -215,7 +223,9 @@ class pedidoModel extends ConectDB {
                 if ($montoTotal <= 0) {
                     throw new PDOException('El total del pedido debe ser mayor a cero');
                 }
-                $this->registrarPago($id, $pago, $montoTotal);
+                if (!$mantenerPago) {
+                    $this->registrarPago($id, $pago, $montoTotal);
+                }
             }
 
             $this->conex->commit();

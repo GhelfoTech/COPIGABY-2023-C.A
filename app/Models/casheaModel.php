@@ -324,7 +324,8 @@ class casheaModel extends ConectDB {
                 return ['status' => 'error', 'message' => 'El crédito Cashea no existe o está inactivo.'];
             }
 
-            $montoAbonado = round((float) $montoAbonado, 2);
+            // Los abonos se manejan por unidad (enteros): 1, 2, 3...
+            $montoAbonado = round((float) $montoAbonado);
             $pendiente = round((float) $credito['monto_pendiente'], 2);
 
             if ($montoAbonado <= 0) {

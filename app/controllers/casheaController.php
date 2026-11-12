@@ -65,7 +65,7 @@
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_cashea_credito'], $_POST['monto_abonado'])) {
                 $resultado = $object->registrarPago(
                     (int) $_POST['id_cashea_credito'],
-                    is_numeric($_POST['monto_abonado']) ? (float) $_POST['monto_abonado'] : 0
+                    is_numeric($_POST['monto_abonado']) ? round((float) $_POST['monto_abonado']) : 0 // Abonos por unidad (enteros): 1, 2, 3...
                 );
                 copigabyAjaxRespond($resultado, 'Abono registrado correctamente.', 'No se pudo registrar el abono.');
                 $_SESSION['cashea_flash'] = is_array($resultado)

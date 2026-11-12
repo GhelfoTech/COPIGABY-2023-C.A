@@ -30,6 +30,11 @@ trait CasheaTrait
             return ['status' => 'error', 'message' => 'El monto total del pedido debe ser mayor a cero'];
         }
 
+        // Cashea solo aplica a pedidos mayores a $25 (montos menores no se financian)
+        if ($montoTotal <= 25) {
+            return ['status' => 'error', 'message' => 'Cashea solo está disponible para pedidos mayores a $25'];
+        }
+
         $nivel = (int) ($datos['nivel_cashea'] ?? 0);
         if ($nivel < 1 || $nivel > 6) {
             return ['status' => 'error', 'message' => 'La cantidad de cuotas debe estar entre 1 y 6'];

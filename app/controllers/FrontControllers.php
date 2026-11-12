@@ -6,6 +6,9 @@
     require_once __DIR__ . '/../../helpers/auth.php';
     require_once __DIR__ . '/../../helpers/alerts.php';
 
+    // Zona horaria del sistema (Venezuela) para que todas las fechas coincidan con el día actual
+    date_default_timezone_set('America/Caracas');
+
     class FrontControllers {
 
         /** Módulos que requieren sesión iniciada (todo excepto el login) */

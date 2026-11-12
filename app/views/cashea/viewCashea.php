@@ -324,7 +324,7 @@
           </div>
           <div class="mb-4">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Monto a pagar <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" min="0.01" name="monto_abonado" id="abonar_monto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
+            <input type="number" step="1" min="1" name="monto_abonado" id="abonar_monto" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-hidden font-bold text-sm">
           </div>
           <div class="flex justify-end gap-3 mt-4">
             <button type="button" onclick="closeAbonarModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>

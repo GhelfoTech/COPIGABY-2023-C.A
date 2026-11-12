@@ -139,7 +139,7 @@
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Costo Unit. ($)</label>
-                      <input type="number" step="0.01" id="costProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange">
+                      <input type="number" step="1" min="1" id="costProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange">
                   </div>
                   <button type="button" onclick="addItem()" class="col-span-3 bg-navy-light text-white font-bold py-2 rounded-lg text-xs hover:bg-navy transition-colors mt-1 uppercase">Agregar a la lista</button>
               </div>
@@ -327,7 +327,7 @@
           </div>
           <div>
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">% Ganancia <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" min="0" name="porcentaje_ganancia" required value="0" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm">
+            <input type="number" step="1" min="0" name="porcentaje_ganancia" required value="0" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm">
           </div>
           <div class="col-span-2">
             <label class="block text-xs font-black text-gray-400 uppercase mb-1">Descripción / Notas</label>
@@ -516,7 +516,7 @@
           };
 
           document.getElementById('det_factura').innerText = `FACTURA #${h.numero_factura_proveedor}`;
-          document.getElementById('det_fecha').innerText = `Fecha de Compra: ${h.fecha_compra}`;
+          document.getElementById('det_fecha').innerText = `Fecha de Compra: ${new Date(h.fecha_compra.replace(' ', 'T')).toLocaleDateString('es-VE')}`;
           document.getElementById('det_proveedor').innerText = h.razon_social;
           document.getElementById('det_rif').innerText = `RIF: ${h.rif_proveedor} | Tel: ${h.telefono}`;
           document.getElementById('det_estado').innerText = Number(h.estado) === 1 ? 'Compra Activa' : 'Compra Anulada';
@@ -654,8 +654,8 @@
         const cant = Number(cantInput.value);
         const cost = parseFloat(costInput.value);
 
-        if(!sel.value || !Number.isInteger(cant) || cant <= 0 || isNaN(cost) || cost < 0) {
-            showAlert('Por favor complete los datos del producto (Cantidad y Costo deben ser positivos).', 'warning', 'Datos incompletos');
+        if(!sel.value || !Number.isInteger(cant) || cant <= 0 || isNaN(cost) || !Number.isInteger(cost) || cost <= 0) {
+            showAlert('Por favor complete los datos del producto (Cantidad y Costo deben ser enteros positivos).', 'warning', 'Datos incompletos');
             return;
         }
 

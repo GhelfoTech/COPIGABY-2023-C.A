@@ -65,7 +65,7 @@
               </div>
               <div>
                 <label class="block text-xs font-black text-gray-400 uppercase mb-1">Nueva tasa (Bs.)</label>
-                <input type="number" name="monto_bolivares" min="0.01" step="0.01" required value="<?= htmlspecialchars(number_format((float) ($monedaActual['tasa_cambio'] ?? $tasaActual['monto_bolivares'] ?? 0), 2, '.', '')) ?>" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none font-black text-navy-dark focus:border-orange">
+                <input type="number" name="monto_bolivares" min="1" step="1" required value="<?= htmlspecialchars((string) round((float) ($monedaActual['tasa_cambio'] ?? $tasaActual['monto_bolivares'] ?? 0))) ?>" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none font-black text-navy-dark focus:border-orange">
               </div>
               <button type="submit" class="sm:col-span-2 px-5 py-2.5 bg-orange text-navy-dark rounded-lg font-black shadow-sm hover:bg-orange-dk transition-colors">GUARDAR TASA</button>
             </form>

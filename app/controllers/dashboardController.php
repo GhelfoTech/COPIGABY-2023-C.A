@@ -19,7 +19,7 @@
         $codigoMoneda = (int) ($_POST['codigo_moneda'] ?? 0);
         $resultado = $monedaModel->actualizarTasaMoneda(
             $codigoMoneda,
-            (float) ($_POST['monto_bolivares'] ?? 0)
+            round((float) ($_POST['monto_bolivares'] ?? 0)) // La tasa se maneja por unidad (enteros): 1, 2, 3...
         );
         copigabyAjaxRespond($resultado, 'Tasa de cambio actualizada correctamente.', 'No se pudo actualizar la tasa de cambio.');
         $_SESSION['tasa_flash'] = $resultado;

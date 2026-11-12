@@ -68,7 +68,7 @@ class compraModel extends ConectDB {
                 $datos['codigo_proveedor'],
                 $datos['cedula_usuario'],
                 $datos['numero_factura_proveedor'],
-                $datos['fecha_compra'],
+                $datos['fecha_compra'] . date(' H:i:s'),
                 $datos['monto_total'],
                 $tasaCambio,
             ]);
@@ -85,6 +85,8 @@ class compraModel extends ConectDB {
             $stmtStock = $this->conex->prepare($queryStock);
 
             foreach ($items as $item) {
+                // El costo unitario se maneja por unidad (enteros): 1, 2, 3...
+                $item['costo'] = round((float) $item['costo']);
                 $subtotal = $item['cantidad'] * $item['costo'];
 
                 // Guardar detalle
@@ -134,7 +136,7 @@ class compraModel extends ConectDB {
             $stmt = $this->conex->prepare($query);
             $stmt->bindValue(1, (int) $datos['codigo_proveedor'], PDO::PARAM_INT);
             $stmt->bindValue(2, $datos['numero_factura_proveedor']);
-            $stmt->bindValue(3, $datos['fecha_compra']);
+            $stmt->bindValue(3, $datos['fecha_compra'] . date(' H:i:s'));
             $stmt->bindValue(4, $datos['monto_total']);
             $stmt->bindValue(5, (int) $datos['estado'], PDO::PARAM_INT);
             $stmt->bindValue(6, $id, PDO::PARAM_INT);
@@ -382,7 +384,7 @@ class compraModel extends ConectDB {
                 $stmtTotal->execute([
                     $datosCompra['codigo_proveedor'],
                     $datosCompra['numero_factura_proveedor'],
-                    $datosCompra['fecha_compra'],
+                    $datosCompra['fecha_compra'] . date(' H:i:s'),
                     $datosCompra['estado'],
                     round($montoTotal, 2),
                     $id,

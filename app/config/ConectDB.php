@@ -21,6 +21,8 @@
             try {
                 $this->conex = new PDO("mysql:host=localhost;dbname=db_copigaby1;charset=utf8", "root", "");
                 $this->conex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                // Forzar la zona horaria de la sesión MySQL (Venezuela) para que NOW() y CURDATE() devuelvan la fecha/hora actual local
+                $this->conex->exec("SET time_zone = '-04:00'");
             } catch (PDOException $e) {
                 die('ERROR DE CONEXIÓN: No se ha podido conectar con la base de datos. ' . $e->getMessage());
             }

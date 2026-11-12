@@ -88,7 +88,8 @@ class productoModel extends ConectDB {
                     $datos['codigo_categoria'],
                     (int) $datos['codigo_media'],
                     $datos['descripcion'],
-                    floatval($datos['porcentaje_ganancia'] ?? 0),
+                    // La ganancia se maneja por unidad (enteros): 1, 2, 3...
+                    round(floatval($datos['porcentaje_ganancia'] ?? 0)),
                     intval($datos['stock_actual'] ?? 0),
                     intval($datos['stock_minimo'] ?? 0)
                 ]);
@@ -100,7 +101,8 @@ class productoModel extends ConectDB {
                     $datos['nombre_producto'],
                     $datos['codigo_categoria'],
                     $datos['descripcion'],
-                    floatval($datos['porcentaje_ganancia'] ?? 0),
+                    // La ganancia se maneja por unidad (enteros): 1, 2, 3...
+                    round(floatval($datos['porcentaje_ganancia'] ?? 0)),
                     intval($datos['stock_actual'] ?? 0),
                     intval($datos['stock_minimo'] ?? 0)
                 ]);
@@ -135,7 +137,8 @@ class productoModel extends ConectDB {
                     $datos['codigo_categoria'],
                     $codigoMedia,
                     $datos['descripcion'],
-                    floatval($datos['porcentaje_ganancia'] ?? 0),
+                    // La ganancia se maneja por unidad (enteros): 1, 2, 3...
+                    round(floatval($datos['porcentaje_ganancia'] ?? 0)),
                     intval($datos['stock_actual'] ?? 0),
                     intval($datos['stock_minimo'] ?? 0),
                     intval($datos['estado'] ?? 1),
@@ -148,7 +151,8 @@ class productoModel extends ConectDB {
                     $datos['nombre_producto'],
                     $datos['codigo_categoria'],
                     $datos['descripcion'],
-                    floatval($datos['porcentaje_ganancia'] ?? 0),
+                    // La ganancia se maneja por unidad (enteros): 1, 2, 3...
+                    round(floatval($datos['porcentaje_ganancia'] ?? 0)),
                     intval($datos['stock_actual'] ?? 0),
                     intval($datos['stock_minimo'] ?? 0),
                     intval($datos['estado'] ?? 1),

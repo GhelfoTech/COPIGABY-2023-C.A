@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="assets/css/dist.css?v=3">
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
+  <style>
+    /* Las alertas de validación/registro de cliente siempre por delante de cualquier modal */
+    .swal2-container { z-index: 20000 !important; }
+  </style>
 </head>
 <body class="font-['Nunito'] bg-[#f0f2f7] text-[#1f2937] min-h-screen flex">
 
@@ -982,7 +986,8 @@
     async function submitPedido(e) {
       e.preventDefault();
 
-      if (!selectCliente.value) {
+      // En edición el cliente ya pertenece al pedido; solo se exige al registrar
+      if (!selectCliente.value && !editMode) {
         Swal.fire({ icon: 'warning', title: 'Cliente requerido', text: 'Seleccione un cliente.' });
         return;
       }
@@ -1026,7 +1031,10 @@
       formData.set('monto_total', formatMoney(totals.total));
       formData.set('tasa_actual', formatMoney(getTasaFormulario()));
       formData.set('es_cashea', esCashea ? '1' : '0');
-      formData.set('codigo_metodo', esCashea && porcentajeInicialCashea.value === '0' ? '0' : selectMetodo.value);
+      // En edición, si no se tocó el método de pago no se envía: el backend conserva el pago existente
+      if (!editMode || selectMetodo.value) {
+        formData.set('codigo_metodo', esCashea && porcentajeInicialCashea.value === '0' ? '0' : selectMetodo.value);
+      }
       if (esCashea) {
         formData.set('nivel_cashea', nivelCashea.value);
         formData.set('porcentaje_inicial', porcentajeInicialCashea.value);
@@ -1086,7 +1094,8 @@
           detailPedidoId = h.codigo_pedido;
 
           document.getElementById('det_codigo').innerText = 'PEDIDO #' + String(h.codigo_pedido).padStart(4, '0');
-          document.getElementById('det_fecha').innerText = 'Fecha: ' + h.fecha_pedido;
+          const f = new Date(h.fecha_pedido.replace(' ', 'T'));
+          document.getElementById('det_fecha').innerText = 'Fecha: ' + f.toLocaleDateString('es-VE') + ' ' + f.toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'});
           document.getElementById('det_cliente').innerText = h.nombre_cliente || '—';
           document.getElementById('det_telefono').innerText = 'Tel: ' + (h.telefono_cliente || '—');
           document.getElementById('det_usuario').innerText = h.nombre_usuario || '—';
@@ -1181,6 +1190,11 @@
 
           document.getElementById('selectCliente').value = String(h.cedula_cliente);
           window.syncSearchableSelect(selectCliente);
+          // Mantener la fecha original del pedido al modificar
+          const fechaPedidoEdit = document.querySelector('#formPedido [name="fecha_pedido"]');
+          if (fechaPedidoEdit) fechaPedidoEdit.value = String(h.fecha_pedido).slice(0, 10);
+          // En edición no se fuerza volver a elegir cliente/método: ya vienen del pedido
+          selectMetodo.required = false;
           setIvaSeleccionado(h.codigo_IVA || ivaDefaultCodigo);
 
           const tasaPed = parseFloat(h.tasa_actual ?? h.tasa_cambio ?? tasaActual);

@@ -119,7 +119,7 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
-                <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
+                <input type="number" step="1" min="0" name="porcentaje_ganancia" id="new_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) <span class="text-[0.65rem] font-bold text-gray-400 normal-case"> Se carga desde compra</span></label>
@@ -180,7 +180,7 @@
             </div>
             <div>
                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">% Ganancia <span class="text-red-500">*</span></label>
-                <input type="number" step="0.01" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
+                <input type="number" step="1" min="0" name="porcentaje_ganancia" id="edit_porcentaje" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="25">
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Costo Unitario ($) </label>

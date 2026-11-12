@@ -50,7 +50,8 @@ class servicioModel extends ConectDB {
             $stmt->execute([
                 trim($datos['nombre_servicio']),
                 trim($datos['descripcion']),
-                $datos['precio']
+                // El precio se maneja por unidad (enteros): 1, 2, 3...
+                round(floatval($datos['precio']))
             ]);
 
             $idServicio = $this->conex->lastInsertId();
@@ -90,7 +91,8 @@ class servicioModel extends ConectDB {
             $stmt->execute([
                 trim($datos['nombre_servicio']),
                 trim($datos['descripcion']),
-                $datos['precio'],
+                // El precio se maneja por unidad (enteros): 1, 2, 3...
+                round(floatval($datos['precio'])),
                 $datos['estado'],
                 $id
             ]);
