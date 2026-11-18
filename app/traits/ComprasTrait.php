@@ -8,20 +8,20 @@ namespace App\traits;
  */
 trait ComprasTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos de una compra y sus items.
      */
     protected function validarCompra(array $datos, array $items)
     {
         // Campos obligatorios
-        foreach (['codigo_proveedor', 'cedula_usuario', 'fecha_compra', 'monto_total'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Todos los campos obligatorios de la compra deben ser completados'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['codigo_proveedor', 'cedula_usuario', 'fecha_compra', 'monto_total'])) {
+            return ['status' => 'error', 'message' => 'Todos los campos obligatorios de la compra deben ser completados'];
         }
 
-        $fechaCompra = \DateTimeImmutable::createFromFormat('!Y-m-d', trim((string) $datos['fecha_compra']));
-        if (!$fechaCompra || $fechaCompra->format('Y-m-d') !== trim((string) $datos['fecha_compra'])) {
+        $fechaCompra = $this->parsearFechaYmd((string) $datos['fecha_compra']);
+        if (!$fechaCompra) {
             return ['status' => 'error', 'message' => 'La fecha de compra no es válida'];
         }
         if ($fechaCompra > new \DateTimeImmutable('today')) {
@@ -33,13 +33,13 @@ trait ComprasTrait
                 $linea    = (int) $index + 1;
                 $cantidad = (float) ($item['cantidad'] ?? 0);
                 $costoValor = $item['costo'] ?? null;
-                $costo = is_numeric($costoValor) ? round((float) $costoValor, 2) : 0;
+                $costo = $this->esNumeroValido($costoValor) ? round((float) $costoValor, 2) : 0;
 
                 // Costo unitario y cantidad estrictamente mayores a cero
-                if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
+                if (!$this->enteroPositivoFinito($cantidad)) {
                     return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
                 }
-                if (!is_numeric($costoValor) || !is_finite((float) $costoValor) || $costo <= 0) {
+                if (!$this->numeroFinitoValido($costoValor) || $costo <= 0) {
                     return ['status' => 'error', 'message' => "El costo unitario debe ser mayor a cero en la línea {$linea}"];
                 }
                 $subtotal = $cantidad * $costo;
@@ -71,23 +71,14 @@ trait ComprasTrait
      */
     protected function facturaDuplicada(string $factura, int $codigoProveedor, ?int $idCompra = null): bool
     {
-        try {
-            if ($idCompra !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM compra
-                     WHERE numero_factura_proveedor = ? AND codigo_proveedor = ? AND codigo_compra <> ?'
-                );
-                $stmt->execute([$factura, $codigoProveedor, $idCompra]);
-            } else {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM compra
-                     WHERE numero_factura_proveedor = ? AND codigo_proveedor = ?'
-                );
-                $stmt->execute([$factura, $codigoProveedor]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM compra
+                     WHERE numero_factura_proveedor = ? AND codigo_proveedor = ?';
+        $parametros = [$factura, $codigoProveedor];
+        if ($idCompra !== null) {
+            $consulta .= ' AND codigo_compra <> ?';
+            $parametros[] = $idCompra;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

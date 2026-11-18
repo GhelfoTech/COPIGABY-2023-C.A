@@ -8,6 +8,8 @@ namespace App\traits;
  */
 trait UsuariosTrait
 {
+    use ValidacionesTrait;
+
     /** Código del rol de administrador en la base de datos */
     protected $rolAdminCodigo = 1;
 
@@ -81,14 +83,12 @@ trait UsuariosTrait
     protected function validarUsuario(array $datos)
     {
         // Campos obligatorios
-        foreach (['cedula_usuario', 'telefono', 'nombre_usuario', 'codigo_rol', 'password', 'estado'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Cédula, teléfono, nombre de usuario, rol, contraseña y estado son obligatorios'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['cedula_usuario', 'telefono', 'nombre_usuario', 'codigo_rol', 'password', 'estado'])) {
+            return ['status' => 'error', 'message' => 'Cédula, teléfono, nombre de usuario, rol, contraseña y estado son obligatorios'];
         }
 
         // Cédula: solo números y única en la base de datos
-        if (!preg_match('/^[0-9]+$/', trim((string) $datos['cedula_usuario']))) {
+        if (!$this->soloDigitos($datos['cedula_usuario'])) {
             return ['status' => 'error', 'message' => 'La cédula del usuario solo debe contener números'];
         }
 
@@ -98,7 +98,7 @@ trait UsuariosTrait
         }
 
         // Teléfono: solo números
-        if (!preg_match('/^[0-9]{11}$/', preg_replace('/\s+/', '', (string) $datos['telefono']))) {
+        if (!$this->telefonoNacionalValido($datos['telefono'])) {
             return ['status' => 'error', 'message' => 'El teléfono debe tener 11 dígitos numéricos'];
         }
 
@@ -126,20 +126,14 @@ trait UsuariosTrait
      */
     protected function cedulaUsuarioDuplicada(string $cedula, $idActual = null): bool
     {
-        try {
-            if ($idActual !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM usuario WHERE cedula_usuario = ? AND cedula_usuario <> ?'
-                );
-                $stmt->execute([$cedula, $idActual]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM usuario WHERE cedula_usuario = ?');
-                $stmt->execute([$cedula]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM usuario WHERE cedula_usuario = ?';
+        $parametros = [$cedula];
+        if ($idActual !== null) {
+            $consulta .= ' AND cedula_usuario <> ?';
+            $parametros[] = $idActual;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 
     /**
@@ -147,19 +141,13 @@ trait UsuariosTrait
      */
     protected function nombreUsuarioDuplicado(string $nombreUsuario, $idActual = null): bool
     {
-        try {
-            if ($idActual !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM usuario WHERE nombre_usuario = ? AND cedula_usuario <> ?'
-                );
-                $stmt->execute([$nombreUsuario, $idActual]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM usuario WHERE nombre_usuario = ?');
-                $stmt->execute([$nombreUsuario]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM usuario WHERE nombre_usuario = ?';
+        $parametros = [$nombreUsuario];
+        if ($idActual !== null) {
+            $consulta .= ' AND cedula_usuario <> ?';
+            $parametros[] = $idActual;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

@@ -8,20 +8,20 @@ namespace App\traits;
  */
 trait MonedaTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos de una moneda.
      */
     protected function validarMoneda(array $datos)
     {
         // Campos obligatorios
-        foreach (['nombre_moneda', 'simbolo', 'tasa_cambio', 'estado'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Nombre, símbolo, tasa asociada y estado son obligatorios'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['nombre_moneda', 'simbolo', 'tasa_cambio', 'estado'])) {
+            return ['status' => 'error', 'message' => 'Nombre, símbolo, tasa asociada y estado son obligatorios'];
         }
 
         // La tasa asociada debe ser mayor a cero
-        if (!is_numeric($datos['tasa_cambio']) || (float) $datos['tasa_cambio'] <= 0) {
+        if (!$this->esNumeroValido($datos['tasa_cambio']) || (float) $datos['tasa_cambio'] <= 0) {
             return ['status' => 'error', 'message' => 'La tasa de cambio debe ser un número mayor a cero'];
         }
 
@@ -44,20 +44,14 @@ trait MonedaTrait
      */
     protected function nombreMonedaDuplicado(string $nombreMoneda, ?int $idMoneda = null): bool
     {
-        try {
-            if ($idMoneda !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM moneda WHERE nombre_moneda = ? AND codigo_moneda <> ?'
-                );
-                $stmt->execute([$nombreMoneda, $idMoneda]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM moneda WHERE nombre_moneda = ?');
-                $stmt->execute([$nombreMoneda]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM moneda WHERE nombre_moneda = ?';
+        $parametros = [$nombreMoneda];
+        if ($idMoneda !== null) {
+            $consulta .= ' AND codigo_moneda <> ?';
+            $parametros[] = $idMoneda;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 
     /**
@@ -72,16 +66,13 @@ trait MonedaTrait
                 return false; // La columna no existe, no se puede validar
             }
 
+            $consulta = 'SELECT COUNT(*) FROM moneda WHERE activa = 1';
+            $parametros = [];
             if ($idMoneda !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM moneda WHERE activa = 1 AND codigo_moneda <> ?'
-                );
-                $stmt->execute([$idMoneda]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM moneda WHERE activa = 1');
-                $stmt->execute();
+                $consulta .= ' AND codigo_moneda <> ?';
+                $parametros[] = $idMoneda;
             }
-            return (int) $stmt->fetchColumn() > 0;
+            return $this->registroDuplicadoPorConsulta($consulta, $parametros);
         } catch (\PDOException $e) {
             return false;
         }

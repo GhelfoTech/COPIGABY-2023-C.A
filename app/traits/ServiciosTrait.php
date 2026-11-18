@@ -8,21 +8,22 @@ namespace App\traits;
  */
 trait ServiciosTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos de un servicio.
      */
     protected function validarServicio(array $datos)
     {
         // Campos obligatorios
-        if (!isset($datos['nombre_servicio']) || trim((string) $datos['nombre_servicio']) === '') {
+        if (!$this->campoObligatorioCompleto($datos, 'nombre_servicio')) {
             return ['status' => 'error', 'message' => 'El nombre del servicio es obligatorio'];
         }
 
         // Precio: estrictamente numérico y mayor a cero (no letras)
         if (
-            !isset($datos['precio'])
-            || !is_numeric($datos['precio'])
-            || !is_finite((float) $datos['precio'])
+            !$this->campoObligatorioCompleto($datos, 'precio')
+            || !$this->numeroFinitoValido($datos['precio'])
             || round((float) $datos['precio'], 2) <= 0
         ) {
             return ['status' => 'error', 'message' => 'El precio debe ser un valor numérico mayor a cero'];
@@ -42,19 +43,13 @@ trait ServiciosTrait
      */
     protected function nombreServicioDuplicado(string $nombre, ?int $idServicio = null): bool
     {
-        try {
-            if ($idServicio !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM servicio WHERE nombre_servicio = ? AND codigo_servicio <> ?'
-                );
-                $stmt->execute([$nombre, $idServicio]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM servicio WHERE nombre_servicio = ?');
-                $stmt->execute([$nombre]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM servicio WHERE nombre_servicio = ?';
+        $parametros = [$nombre];
+        if ($idServicio !== null) {
+            $consulta .= ' AND codigo_servicio <> ?';
+            $parametros[] = $idServicio;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

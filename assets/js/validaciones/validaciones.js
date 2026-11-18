@@ -21,6 +21,101 @@
     decimal: 'Introduce un número con hasta dos decimales y usa punto. Ejemplo: 125.50.',
     correo: 'Escribe un correo válido que termine en .com. Ejemplo: ventas@empresa.com.'
   };
+  const PREFIJOS_TELEFONO = ['0426', '0416', '0424', '0414', '0412', '0422'];
+
+  function obtenerCamposTelefono(grupo) {
+    return {
+      prefijo: grupo.querySelector('[data-telefono-prefix]'),
+      numero: grupo.querySelector('[data-telefono-number]'),
+      valor: grupo.querySelector('[data-telefono-value]')
+    };
+  }
+
+  function actualizarValorTelefono(grupo) {
+    const campos = obtenerCamposTelefono(grupo);
+    if (!campos.prefijo || !campos.numero || !campos.valor) return;
+
+    campos.numero.value = campos.numero.value.replace(/\D/g, '').slice(0, 7);
+    campos.valor.value = campos.prefijo.value + campos.numero.value;
+  }
+
+  function establecerValorTelefono(grupo, telefono) {
+    const campos = obtenerCamposTelefono(grupo);
+    if (!campos.prefijo || !campos.numero) return;
+
+    const digitos = String(telefono || '').replace(/\D/g, '');
+    const prefijoCoincidente = PREFIJOS_TELEFONO.find(function (prefijo) {
+      return digitos.startsWith(prefijo);
+    });
+
+    if (prefijoCoincidente) {
+      campos.prefijo.value = prefijoCoincidente;
+      campos.numero.value = digitos.slice(prefijoCoincidente.length, 11);
+    } else if (digitos.length >= 4) {
+      const prefijoAnterior = digitos.slice(0, 4);
+      const existePrefijo = Array.from(campos.prefijo.options).some(function (opcion) {
+        return opcion.value === prefijoAnterior;
+      });
+      if (!existePrefijo) {
+        campos.prefijo.add(new Option(prefijoAnterior + ' (actual)', prefijoAnterior));
+      }
+      campos.prefijo.value = prefijoAnterior;
+      campos.numero.value = digitos.slice(4, 11);
+    } else {
+      campos.prefijo.value = PREFIJOS_TELEFONO[0];
+      campos.numero.value = digitos.slice(0, 7);
+    }
+
+    actualizarValorTelefono(grupo);
+  }
+
+  function inicializarCampoTelefono(grupo) {
+    if (grupo.dataset.telefonoInicializado === '1') return;
+
+    const campos = obtenerCamposTelefono(grupo);
+    if (!campos.prefijo || !campos.numero || !campos.valor) return;
+
+    grupo.dataset.telefonoInicializado = '1';
+    if (campos.valor.value) {
+      establecerValorTelefono(grupo, campos.valor.value);
+    } else {
+      campos.prefijo.value = PREFIJOS_TELEFONO[0];
+      actualizarValorTelefono(grupo);
+    }
+
+    campos.prefijo.addEventListener('change', function () {
+      actualizarValorTelefono(grupo);
+    });
+    campos.numero.addEventListener('input', function () {
+      actualizarValorTelefono(grupo);
+    });
+
+    const formulario = grupo.closest('form');
+    if (formulario) {
+      formulario.addEventListener('reset', function () {
+        window.setTimeout(function () {
+          campos.prefijo.value = PREFIJOS_TELEFONO[0];
+          campos.numero.value = '';
+          actualizarValorTelefono(grupo);
+        }, 0);
+      });
+    }
+  }
+
+  function inicializarCamposTelefono(contenedor) {
+    if (contenedor.matches && contenedor.matches('[data-telefono-field]')) {
+      inicializarCampoTelefono(contenedor);
+    }
+    if (contenedor.querySelectorAll) {
+      contenedor.querySelectorAll('[data-telefono-field]').forEach(inicializarCampoTelefono);
+    }
+  }
+
+  window.setTelefonoFieldValue = function (id, telefono) {
+    const valor = document.getElementById(id);
+    const grupo = valor && valor.closest('[data-telefono-field]');
+    if (grupo) establecerValorTelefono(grupo, telefono);
+  };
 
   function cargarEstilos() {
     if (document.getElementById('copigaby-validaciones-css')) return;
@@ -532,6 +627,7 @@
 
   function iniciar() {
     cargarEstilos();
+    inicializarCamposTelefono(document);
     document.querySelectorAll('form').forEach(prepararFormulario);
 
     // Delegación: también cubre filas y controles agregados dinámicamente.
@@ -589,6 +685,7 @@
           if (!(nodo instanceof Element)) return;
           if (nodo.matches('form')) prepararFormulario(nodo);
           nodo.querySelectorAll && nodo.querySelectorAll('form').forEach(prepararFormulario);
+          inicializarCamposTelefono(nodo);
         });
       });
     });

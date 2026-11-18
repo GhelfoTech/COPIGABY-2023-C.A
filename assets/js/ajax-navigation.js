@@ -214,13 +214,6 @@
       return !type || type === 'text/javascript' || type === 'application/javascript';
     });
 
-    // El layout comparte este helper, pero sus campos cambian en cada módulo.
-    // Se vuelve a ejecutar sobre los nuevos controles después de insertar la vista.
-    var telephoneHelper = parsedDocument.querySelector('script[src*="telefono-input.js"]');
-    if (telephoneHelper) {
-      await loadExternalScript(telephoneHelper.getAttribute('src'), targetUrl, true);
-    }
-
     for (var index = 0; index < scripts.length; index++) {
       var original = scripts[index];
       var source = original.getAttribute('src');

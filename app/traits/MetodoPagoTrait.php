@@ -8,16 +8,18 @@ namespace App\traits;
  */
 trait MetodoPagoTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos de un método de pago.
      */
     protected function validarMetodoPago(array $datos)
     {
         // Campos obligatorios
-        if (!isset($datos['nombre_metodo']) || trim((string) $datos['nombre_metodo']) === '') {
+        if (!$this->campoObligatorioCompleto($datos, 'nombre_metodo')) {
             return ['status' => 'error', 'message' => 'El nombre del método de pago es obligatorio'];
         }
-        if (!isset($datos['estado']) || trim((string) $datos['estado']) === '') {
+        if (!$this->campoObligatorioCompleto($datos, 'estado')) {
             return ['status' => 'error', 'message' => 'El estado del método de pago es obligatorio'];
         }
 
@@ -35,19 +37,13 @@ trait MetodoPagoTrait
      */
     protected function nombreMetodoDuplicado(string $nombreMetodo, ?int $idMetodo = null): bool
     {
-        try {
-            if ($idMetodo !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM metodo_pago WHERE nombre_metodo = ? AND codigo_metodo <> ?'
-                );
-                $stmt->execute([$nombreMetodo, $idMetodo]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM metodo_pago WHERE nombre_metodo = ?');
-                $stmt->execute([$nombreMetodo]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM metodo_pago WHERE nombre_metodo = ?';
+        $parametros = [$nombreMetodo];
+        if ($idMetodo !== null) {
+            $consulta .= ' AND codigo_metodo <> ?';
+            $parametros[] = $idMetodo;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

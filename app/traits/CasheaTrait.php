@@ -8,7 +8,7 @@ namespace App\traits;
  */
 trait CasheaTrait
 {
-    private static $porcentajesInicialValidos = [0, 10, 20, 30, 40, 50, 60];
+    use ValidacionesTrait;
 
     /**
      * Valida los datos de un crédito Cashea.
@@ -40,7 +40,7 @@ trait CasheaTrait
         if (
             !is_scalar($porcentajeInicial)
             || !ctype_digit((string) $porcentajeInicial)
-            || !in_array((int) $porcentajeInicial, self::$porcentajesInicialValidos, true)
+            || !$this->porcentajeInicialCasheaValido((int) $porcentajeInicial)
         ) {
             return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje inicial válido'];
         }
@@ -60,7 +60,7 @@ trait CasheaTrait
 
     protected function validarMontoPedidoCashea($monto): bool|string
     {
-        if (!is_numeric($monto) || !is_finite((float) $monto)) {
+        if (!$this->numeroFinitoValido($monto)) {
             return 'El monto total del pedido no es válido';
         }
 

@@ -8,16 +8,16 @@ namespace App\traits;
  */
 trait ClientesTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos completos de un cliente.
      */
     protected function validarCliente(array $datos)
     {
         // Campos obligatorios
-        foreach (['cedula_cliente', 'nombre', 'telefono', 'direccion', 'estado'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Todos los campos obligatorios del cliente deben ser completados'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['cedula_cliente', 'nombre', 'telefono', 'direccion', 'estado'])) {
+            return ['status' => 'error', 'message' => 'Todos los campos obligatorios del cliente deben ser completados'];
         }
 
         // Cédula: solo números, sin letras ni espacios
@@ -44,7 +44,7 @@ trait ClientesTrait
 
         // Correo opcional: formato válido y dominio terminado en .com
         $correo = trim((string) ($datos['correo'] ?? ''));
-        if ($correo !== '' && (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo))) {
+        if ($correo !== '' && !$this->correoComValido($correo)) {
             return ['status' => 'error', 'message' => 'El correo electrónico debe tener un formato válido y terminar en .com'];
         }
 
@@ -57,7 +57,7 @@ trait ClientesTrait
     protected function validarCedulaCliente($cedula)
     {
         $cedula = trim((string) $cedula);
-        if (!preg_match('/^[0-9]+$/', $cedula)) {
+        if (!$this->soloDigitos($cedula)) {
             return ['status' => 'error', 'message' => 'La cédula solo debe contener números, sin letras ni espacios'];
         }
         if (strlen($cedula) < 6 || strlen($cedula) > 9) {
@@ -71,8 +71,7 @@ trait ClientesTrait
      */
     protected function validarTelefonoCliente($telefono)
     {
-        $telefono = preg_replace('/\s+/', '', (string) $telefono);
-        if (!preg_match('/^[0-9]{11}$/', $telefono)) {
+        if (!$this->telefonoNacionalValido($telefono)) {
             return ['status' => 'error', 'message' => 'El teléfono debe tener 11 dígitos numéricos (ej. 04245555555)'];
         }
         return true;
@@ -83,17 +82,13 @@ trait ClientesTrait
      */
     protected function cedulaClienteDuplicada(string $cedula, $idActual = null): bool
     {
-        try {
-            if ($idActual !== null) {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM cliente WHERE cedula_cliente = ? AND cedula_cliente <> ?');
-                $stmt->execute([$cedula, $idActual]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM cliente WHERE cedula_cliente = ?');
-                $stmt->execute([$cedula]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM cliente WHERE cedula_cliente = ?';
+        $parametros = [$cedula];
+        if ($idActual !== null) {
+            $consulta .= ' AND cedula_cliente <> ?';
+            $parametros[] = $idActual;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

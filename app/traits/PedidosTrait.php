@@ -8,6 +8,8 @@ namespace App\traits;
  */
 trait PedidosTrait
 {
+    use ValidacionesTrait;
+
     private static $metodosConBanco = [563, 564];
 
     /**
@@ -19,8 +21,8 @@ trait PedidosTrait
         $esCashea = !empty($datos['es_cashea']);
         $porcentajeInicial = $datos['porcentaje_inicial'] ?? null;
 
-        $fechaPedido = \DateTimeImmutable::createFromFormat('!Y-m-d', trim((string) ($datos['fecha_pedido'] ?? date('Y-m-d'))));
-        if (!$fechaPedido || $fechaPedido->format('Y-m-d') !== trim((string) ($datos['fecha_pedido'] ?? date('Y-m-d')))) {
+        $fechaPedido = $this->parsearFechaYmd((string) ($datos['fecha_pedido'] ?? date('Y-m-d')));
+        if (!$fechaPedido) {
             return ['status' => 'error', 'message' => 'La fecha del pedido no es válida'];
         }
         if ($fechaPedido > new \DateTimeImmutable('today')) {
@@ -46,7 +48,7 @@ trait PedidosTrait
             $cantidad   = (float) ($item['cantidad'] ?? 0);
             $precioVenta = (float) ($item['precio_venta'] ?? 0);
 
-            if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
+            if (!$this->enteroPositivoFinito($cantidad)) {
                 return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
             }
             if ($precioVenta <= 0) {
@@ -72,7 +74,7 @@ trait PedidosTrait
             if ($nivelCashea < 1 || $nivelCashea > 6) {
                 return ['status' => 'error', 'message' => 'Debe seleccionar un nivel Cashea válido'];
             }
-            if ($porcentajeInicial === null || !in_array((int) $porcentajeInicial, [0, 10, 20, 30, 40, 50, 60], true)) {
+            if ($porcentajeInicial === null || !$this->porcentajeInicialCasheaValido((int) $porcentajeInicial)) {
                 return ['status' => 'error', 'message' => 'Debe seleccionar un porcentaje de inicial válido'];
             }
             $porcentajeInicial = (int) $porcentajeInicial;

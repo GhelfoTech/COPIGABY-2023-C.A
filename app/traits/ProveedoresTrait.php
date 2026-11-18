@@ -8,16 +8,16 @@ namespace App\traits;
  */
 trait ProveedoresTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos de un proveedor.
      */
     protected function validarProveedor(array $datos)
     {
         // Campos obligatorios
-        foreach (['rif_proveedor', 'razon_social', 'telefono', 'correo', 'estado'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Todos los campos obligatorios del proveedor deben ser completados'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['rif_proveedor', 'razon_social', 'telefono', 'correo', 'estado'])) {
+            return ['status' => 'error', 'message' => 'Todos los campos obligatorios del proveedor deben ser completados'];
         }
 
         // Unicidad estricta del RIF
@@ -27,14 +27,13 @@ trait ProveedoresTrait
         }
 
         // Teléfono: formato numérico
-        $telefono = preg_replace('/\s+/', '', (string) $datos['telefono']);
-        if (!preg_match('/^[0-9]{11}$/', $telefono)) {
+        if (!$this->telefonoNacionalValido($datos['telefono'])) {
             return ['status' => 'error', 'message' => 'El teléfono debe tener 11 dígitos numéricos'];
         }
 
         // Correo: formato válido y dominio terminado en .com
         $correo = trim((string) $datos['correo']);
-        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo)) {
+        if (!$this->correoComValido($correo)) {
             return ['status' => 'error', 'message' => 'El correo electrónico debe tener un formato válido y terminar en .com'];
         }
 
@@ -51,20 +50,14 @@ trait ProveedoresTrait
      */
     protected function rifProveedorDuplicado(string $rif, ?int $idProveedor = null): bool
     {
-        try {
-            if ($idProveedor !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM proveedor WHERE rif_proveedor = ? AND codigo_proveedor <> ?'
-                );
-                $stmt->execute([$rif, $idProveedor]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM proveedor WHERE rif_proveedor = ?');
-                $stmt->execute([$rif]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM proveedor WHERE rif_proveedor = ?';
+        $parametros = [$rif];
+        if ($idProveedor !== null) {
+            $consulta .= ' AND codigo_proveedor <> ?';
+            $parametros[] = $idProveedor;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 
     /**
@@ -72,19 +65,13 @@ trait ProveedoresTrait
      */
     protected function correoProveedorDuplicado(string $correo, ?int $idProveedor = null): bool
     {
-        try {
-            if ($idProveedor !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM proveedor WHERE correo = ? AND codigo_proveedor <> ?'
-                );
-                $stmt->execute([$correo, $idProveedor]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM proveedor WHERE correo = ?');
-                $stmt->execute([$correo]);
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM proveedor WHERE correo = ?';
+        $parametros = [$correo];
+        if ($idProveedor !== null) {
+            $consulta .= ' AND codigo_proveedor <> ?';
+            $parametros[] = $idProveedor;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }

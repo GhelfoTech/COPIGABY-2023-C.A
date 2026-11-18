@@ -8,16 +8,16 @@ namespace App\traits;
  */
 trait EmpresaTrait
 {
+    use ValidacionesTrait;
+
     /**
      * Valida los datos fiscales de la empresa.
      */
     protected function validarEmpresa(array $datos)
     {
         // Campos obligatorios
-        foreach (['rif_empresa', 'nombre_empresa', 'telefono', 'correo'] as $campo) {
-            if (!isset($datos[$campo]) || trim((string) $datos[$campo]) === '') {
-                return ['status' => 'error', 'message' => 'Todos los datos fiscales de la empresa son obligatorios'];
-            }
+        if (!$this->camposObligatoriosCompletos($datos, ['rif_empresa', 'nombre_empresa', 'telefono', 'correo'])) {
+            return ['status' => 'error', 'message' => 'Todos los datos fiscales de la empresa son obligatorios'];
         }
 
         // RIF válido
@@ -27,7 +27,7 @@ trait EmpresaTrait
 
         // Correo con formato válido y dominio terminado en .com
         $correo = trim((string) $datos['correo']);
-        if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || !preg_match('/\.com$/i', $correo)) {
+        if (!$this->correoComValido($correo)) {
             return ['status' => 'error', 'message' => 'El correo de la empresa debe tener un formato válido y terminar en .com'];
         }
 
@@ -45,19 +45,13 @@ trait EmpresaTrait
      */
     protected function existeOtraEmpresa(?int $idEmpresa = null): bool
     {
-        try {
-            if ($idEmpresa !== null) {
-                $stmt = $this->conex->prepare(
-                    'SELECT COUNT(*) FROM empresa WHERE codigo_empresa <> ?'
-                );
-                $stmt->execute([$idEmpresa]);
-            } else {
-                $stmt = $this->conex->prepare('SELECT COUNT(*) FROM empresa');
-                $stmt->execute();
-            }
-            return (int) $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            return false;
+        $consulta = 'SELECT COUNT(*) FROM empresa';
+        $parametros = [];
+        if ($idEmpresa !== null) {
+            $consulta .= ' WHERE codigo_empresa <> ?';
+            $parametros[] = $idEmpresa;
         }
+
+        return $this->registroDuplicadoPorConsulta($consulta, $parametros);
     }
 }
