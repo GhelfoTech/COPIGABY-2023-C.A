@@ -107,7 +107,13 @@
         f.append('idcompra', id);
         CopiGabyAjax.request('?url=compra&type=main', { method:'POST', body:f })
         .then(r => r.json())
-        .then(d => showMutationResultAndReload(d, 'Compra anulada correctamente.', 'No se pudo anular la compra.'))
+        .then(d => {
+          if (d && d.status === 'success') {
+            closeDetalleModal();
+            setPurchaseEditMode(false);
+          }
+          showMutationResultAndReload(d, 'Compra anulada correctamente.', 'No se pudo anular la compra.');
+        })
         .catch(() => showAlert('No se pudo comunicar con el servidor para anular la compra.', 'error', 'Error de conexión'));
       }
     }
@@ -284,6 +290,8 @@
         }
 
         await showAlert(result.message, 'success', 'Compra actualizada');
+        closeDetalleModal();
+        setPurchaseEditMode(false);
         window.CopiGabyAjax.refresh();
       } catch (error) {
         showAlert(error.message || 'No se pudo actualizar la compra.', 'error', 'Error');
