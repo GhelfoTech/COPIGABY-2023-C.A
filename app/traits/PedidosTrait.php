@@ -10,8 +10,6 @@ trait PedidosTrait
 {
     use ValidacionesTrait;
 
-    private static $metodosConBanco = [563, 564];
-
     /**
      * Valida los datos generales de un pedido y sus ítems.
      * Devuelve true si todo es válido, o un array de error.
@@ -142,7 +140,13 @@ trait PedidosTrait
             return ['status' => 'error', 'message' => 'Debe seleccionar un método de pago'];
         }
 
-        if ($this->metodoRequiereBanco($codigoMetodo)) {
+        try {
+            $requiereBanco = $this->metodoRequiereBanco($codigoMetodo);
+        } catch (\PDOException $e) {
+            return ['status' => 'error', 'message' => 'No se pudo validar el método de pago'];
+        }
+
+        if ($requiereBanco) {
             if (empty($pago['codigo_banco'])) {
                 return ['status' => 'error', 'message' => 'Debe seleccionar el banco para este método de pago'];
             }
@@ -162,6 +166,15 @@ trait PedidosTrait
      */
     protected function metodoRequiereBanco(int $codigoMetodo): bool
     {
-        return in_array($codigoMetodo, self::$metodosConBanco, true);
+        $stmt = $this->conex->prepare(
+            'SELECT nombre_metodo FROM metodo_pago
+             WHERE codigo_metodo = ? AND estado = 1
+             LIMIT 1'
+        );
+        $stmt->execute([$codigoMetodo]);
+        $nombreMetodo = (string) $stmt->fetchColumn();
+        $nombreMetodo = strtoupper(strtr(trim($nombreMetodo), ['ó' => 'o', 'Ó' => 'O']));
+
+        return in_array($nombreMetodo, ['PAGO MOVIL', 'TRANSFERENCIA'], true);
     }
 }

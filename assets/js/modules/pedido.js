@@ -4,7 +4,6 @@
   $(function () {
     const pedidoConfig = JSON.parse($('#pedidoConfig').attr('data-config'));
     const { productos, servicios, medidas, tasaActual, ivaDefaultCodigo, simboloMoneda } = pedidoConfig;
-    const METODOS_CON_BANCO = [563, 564];
     const PORCENTAJES_INICIAL_CASHEA = [60, 50, 40, 30, 20, 10, 0];
 
     const modalPedido = document.getElementById('modalPedido');
@@ -222,8 +221,11 @@
     overlayPedido.onclick = () => { toggleModal(true); resetFormPedido(); };
 
     function toggleCamposBanco() {
-      const metodo = parseInt(selectMetodo.value, 10);
-      const requiere = !casheaMode && METODOS_CON_BANCO.includes(metodo);
+      const metodoSeleccionado = selectMetodo.selectedOptions[0];
+      const nombreMetodo = metodoSeleccionado
+        ? metodoSeleccionado.textContent.trim().toLocaleUpperCase('es').replace('Ó', 'O')
+        : '';
+      const requiere = !casheaMode && ['PAGO MOVIL', 'TRANSFERENCIA'].includes(nombreMetodo);
       wrapBanco.classList.toggle('hidden', !requiere);
       wrapReferencia.classList.toggle('hidden', !requiere);
       document.getElementById('selectBanco').required = requiere;
@@ -632,7 +634,7 @@
         formData.set('nivel_cashea', nivelCashea.value);
         formData.set('porcentaje_inicial', porcentajeInicialCashea.value);
       }
-      if (selectMetodo.value && METODOS_CON_BANCO.includes(parseInt(selectMetodo.value, 10))) {
+      if (!wrapBanco.classList.contains('hidden')) {
         formData.set('codigo_banco', document.getElementById('selectBanco').value);
         formData.set('referencia_pago', document.getElementById('referenciaPago').value.trim());
       }
