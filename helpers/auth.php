@@ -3,21 +3,19 @@
  * helpers/auth.php
  * Autenticación y control de permisos por rol.
  *
- * Roles del sistema:
- *   1 = admin     -> acceso total al sistema
- *   2 = empleado  -> solo los módulos definidos en PERMISOS_EMPLEADO,
- *                    y dentro de ellos únicamente "añadir" y "consultar"
+ * Los códigos de rol pueden variar entre bases de datos; los permisos se
+ * determinan por los nombres canónicos "admin" y "empleado".
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/** Código del rol administrador */
-const ROL_ADMIN = 1;
+/** Nombre canónico del rol administrador */
+const NOMBRE_ROL_ADMIN = 'admin';
 
-/** Código del rol empleado */
-const ROL_EMPLEADO = 2;
+/** Nombre canónico del rol empleado */
+const NOMBRE_ROL_EMPLEADO = 'empleado';
 
 /**
  * Módulos permitidos para el rol EMPLEADO y las acciones que puede ejecutar.
@@ -43,11 +41,22 @@ function checkAuth(): void
         header('Location: ?url=login&msg=unauthorized');
         exit;
     }
+
+    $userModel = new \App\models\userModel();
+    $rol = $userModel->getActiveUserRole($_SESSION['user_id']);
+    if ($rol === null) {
+        unset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['rol'], $_SESSION['rol_nombre']);
+        header('Location: ?url=login&msg=unauthorized');
+        exit;
+    }
+
+    $_SESSION['rol'] = $rol['codigo_rol'];
+    $_SESSION['rol_nombre'] = $rol['nombre_rol'];
 }
 
 /**
  * Verifica que el rol del usuario esté dentro de los roles permitidos.
- * El admin (rol 1) siempre tiene acceso; si no está en la lista, redirige.
+ * El rol admin siempre tiene acceso; los demás deben estar en la lista.
  */
 function checkRole(array $roles): void
 {
@@ -56,7 +65,7 @@ function checkRole(array $roles): void
     $rol = (int) ($_SESSION['rol'] ?? 0);
 
     // El administrador siempre tiene acceso
-    if ($rol === ROL_ADMIN) {
+    if (strtolower(trim((string) ($_SESSION['rol_nombre'] ?? ''))) === NOMBRE_ROL_ADMIN) {
         return;
     }
 
@@ -109,11 +118,15 @@ function getAccionActual(): string
  */
 function tienePermiso(string $modulo = null, string $accion = null): bool
 {
-    $rol = (int) ($_SESSION['rol'] ?? 0);
+    $rolNombre = strtolower(trim((string) ($_SESSION['rol_nombre'] ?? '')));
 
     // Administrador: acceso total
-    if ($rol === ROL_ADMIN) {
+    if ($rolNombre === NOMBRE_ROL_ADMIN) {
         return true;
+    }
+
+    if ($rolNombre !== NOMBRE_ROL_EMPLEADO) {
+        return false;
     }
 
     $modulo = $modulo ?? getModuloActual();
@@ -149,7 +162,7 @@ function checkPermission(string $modulo = null, string $accion = null): void
  */
 function esAdmin(): bool
 {
-    return (int) ($_SESSION['rol'] ?? 0) === ROL_ADMIN;
+    return strtolower(trim((string) ($_SESSION['rol_nombre'] ?? ''))) === NOMBRE_ROL_ADMIN;
 }
 
 /**
@@ -158,11 +171,11 @@ function esAdmin(): bool
  */
 function puedeVerModulo(string $modulo): bool
 {
-    $rol = (int) ($_SESSION['rol'] ?? 0);
+    $rolNombre = strtolower(trim((string) ($_SESSION['rol_nombre'] ?? '')));
 
-    if ($rol === ROL_ADMIN) {
+    if ($rolNombre === NOMBRE_ROL_ADMIN) {
         return true;
     }
 
-    return isset(PERMISOS_EMPLEADO[$modulo]);
+    return $rolNombre === NOMBRE_ROL_EMPLEADO && isset(PERMISOS_EMPLEADO[$modulo]);
 }

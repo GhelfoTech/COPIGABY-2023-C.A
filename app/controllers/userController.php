@@ -17,7 +17,7 @@
     if (isset($_GET['type'])) {
 
         if ($_GET['type'] == 'register') {
-            $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
+            $rol = $_POST['codigo_rol'] ?? '';
             $result = $object->addUser(
                 $_POST['cedula'] ?? '',
                 $_POST['nombre_usuario'] ?? '',

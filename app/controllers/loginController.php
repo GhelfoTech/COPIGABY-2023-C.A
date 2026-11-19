@@ -19,7 +19,7 @@
         elseif ($_GET['type'] == 'register') {
             // Se ajustan los campos según la tabla 'usuario' del SQL proporcionado
             if (isset($_POST['cedula']) && isset($_POST['nombre_usuario']) && isset($_POST['telefono']) && isset($_POST['password'])) {
-                $rol = $_POST['codigo_rol'] ?? 2; // Rol por defecto si no se envía
+                $rol = $_POST['codigo_rol'] ?? '';
                 $result = $object->addUser($_POST['cedula'], $_POST['nombre_usuario'], $_POST['telefono'], $_POST['password'], $rol);
             }
             include 'app/views/user/registerView.php';
@@ -57,7 +57,8 @@
                     // Guardamos los datos esenciales en la sesión
                     $_SESSION['user_id']  = (string)$user['cedula_usuario'];
                     $_SESSION['username'] = $user['nombre_usuario']; // nombre_usuario
-                    $_SESSION['rol']      = $user['codigo_rol'];
+                    $_SESSION['rol']      = (int) $user['codigo_rol'];
+                    $_SESSION['rol_nombre'] = $user['nombre_rol'];
                     
                     header("Location: ?url=dashboard");
                     exit();

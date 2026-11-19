@@ -10,23 +10,32 @@ trait UsuariosTrait
 {
     use ValidacionesTrait;
 
-    /** Código del rol de administrador en la base de datos */
-    protected $rolAdminCodigo = 1;
+    /**
+     * Obtiene el código del rol administrador activo.
+     */
+    protected function getAdminRoleCodigo(): ?int {
+        $stmt = $this->conex->prepare(
+            "SELECT codigo_rol FROM rol WHERE LOWER(TRIM(nombre_rol)) = 'admin' AND estado = 1 LIMIT 1"
+        );
+        $stmt->execute();
+        $codigo = $stmt->fetchColumn();
+        return $codigo !== false ? (int) $codigo : null;
+    }
 
     /**
      * Obtiene la cédula del único administrador del sistema (null si no hay).
      */
     protected function getCedulaAdmin() {
-        try {
-            $stmt = $this->conex->prepare(
-                'SELECT cedula_usuario FROM usuario WHERE codigo_rol = ? LIMIT 1'
-            );
-            $stmt->execute([$this->rolAdminCodigo]);
-            $cedula = $stmt->fetchColumn();
-            return $cedula !== false ? (string) $cedula : null;
-        } catch (\PDOException $e) {
-            return null;
-        }
+        $stmt = $this->conex->prepare(
+            "SELECT u.cedula_usuario
+             FROM usuario u
+             INNER JOIN rol r ON r.codigo_rol = u.codigo_rol
+             WHERE LOWER(TRIM(r.nombre_rol)) = 'admin'
+             LIMIT 1"
+        );
+        $stmt->execute();
+        $cedula = $stmt->fetchColumn();
+        return $cedula !== false ? (string) $cedula : null;
     }
 
     /**
@@ -44,10 +53,11 @@ trait UsuariosTrait
     protected function validarRolAdminUnico($rol, $cedulaUsuario, $cedulaActual = null)
     {
         $rol = (int) $rol;
+        $rolAdminCodigo = $this->getAdminRoleCodigo();
         $admin = $this->getCedulaAdmin();
 
         // Caso 1: se intenta asignar rol admin a un usuario que no es el admin actual
-        if ($rol === $this->rolAdminCodigo) {
+        if ($rolAdminCodigo !== null && $rol === $rolAdminCodigo) {
             $esElAdminActual = ($admin !== null && $admin === (string) $cedulaUsuario)
                 || ($cedulaActual !== null && $admin !== null && $admin === (string) $cedulaActual);
 
@@ -58,7 +68,7 @@ trait UsuariosTrait
         }
 
         // Caso 2: se intenta cambiar el rol del admin actual o cambiarle el rol a otro usuario que ya es admin
-        if ($admin !== null && $cedulaActual !== null && (string) $cedulaActual === $admin && $rol !== $this->rolAdminCodigo) {
+        if ($admin !== null && $cedulaActual !== null && (string) $cedulaActual === $admin && $rol !== $rolAdminCodigo) {
             return ['status' => 'error', 'message' => 'No se puede cambiar el rol del usuario administrador'];
         }
 

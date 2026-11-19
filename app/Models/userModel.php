@@ -37,7 +37,7 @@ class userModel extends ConectDB {
         }
     }
 
-    public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol = 2) {
+    public function addUser($cedula, $nombre_usuario, $telefono, $password, $rol) {
         $validacion = $this->validarUsuario([
             'cedula_usuario' => $cedula,
             'telefono'       => $telefono,
@@ -122,14 +122,38 @@ class userModel extends ConectDB {
         }
     }
 
+    /**
+     * @return array{codigo_rol: int, nombre_rol: string}|null
+     */
+    public function getActiveUserRole($cedula): ?array {
+        $query = "SELECT u.codigo_rol, r.nombre_rol
+                  FROM usuario u
+                  INNER JOIN rol r ON r.codigo_rol = u.codigo_rol
+                  WHERE u.cedula_usuario = :cedula AND u.estado = 1 AND r.estado = 1
+                  LIMIT 1";
+        $stmt = $this->conex->prepare($query);
+        $stmt->bindValue(':cedula', $cedula);
+        $stmt->execute();
+        $rol = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($rol === false) return null;
+
+        return [
+            'codigo_rol' => (int) $rol['codigo_rol'],
+            'nombre_rol' => trim((string) $rol['nombre_rol']),
+        ];
+    }
+
     public function login($username, $password) {
         try {
             $username = trim((string)$username);
             $password = trim((string)$password);
 
-            $query = "SELECT cedula_usuario, nombre_usuario, password, codigo_rol, estado 
-                      FROM usuario 
-                      WHERE nombre_usuario = :user";
+            $query = "SELECT u.cedula_usuario, u.nombre_usuario, u.password, u.codigo_rol,
+                             u.estado, r.nombre_rol
+                      FROM usuario u
+                      INNER JOIN rol r ON r.codigo_rol = u.codigo_rol
+                      WHERE u.nombre_usuario = :user AND r.estado = 1";
             
             $stmt = $this->conex->prepare($query);
             $stmt->bindParam(':user', $username);

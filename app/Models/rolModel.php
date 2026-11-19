@@ -54,6 +54,11 @@ class rolModel extends ConectDB {
 
     public function updateRol($id, $datos) {
         $datos['codigo_rol'] = $id;
+        if ($this->esRolAdministrador((int) $id)
+            && (strtolower(trim((string) ($datos['nombre_rol'] ?? ''))) !== 'admin' || (int) ($datos['estado'] ?? 0) !== 1)) {
+            return ['status' => 'error', 'message' => 'No se puede cambiar el nombre ni desactivar el rol administrador.'];
+        }
+
         $validacion = $this->validarRol($datos);
         if ($validacion !== true) {
             return $validacion;
@@ -77,6 +82,10 @@ class rolModel extends ConectDB {
     }
 
     public function deleteRol($id) {
+        if ($this->esRolAdministrador((int) $id)) {
+            return ['status' => 'error', 'message' => 'No se puede desactivar el rol administrador.'];
+        }
+
         try {
             $stmt = $this->conex->prepare("UPDATE rol SET estado = 0 WHERE codigo_rol = ?");
             $success = $stmt->execute([(int) $id]);
@@ -84,5 +93,13 @@ class rolModel extends ConectDB {
         } catch (PDOException $e) {
             return ["status" => "error", "message" => $e->getMessage()];
         }
+    }
+
+    private function esRolAdministrador(int $id): bool {
+        $stmt = $this->conex->prepare(
+            "SELECT COUNT(*) FROM rol WHERE codigo_rol = ? AND LOWER(TRIM(nombre_rol)) = 'admin'"
+        );
+        $stmt->execute([$id]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 }
