@@ -61,11 +61,20 @@
         }
 
         elseif ($_GET['type'] === 'list') {
-            header("Location: ?url=producto");
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+                exit();
+            }
+
+            echo json_encode(
+                $object->getProductsDataTable($_POST),
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
             exit();
         }
     }
 
-    $productos = $object->getAllProducts();
     $categorias = $object->getCategories();
     include 'app/views/productos/viewProducto.php';

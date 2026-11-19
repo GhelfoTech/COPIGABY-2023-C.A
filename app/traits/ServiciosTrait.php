@@ -20,6 +20,11 @@ trait ServiciosTrait
             return ['status' => 'error', 'message' => 'El nombre del servicio es obligatorio'];
         }
 
+        $descripcion = $datos['descripcion'] ?? '';
+        if (!is_scalar($descripcion) || mb_strlen((string) $descripcion, 'UTF-8') > 50) {
+            return ['status' => 'error', 'message' => 'La descripción del servicio no puede superar los 50 caracteres'];
+        }
+
         // Precio: estrictamente numérico y mayor a cero (no letras)
         if (
             !$this->campoObligatorioCompleto($datos, 'precio')

@@ -1,14 +1,13 @@
 /**
  * Configuración AJAX global de CopiGaby.
- * Centraliza las peticiones fetch, intercepta formularios POST normales y
+ * Centraliza las peticiones jQuery, intercepta formularios POST normales y
  * actualiza el <main> actual sin recargar el documento completo.
  */
-(function (window, document) {
+(function (window, document, $) {
   'use strict';
 
   if (window.CopiGabyAjax) return;
 
-  var nativeFetch = window.fetch.bind(window);
   var refreshInProgress = null;
 
   function isSameOrigin(url) {
@@ -21,27 +20,79 @@
 
   function request(url, options) {
     options = options || {};
-    var method = String(options.method || (options.body ? 'POST' : 'GET')).toUpperCase();
-    var headers = new Headers(options.headers || {});
-    var body = options.body;
+    var method = 'POST';
+    var data = options.data !== undefined ? options.data : options.body;
+    var isFormData = data instanceof FormData;
+    var headers = Object.assign({
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': options.dataType === 'html' ? 'text/html' : 'application/json'
+    }, options.headers || {});
 
-    if (method !== 'GET' && method !== 'HEAD') {
-      headers.set('X-Requested-With', 'XMLHttpRequest');
-      if (!headers.has('Accept')) headers.set('Accept', 'application/json');
-
-      if (body instanceof FormData && !body.has('_ajax_request')) {
-        body.set('_ajax_request', '1');
-      } else if (body instanceof URLSearchParams && !body.has('_ajax_request')) {
-        body.set('_ajax_request', '1');
-      }
+    if (isFormData) data.set('_ajax_request', '1');
+    if (data && !isFormData && typeof data === 'object' && !(data instanceof URLSearchParams)) {
+      data = $.extend({}, data);
+      if (data._ajax_request === undefined) data._ajax_request = '1';
+    }
+    if (data instanceof URLSearchParams) {
+      data.set('_ajax_request', '1');
+      data = data.toString();
     }
 
-    return nativeFetch(url, Object.assign({}, options, {
-      method: method,
+    var ajaxOptions = {
+      url: url,
+      type: method,
+      dataType: options.dataType || 'json',
+      data: data,
+      processData: !isFormData,
+      contentType: isFormData ? false : (options.contentType || 'application/x-www-form-urlencoded; charset=UTF-8'),
       headers: headers,
-      body: body,
-      credentials: options.credentials || 'same-origin'
-    }));
+      timeout: options.timeout || 0
+    };
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        return Promise.resolve(createResponse({ status: 0, responseText: '' }, null, 'abort'));
+      }
+      ajaxOptions.beforeSend = function (xhr) {
+        options.signal.addEventListener('abort', function () { xhr.abort(); }, { once: true });
+      };
+    }
+
+    return $.ajax(ajaxOptions).then(
+      function (payload, status, xhr) {
+        return createResponse(xhr, payload, status);
+      },
+      function (xhr, status) {
+        return createResponse(xhr, null, status);
+      }
+    );
+  }
+
+  function createResponse(xhr, payload, status) {
+    var responseText = xhr.responseText || '';
+    var response = {
+      ok: xhr.status >= 200 && xhr.status < 300,
+      status: xhr.status || 0,
+      json: function () {
+        if (status === 'abort') {
+          var abortError = new Error('La solicitud fue cancelada.');
+          abortError.name = 'AbortError';
+          return Promise.reject(abortError);
+        }
+        if (payload !== null && typeof payload === 'object') return Promise.resolve(payload);
+        try {
+          return Promise.resolve(JSON.parse(responseText || payload || 'null'));
+        } catch (error) {
+          return Promise.reject(new Error('El servidor no devolvió una respuesta JSON válida. Revise el controlador del módulo.'));
+        }
+      },
+      text: function () {
+        return Promise.resolve(responseText || (typeof payload === 'string' ? payload : JSON.stringify(payload || '')));
+      }
+    };
+
+    if (status === 'abort') response.statusText = 'abort';
+    return response;
   }
 
   function sameNodeType(current, incoming) {
@@ -154,16 +205,15 @@
       var currentMain = document.querySelector('main');
       if (!currentMain) throw new Error('No se encontró el contenido principal para actualizar.');
 
-      var response = await nativeFetch(window.location.href, {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: { 'Accept': 'text/html' }
+      var html = await $.ajax({
+        url: window.location.href,
+        type: 'POST',
+        dataType: 'html',
+        headers: {
+          'Accept': 'text/html',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
       });
-
-      if (!response.ok) throw new Error('No se pudo actualizar el contenido del módulo.');
-
-      var html = await response.text();
       var parsed = new DOMParser().parseFromString(html, 'text/html');
       var incomingMain = parsed.querySelector('main');
 
@@ -276,19 +326,16 @@
     }
   }
 
-  document.addEventListener('submit', function (event) {
-    var form = event.target;
-    if (!(form instanceof HTMLFormElement)) return;
-    if (event.defaultPrevented) return; // Respeta los formularios que ya usan AJAX propio.
-    if (String(form.method).toUpperCase() !== 'POST') return;
-    if (form.dataset.ajax === 'off' || form.target === '_blank') return;
+  $(document).on('submit.copigabyAjax', 'form[method="POST"]', function (event) {
+    if (event.isDefaultPrevented()) return;
+    if (this.dataset.ajax === 'off' || this.target === '_blank') return;
 
     event.preventDefault();
-    submitForm(form, event.submitter || null);
+    submitForm(this, event.originalEvent && event.originalEvent.submitter || null);
   });
 
   window.CopiGabyAjax = {
-    fetch: request,
+    request: request,
     refresh: refresh
   };
-})(window, document);
+})(window, document, window.jQuery);

@@ -13,7 +13,22 @@
 
     if (isset($_GET['type'])) {
 
-        if ($_GET['type'] === 'register') {
+        if ($_GET['type'] === 'list') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+                exit();
+            }
+
+            echo json_encode(
+                $object->getComprasDataTable($_POST),
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['numero_factura_proveedor'])) {
                 // Usamos cedula_usuario para que coincida con el modelo y la DB
                 $_POST['cedula_usuario'] = $_SESSION['user_id']; 
@@ -64,9 +79,10 @@
         }
 
         elseif ($_GET['type'] === 'details') {
-            if (isset($_GET['id'])) {
-                $header = $object->getCompraById((int)$_GET['id']);
-                $items = $object->getItemsByCompra((int)$_GET['id']);
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+            if ($id !== null) {
+                $header = $object->getCompraById((int) $id);
+                $items = $object->getItemsByCompra((int) $id);
                 header('Content-Type: application/json');
                 echo json_encode(['header' => $header, 'items' => $items]);
                 exit();
@@ -119,7 +135,6 @@
         }
     }
 
-    $compras = $object->getAllCompras();
     $proveedores = $object->getProviders();
     $productos = $object->getProducts();
     $categorias = $object->getCategories();

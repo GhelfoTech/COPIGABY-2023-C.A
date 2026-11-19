@@ -4,14 +4,14 @@
  * manteniendo la barra lateral, la sesión y el historial del navegador.
  * No interviene en las peticiones CRUD existentes.
  */
-(function (window, document) {
+(function (window, document, $) {
   'use strict';
 
   if (window.CopiGabyAjaxNavigation) return;
 
   var loadedScripts = new Set();
   var pendingScripts = new Map();
-  var activeController = null;
+  var activeRequest = null;
   var navigationId = 0;
 
   function absoluteUrl(value, base) {
@@ -28,11 +28,7 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', rememberLoadedScripts, { once: true });
-  } else {
-    rememberLoadedScripts();
-  }
+  $(rememberLoadedScripts);
 
   function findContentShell(root) {
     if (!root || !root.body) return null;
@@ -118,50 +114,6 @@
     });
   }
 
-  function getTopLevelCallableNames(source) {
-    var lines = source.split(/\r?\n/);
-    var indents = lines
-      .filter(function (line) { return line.trim() !== ''; })
-      .map(function (line) { return line.match(/^\s*/)[0].length; });
-    if (!indents.length) return [];
-
-    var baseIndent = Math.min.apply(Math, indents);
-    var names = [];
-
-    lines.forEach(function (line) {
-      var indentation = line.match(/^\s*/)[0].length;
-      if (indentation !== baseIndent) return;
-
-      var functionMatch = line.match(/^\s*(?:async\s+)?function\s*\*?\s+([A-Za-z_$][\w$]*)\s*\(/);
-      if (functionMatch) names.push(functionMatch[1]);
-
-      var arrowMatch = line.match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:function\b|(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)/);
-      if (arrowMatch) names.push(arrowMatch[1]);
-    });
-
-    return Array.from(new Set(names));
-  }
-
-  function executeInlineScript(source) {
-    if (!source || !source.trim()) return;
-
-    var exports = getTopLevelCallableNames(source).map(function (name) {
-      return 'if (typeof ' + name + ' === "function") window[' + JSON.stringify(name) + '] = ' + name + ';';
-    }).join('\n');
-
-    // Cada vista se ejecuta en su propio ámbito para evitar que los const/let
-    // globales de un módulo choquen al volver a visitarlo. Las funciones usadas
-    // por atributos onclick se exponen nuevamente en window.
-    var wrappedSource = '(function (window, document) {\n"use strict";\n'
-      + source + '\n' + exports + '\n}).call(window, window, document);';
-
-    var script = document.createElement('script');
-    script.setAttribute('data-copigaby-navigation-inline', '1');
-    script.textContent = wrappedSource;
-    document.body.appendChild(script);
-    script.remove();
-  }
-
   function loadExternalScript(source, baseUrl, forceReload) {
     var url;
     try {
@@ -195,7 +147,7 @@
   }
 
   function scriptNeedsReinitialization(source) {
-    return /(?:^|\/)(?:quick-category|datatables-init)\.js(?:\?|$)/i.test(source || '');
+    return /(?:^|\/)modules\/[^/?]+\.js(?:\?|$)|(?:^|\/)(?:quick-category|datatables-init)\.js(?:\?|$)/i.test(source || '');
   }
 
   async function executePageScripts(parsedDocument, targetUrl) {
@@ -215,13 +167,8 @@
     });
 
     for (var index = 0; index < scripts.length; index++) {
-      var original = scripts[index];
-      var source = original.getAttribute('src');
-      if (source) {
-        await loadExternalScript(source, targetUrl, scriptNeedsReinitialization(source));
-      } else {
-        executeInlineScript(original.textContent || '');
-      }
+      var source = scripts[index].getAttribute('src');
+      if (source) await loadExternalScript(source, targetUrl, scriptNeedsReinitialization(source));
     }
   }
 
@@ -239,31 +186,29 @@
     var requestedModule = targetUrl.searchParams.get('url');
     if (!requestedModule || requestedModule === 'login') return false;
 
-    if (activeController) activeController.abort();
-    var controller = new AbortController();
-    activeController = controller;
+    if (activeRequest) activeRequest.abort();
+    var currentRequest = null;
     var currentId = ++navigationId;
     var currentShell = findContentShell(document);
     if (currentShell) currentShell.setAttribute('aria-busy', 'true');
 
     try {
-      var response = await window.fetch(targetUrl.href, {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        signal: controller.signal,
+      currentRequest = $.ajax({
+        url: targetUrl.href,
+        type: 'POST',
+        dataType: 'html',
         headers: {
           'Accept': 'text/html',
-          'X-Requested-With': 'XMLHttpRequest',
           'X-Ajax-Navigation': '1'
         }
       });
+      activeRequest = currentRequest;
 
+      var html = await currentRequest;
       if (currentId !== navigationId) return false;
-      if (!response.ok) throw new Error('No se pudo cargar el módulo solicitado.');
 
-      var responseUrl = response.url || targetUrl.href;
-      var parsedDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+      var responseUrl = currentRequest.responseURL || targetUrl.href;
+      var parsedDocument = new DOMParser().parseFromString(html, 'text/html');
       var incomingShell = findContentShell(parsedDocument);
 
       // Si el servidor redirigió al login, devolvemos el control a la navegación normal.
@@ -286,9 +231,12 @@
         window.history.pushState({ copigabyAjaxNavigation: true }, '', targetUrl.href);
       }
 
+      var newShellCurrent = findContentShell(document);
+      document.dispatchEvent(new CustomEvent('copigaby:contentReady', {
+        detail: { content: newShellCurrent }
+      }));
       await executePageScripts(parsedDocument, responseUrl);
 
-      var newShellCurrent = findContentShell(document);
       if (newShellCurrent) newShellCurrent.removeAttribute('aria-busy');
 
       if (typeof window.CopiGabyDataTablesInit === 'function' && newShellCurrent) {
@@ -301,7 +249,7 @@
       window.scrollTo(0, 0);
       return true;
     } catch (error) {
-      if (error.name === 'AbortError' || currentId !== navigationId) return false;
+      if (error.statusText === 'abort' || currentId !== navigationId) return false;
       console.error('No se pudo completar la navegación AJAX. Se usará la navegación normal.', error);
       window.location.assign(targetUrl.href);
       return false;
@@ -309,17 +257,17 @@
       if (currentId === navigationId) {
         var shell = findContentShell(document);
         if (shell) shell.removeAttribute('aria-busy');
-        activeController = null;
+        activeRequest = null;
       }
     }
   }
 
-  document.addEventListener('click', function (event) {
-    if (event.defaultPrevented || event.button !== 0) return;
+  $(document).on('click.copigabyNavigation', 'aside a[href]', function (event) {
+    if (event.isDefaultPrevented() || event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-    var anchor = event.target.closest && event.target.closest('aside a[href]');
-    if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+    var anchor = this;
+    if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
     if (anchor.dataset.ajaxNav === 'off') return;
 
     var targetUrl;
@@ -336,7 +284,7 @@
     navigate(targetUrl.href);
   });
 
-  window.addEventListener('popstate', function () {
+  $(window).on('popstate.copigabyNavigation', function () {
     var targetUrl = new URL(window.location.href);
     if (targetUrl.searchParams.get('url') && targetUrl.searchParams.get('url') !== 'login') {
       navigate(targetUrl.href, { popstate: true });
@@ -346,4 +294,4 @@
   });
 
   window.CopiGabyAjaxNavigation = Object.freeze({ navigate: navigate });
-})(window, document);
+})(window, document, window.jQuery);

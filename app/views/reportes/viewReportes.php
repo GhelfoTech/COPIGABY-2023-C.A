@@ -189,20 +189,6 @@
     </main>
   </div>
 
-  <script>
-    (function () {
-      var period = document.getElementById('periodSelect');
-      var start = document.getElementById('startDateWrap');
-      var end = document.getElementById('endDateWrap');
-      if (!period || !start || !end) return;
-      function updateDateInputs() {
-        var show = period.value === 'custom';
-        start.classList.toggle('hidden', !show);
-        end.classList.toggle('hidden', !show);
-      }
-      period.addEventListener('change', updateDateInputs);
-      updateDateInputs();
-    })();
-  </script>
+  <script src="assets/js/modules/reportes.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/reportes.js') ?>"></script>
 </body>
 </html>

@@ -35,7 +35,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table data-datatable="true" class="w-full text-left">
+        <table id="tablaProductos" data-datatable="true" data-datatable-config="productos" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4">Producto</th>
@@ -46,43 +46,7 @@
               <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
-          <tbody class="text-gray-700 font-semibold text-sm divide-y">
-            <?php if(!empty($productos)): foreach ($productos as $p): ?>
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4">
-                  <div class="font-black text-navy-dark uppercase"><?= htmlspecialchars($p['nombre_producto']) ?></div>
-                  <div class="text-[0.7rem] text-gray-400 font-bold">COD: #<?= str_pad($p['codigo_producto'], 4, '0', STR_PAD_LEFT) ?></div>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="text-navy-light"><?= htmlspecialchars($p['nombre_categoria'] ?? '—') ?></div>
-                  <span class="inline-block mt-1 px-2 py-0.5 rounded bg-orange/10 text-orange-dk text-[0.65rem] font-black uppercase"><?= floatval($p['porcentaje_ganancia'] ?? 0) ?>% Ganancia</span>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="<?= ($p['stock_actual'] <= $p['stock_minimo']) ? 'text-red-500 font-black' : 'text-green-600' ?>">
-                    <?= $p['stock_actual'] ?>
-                  </span>
-                  <span class="text-gray-300 mx-1">/</span>
-                  <span class="text-gray-400 text-[0.75rem] font-bold"><?= $p['stock_minimo'] ?></span>
-                </td>
-                <td class="px-6 py-4 font-black text-navy-dark">
-                  $<?= number_format($p['precio'] ?? ($p['costo'] * (1 + ($p['porcentaje_ganancia'] ?? 0) / 100)), 2) ?>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $p['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
-                    <?= $p['estado'] ? 'Activo' : 'Inactivo' ?>
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <button type="button" onclick='viewDetails(<?= json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  </button>
-                </td>
-              </tr>
-            <?php endforeach; else: ?>
-              <tr><td colspan="6" class="px-6 py-10 text-center text-gray-400 font-bold italic">No hay productos registrados.</td></tr>
-            <?php endif; ?>
-          </tbody>
+          <tbody class="text-gray-700 font-semibold text-sm divide-y"></tbody>
         </table>
       </div>
     </main>
@@ -108,7 +72,7 @@
                  <div class="relative min-w-0 flex-1">
                    <input type="search" id="buscarCategoriaProducto" aria-label="Buscar categoría por nombre" placeholder="Escriba el nombre de la categoría" class="w-full px-3 py-2 bg-gray-50 border rounded-lg outline-none text-sm focus:border-orange">
                  </div>
-                 <button type="button" onclick="openQuickCategoryModal('selectCategoriaProducto')" aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
+                 <button type="button" data-js-action="openQuickCategoryModal" data-js-args='["selectCategoriaProducto"]' aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
                </div>
                <select name="codigo_categoria" id="selectCategoriaProducto" data-categoria-select required class="hidden">
                 <option value="">Seleccione una categoría</option>
@@ -131,7 +95,7 @@
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción / Notas</label>
-               <textarea name="descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
+               <textarea name="descripcion" rows="2" maxlength="50" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
@@ -154,11 +118,11 @@
 
   <div id="modalEditProduct" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="closeEditModal"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-2xl animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Editar Producto</h3>
-          <button onclick="closeEditModal()"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button data-js-action="closeEditModal"><svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form action="?url=producto&type=update" method="POST" class="p-6">
           <input type="hidden" name="idproducto" id="edit_id">
@@ -175,7 +139,7 @@
                     <option value="<?= $c['codigo_categoria'] ?>"><?= $c['nombre_categoria'] ?></option>
                   <?php endforeach; ?>
                 </select>
-                <button type="button" onclick="openQuickCategoryModal('edit_categoria')" aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
+                <button type="button" data-js-action="openQuickCategoryModal" data-js-args='["edit_categoria"]' aria-label="Añadir categoría" title="Añadir categoría" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange text-xl font-black text-navy-dark hover:bg-orange-dk">+</button>
                </div>
             </div>
             <div>
@@ -192,7 +156,7 @@
             </div>
             <div class="col-span-2">
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Descripción</label>
-               <textarea name="descripcion" id="edit_descripcion" rows="2" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
+               <textarea name="descripcion" id="edit_descripcion" rows="2" maxlength="50" class="w-full px-4 py-2 bg-gray-50 border rounded-lg outline-none font-bold text-sm" placeholder="Resma de 500 hojas, 75 g/m²"></textarea>
             </div>
             <div>
               <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Stock Actual</label>
@@ -209,7 +173,7 @@
             </div>
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="closeEditModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar Producto </button>
           </div>
         </form>
@@ -220,11 +184,11 @@
   <!-- Modal Ver Detalle -->
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" data-js-action="closeDetalleModal"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-lg animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Detalle del Producto</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeDetalleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6 grid grid-cols-2 gap-4 text-sm">
           <div class="col-span-2"><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Producto</p><p id="det_nombre" class="font-black text-navy-dark uppercase">—</p></div>
@@ -240,7 +204,7 @@
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" data-js-action="closeDetalleModal" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
@@ -249,110 +213,7 @@
   <script src="assets/js/searchable-select.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/searchable-select.js') ?>"></script>
   <?php include 'app/views/categorias/modalQuickCategory.php'; ?>
   <script src="assets/js/quick-category.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/quick-category.js') ?>"></script>
-  <script>
-    const modal = document.getElementById('modalProduct');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const closeBtns = document.querySelectorAll('.closeModal');
-    const overlay = document.getElementById('overlay');
-    const toggleModal = () => modal.classList.toggle('hidden');
-
-    btnOpen.onclick = toggleModal;
-    closeBtns.forEach(btn => btn.onclick = toggleModal);
-    overlay.onclick = toggleModal;
-
-    function resetCategoryFilter() {
-      window.resetSearchableSelect(document.getElementById('selectCategoriaProducto'));
-    }
-
-    window.attachSearchableSelect(
-      document.getElementById('buscarCategoriaProducto'),
-      document.getElementById('selectCategoriaProducto')
-    );
-    document.getElementById('formProductoRegister').addEventListener('reset', () => window.setTimeout(resetCategoryFilter, 0));
-    btnOpen.addEventListener('click', resetCategoryFilter);
-
-    const newCostoInput = document.getElementById('new_costo');
-    const newPorcentajeInput = document.getElementById('new_porcentaje');
-    if (newCostoInput && newPorcentajeInput) {
-      const updateNewPrecio = () => updatePricePreview(newCostoInput, newPorcentajeInput, 'new_precio_preview');
-      newCostoInput.addEventListener('input', updateNewPrecio);
-      newPorcentajeInput.addEventListener('input', updateNewPrecio);
-    }
-
-    const editCostoInput = document.getElementById('edit_costo');
-    const editPorcentajeInput = document.getElementById('edit_porcentaje');
-    if (editCostoInput && editPorcentajeInput) {
-      const updateEditPrecio = () => updatePricePreview(editCostoInput, editPorcentajeInput, 'edit_precio_preview');
-      editCostoInput.addEventListener('input', updateEditPrecio);
-      editPorcentajeInput.addEventListener('input', updateEditPrecio);
-    }
-
-    let currentRecord = null;
-
-    function viewDetails(data) {
-      currentRecord = data;
-      document.getElementById('det_nombre').textContent = data.nombre_producto;
-      document.getElementById('det_codigo').textContent = '#' + String(data.codigo_producto).padStart(4, '0');
-      document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
-      document.getElementById('det_categoria').textContent = data.nombre_categoria || '—';
-      document.getElementById('det_porcentaje').textContent = parseFloat(data.porcentaje_ganancia || data.porcentaje_ganancia || 0).toFixed(2) + '%';
-      document.getElementById('det_costo_compra').textContent = '$' + parseFloat(data.costo_compra || data.costo || 0).toFixed(2);
-      document.getElementById('det_precio').textContent = '$' + parseFloat(data.precio || 0).toFixed(2);
-      document.getElementById('det_stock').textContent = data.stock_actual + ' / ' + data.stock_minimo;
-      document.getElementById('det_descripcion').textContent = data.descripcion || '—';
-      document.getElementById('btnDetalleEditar').onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
-      document.getElementById('btnDetalleEliminar').onclick = () => confirmDelete(currentRecord.codigo_producto);
-      document.getElementById('modalDetalle').classList.remove('hidden');
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function calculateProductPrice(costo, porcentaje) {
-      const cost = parseFloat(costo) || 0;
-      const gain = parseFloat(porcentaje) || 0;
-      return cost * (1 + gain / 100);
-    }
-
-    function updatePricePreview(costoInput, porcentajeInput, previewId) {
-      const costo = parseFloat(costoInput.value) || 0;
-      const porcentaje = parseFloat(porcentajeInput.value) || 0;
-      const precio = calculateProductPrice(costo, porcentaje);
-      document.getElementById(previewId).textContent = '$' + precio.toFixed(2);
-    }
-
-    function openEditModal(data) {
-        document.getElementById('edit_id').value = data.codigo_producto;
-        document.getElementById('edit_nombre').value = data.nombre_producto;
-        document.getElementById('edit_categoria').value = data.codigo_categoria;
-        const costoCompra = parseFloat(data.costo_compra || data.costo || 0).toFixed(2);
-        document.getElementById('edit_costo').value = costoCompra;
-        document.getElementById('edit_porcentaje').value = parseFloat(data.porcentaje_ganancia || data.porcentaje_ganancia || 0).toFixed(2);
-        document.getElementById('edit_precio_preview').textContent = '$' + calculateProductPrice(costoCompra, data.porcentaje_ganancia || data.porcentaje_ganancia || 0).toFixed(2);
-        document.getElementById('edit_descripcion').value = data.descripcion;
-        document.getElementById('edit_stock_actual').value = data.stock_actual;
-        document.getElementById('edit_stock_minimo').value = data.stock_minimo;
-        document.getElementById('edit_estado').checked = (data.estado == 1);
-        document.getElementById('modalEditProduct').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-        document.getElementById('modalEditProduct').classList.add('hidden');
-    }
-
-    async function confirmDelete(id) {
-      if(await showConfirm('¿Desea desactivar este producto del inventario?', 'Desactivar producto', 'Sí, desactivar')) {
-        const f = new FormData();
-        f.append('deleteProduct', 'true');
-        f.append('idproducto', id);
-        CopiGabyAjax.fetch('?url=producto&type=main', { method:'POST', body:f })
-        .then(r => r.json())
-        .then(d => showMutationResultAndReload(d, 'Producto desactivado correctamente.', 'No se pudo desactivar el producto.'))
-        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el producto.', 'error', 'Error de conexión'));
-      }
-    }
-  </script>
+  <script src="assets/js/modules/producto.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/producto.js') ?>"></script>
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

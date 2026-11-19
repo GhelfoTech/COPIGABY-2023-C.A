@@ -15,6 +15,21 @@ function showFlashAlert(status, message) {
   });
 }
 
+window.CopiGabyShowModuleFlash = function () {
+  const element = document.querySelector('[data-module-flash-status], [data-system-flash-status]');
+  if (!element) return Promise.resolve();
+
+  const isSystemFlash = element.hasAttribute('data-system-flash-status');
+  const statusAttribute = isSystemFlash ? 'data-system-flash-status' : 'data-module-flash-status';
+  const messageAttribute = isSystemFlash ? 'data-system-flash-message' : 'data-module-flash-message';
+  const status = element.getAttribute(statusAttribute);
+  const message = element.getAttribute(messageAttribute);
+  element.removeAttribute(statusAttribute);
+  element.removeAttribute(messageAttribute);
+
+  return showFlashAlert(status, message);
+};
+
 async function showConfirm(message, title = '¿Está seguro?', confirmButtonText = 'Sí, continuar') {
   const result = await Swal.fire({
     icon: 'warning',

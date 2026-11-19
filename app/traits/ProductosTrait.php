@@ -20,6 +20,11 @@ trait ProductosTrait
             return ['status' => 'error', 'message' => 'Los campos código, nombre, categoría, stock actual y stock mínimo son obligatorios'];
         }
 
+        $descripcion = $datos['descripcion'] ?? '';
+        if (!is_scalar($descripcion) || mb_strlen((string) $descripcion, 'UTF-8') > 50) {
+            return ['status' => 'error', 'message' => 'La descripción del producto no puede superar los 50 caracteres'];
+        }
+
         // Stock actual y mínimo no pueden ser negativos (enteros o decimales)
         $stockActual = (float) $datos['stock_actual'];
         $stockMinimo = (float) $datos['stock_minimo'];

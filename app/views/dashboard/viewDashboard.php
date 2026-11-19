@@ -28,18 +28,8 @@
       </div>
     </header>
 
-    <main class="p-8 flex-1 animate-fade-up">
+    <main class="p-8 flex-1 animate-fade-up"<?php if (!empty($_SESSION['tasa_flash'])): $tasaFlash = $_SESSION['tasa_flash']; unset($_SESSION['tasa_flash']); ?> data-module-flash-status="<?= htmlspecialchars((string) ($tasaFlash['status'] ?? 'error'), ENT_QUOTES, 'UTF-8') ?>" data-module-flash-message="<?= htmlspecialchars((string) ($tasaFlash['message'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>>
       <h1 class="text-2xl font-[900] text-gray-800 mb-8">Resumen de Actividad</h1>
-
-      <?php if (!empty($_SESSION['tasa_flash'])): ?>
-        <?php $tasaFlash = $_SESSION['tasa_flash']; unset($_SESSION['tasa_flash']); ?>
-        <script>
-          showFlashAlert(
-            <?= json_encode($tasaFlash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-            <?= json_encode($tasaFlash['message'] ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-          );
-        </script>
-      <?php endif; ?>
 
       <div id="dashboardTasa" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <section class="bg-white rounded-custom border border-gray-100 shadow-sm p-6">
@@ -185,10 +175,6 @@
       </section>
     </main>
   </div>
-  <script>
-    const indicadores = document.getElementById('dashboardIndicadores');
-    const tasa = document.getElementById('dashboardTasa');
-    if (indicadores && tasa) tasa.before(indicadores);
-  </script>
+  <script src="assets/js/modules/dashboard.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/dashboard.js') ?>"></script>
 </body>
 </html>

@@ -22,27 +22,17 @@
       </div>
     </header>
 
-    <main class="p-8 flex-1 animate-fade-up">
+    <main class="p-8 flex-1 animate-fade-up"<?php if (!empty($_SESSION['rol_flash'])): $flash = $_SESSION['rol_flash']; unset($_SESSION['rol_flash']); ?> data-module-flash-status="<?= htmlspecialchars((string) ($flash['status'] ?? 'error'), ENT_QUOTES, 'UTF-8') ?>" data-module-flash-message="<?= htmlspecialchars((string) ($flash['message'] ?? (($flash['status'] ?? '') === 'success' ? 'Operación realizada correctamente' : 'No se pudo realizar la operación')), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>>
       <div class="flex justify-between items-center mb-8">
         <div>
           <h1 class="text-2xl font-[900] text-gray-800">Roles de Usuario</h1>
           <p class="text-gray-500 text-sm font-semibold">Defina los niveles de permisos del sistema</p>
         </div>
-        <button onclick="toggleModal('modalRegister')" class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+        <button data-js-action="toggleModal" data-js-args='["modalRegister"]' class="flex items-center gap-2 bg-gradient-to-r from-orange to-orange-dk text-navy-dark font-black px-6 py-3 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
           AÑADIR ROL
         </button>
       </div>
-
-      <?php if (!empty($_SESSION['rol_flash'])): ?>
-        <?php $flash = $_SESSION['rol_flash']; unset($_SESSION['rol_flash']); ?>
-        <script>
-          showFlashAlert(
-            <?= json_encode($flash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-            <?= json_encode($flash['message'] ?? (($flash['status'] ?? '') === 'success' ? 'Operación realizada correctamente' : 'No se pudo realizar la operación'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-          );
-        </script>
-      <?php endif; ?>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
         <table data-datatable="true" class="w-full text-left">
@@ -67,7 +57,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <button type="button" onclick='viewDetails(<?= json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                  <button type="button" data-js-action="viewDetails" data-js-args="<?= htmlspecialchars(json_encode([$r], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                     <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
@@ -156,11 +146,11 @@
   <!-- Modales -->
   <div id="modalRegister" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal('modalRegister')"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="toggleModal" data-js-args='["modalRegister"]'></div>
       <form action="?url=rol&type=register" method="POST" class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Nuevo Rol</h3>
-          <button type="button" onclick="toggleModal('modalRegister')" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="toggleModal" data-js-args='["modalRegister"]' class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6">
           <div class="mb-4">
@@ -172,7 +162,7 @@
              <textarea name="descripcion" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="Acceso a pedidos y clientes"></textarea>
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal('modalRegister')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="toggleModal" data-js-args='["modalRegister"]' class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
           </div>
         </div>
@@ -182,12 +172,12 @@
 
   <div id="modalEdit" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal('modalEdit')"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="toggleModal" data-js-args='["modalEdit"]'></div>
       <form action="?url=rol&type=update" method="POST" class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <input type="hidden" name="codigo_rol" id="edit_id">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Editar Rol</h3>
-          <button type="button" onclick="toggleModal('modalEdit')" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="toggleModal" data-js-args='["modalEdit"]' class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6">
           <div class="mb-4">
@@ -203,7 +193,7 @@
             <label class="text-sm font-bold text-navy-dark uppercase">Activo</label>
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal('modalEdit')" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="toggleModal" data-js-args='["modalEdit"]' class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
           </div>
         </div>
@@ -214,11 +204,11 @@
   <!-- Modal Ver Detalle -->
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" data-js-action="closeDetalleModal"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Detalle del Rol</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeDetalleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6 space-y-4">
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Código</p><p id="det_codigo" class="font-black text-navy-dark">—</p></div>
@@ -229,52 +219,13 @@
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" data-js-action="closeDetalleModal" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const toggleModal = (id) => document.getElementById(id).classList.toggle('hidden');
-
-    let currentRecord = null;
-
-    function viewDetails(data) {
-      currentRecord = data;
-      document.getElementById('det_codigo').textContent = '#' + String(data.codigo_rol).padStart(3, '0');
-      document.getElementById('det_nombre').textContent = data.nombre_rol;
-      document.getElementById('det_descripcion').textContent = data.descripcion || '—';
-      document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
-      document.getElementById('btnDetalleEditar').onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
-      document.getElementById('btnDetalleEliminar').onclick = () => eliminar(currentRecord.codigo_rol);
-      document.getElementById('modalDetalle').classList.remove('hidden');
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function openEditModal(data) {
-      document.getElementById('edit_id').value = data.codigo_rol;
-      document.getElementById('edit_nombre').value = data.nombre_rol;
-      document.getElementById('edit_descripcion').value = data.descripcion;
-      document.getElementById('edit_estado').checked = data.estado == 1;
-      toggleModal('modalEdit');
-    }
-
-    async function eliminar(id) {
-      if(await showConfirm('¿Desea desactivar este rol?', 'Desactivar rol', 'Sí, desactivar')) {
-        const f = new FormData();
-        f.append('deleteRol', 'true');
-        f.append('idrol', id);
-        CopiGabyAjax.fetch('?url=rol&type=main', { method:'POST', body:f })
-        .then(r => r.json())
-        .then(d => showMutationResultAndReload(d, 'Rol desactivado correctamente.', 'No se pudo desactivar el rol.'))
-        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el rol.', 'error', 'Error de conexión'));
-      }
-    }
-  </script>
+  <script src="assets/js/modules/rol.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/rol.js') ?>"></script>
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

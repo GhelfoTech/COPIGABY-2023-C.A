@@ -63,8 +63,9 @@
         }
 
         elseif ($_GET['type'] === 'details') {
-            if (isset($_GET['id'])) {
-                $result = $object->getEmpresaById((int) $_GET['id']);
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+            if ($id !== null) {
+                $result = $object->getEmpresaById((int) $id);
                 header('Content-Type: application/json');
                 echo json_encode($result);
                 exit();

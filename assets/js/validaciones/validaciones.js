@@ -1,5 +1,5 @@
 
-(function (window, document) {
+(function ($, window, document) {
   'use strict';
 
   const PATRONES = window.CopiGabiRegex;
@@ -24,10 +24,11 @@
   const PREFIJOS_TELEFONO = ['0426', '0416', '0424', '0414', '0412', '0422'];
 
   function obtenerCamposTelefono(grupo) {
+    const $grupo = $(grupo);
     return {
-      prefijo: grupo.querySelector('[data-telefono-prefix]'),
-      numero: grupo.querySelector('[data-telefono-number]'),
-      valor: grupo.querySelector('[data-telefono-value]')
+      prefijo: $grupo.find('[data-telefono-prefix]').get(0),
+      numero: $grupo.find('[data-telefono-number]').get(0),
+      valor: $grupo.find('[data-telefono-value]').get(0)
     };
   }
 
@@ -70,12 +71,13 @@
   }
 
   function inicializarCampoTelefono(grupo) {
-    if (grupo.dataset.telefonoInicializado === '1') return;
+    const $grupo = $(grupo);
+    if ($grupo.data('telefonoInicializado')) return;
 
     const campos = obtenerCamposTelefono(grupo);
     if (!campos.prefijo || !campos.numero || !campos.valor) return;
 
-    grupo.dataset.telefonoInicializado = '1';
+    $grupo.data('telefonoInicializado', true);
     if (campos.valor.value) {
       establecerValorTelefono(grupo, campos.valor.value);
     } else {
@@ -83,16 +85,16 @@
       actualizarValorTelefono(grupo);
     }
 
-    campos.prefijo.addEventListener('change', function () {
+    $(campos.prefijo).off('change.cgValidation').on('change.cgValidation', function () {
       actualizarValorTelefono(grupo);
     });
-    campos.numero.addEventListener('input', function () {
+    $(campos.numero).off('input.cgValidation').on('input.cgValidation', function () {
       actualizarValorTelefono(grupo);
     });
 
-    const formulario = grupo.closest('form');
-    if (formulario) {
-      formulario.addEventListener('reset', function () {
+    const $formulario = $grupo.closest('form');
+    if ($formulario.length) {
+      $formulario.on('reset.cgValidation', function () {
         window.setTimeout(function () {
           campos.prefijo.value = PREFIJOS_TELEFONO[0];
           campos.numero.value = '';
@@ -103,28 +105,23 @@
   }
 
   function inicializarCamposTelefono(contenedor) {
-    if (contenedor.matches && contenedor.matches('[data-telefono-field]')) {
-      inicializarCampoTelefono(contenedor);
-    }
-    if (contenedor.querySelectorAll) {
-      contenedor.querySelectorAll('[data-telefono-field]').forEach(inicializarCampoTelefono);
-    }
+    const $contenedor = $(contenedor);
+    $contenedor.filter('[data-telefono-field]').add($contenedor.find('[data-telefono-field]'))
+      .each(function () { inicializarCampoTelefono(this); });
   }
 
   window.setTelefonoFieldValue = function (id, telefono) {
-    const valor = document.getElementById(id);
-    const grupo = valor && valor.closest('[data-telefono-field]');
+    const grupo = $('#' + $.escapeSelector(id)).closest('[data-telefono-field]').get(0);
     if (grupo) establecerValorTelefono(grupo, telefono);
   };
 
   function cargarEstilos() {
-    if (document.getElementById('copigaby-validaciones-css')) return;
-
-    const link = document.createElement('link');
-    link.id = 'copigaby-validaciones-css';
-    link.rel = 'stylesheet';
-    link.href = 'assets/js/validaciones/validaciones.css';
-    document.head.appendChild(link);
+    if ($('#copigaby-validaciones-css').length) return;
+    $('<link>', {
+      id: 'copigaby-validaciones-css',
+      rel: 'stylesheet',
+      href: 'assets/js/validaciones/validaciones.css'
+    }).appendTo('head');
   }
 
   function valorDe(campo) {
@@ -160,8 +157,8 @@
 
       // Detecta iconos SVG, elementos decorativos accesibles y botones auxiliares
       // (por ejemplo, el ojo de contraseña) anclados al contenedor del input.
-      return hijo.matches('svg, i, button, [aria-hidden="true"], [class*="icon"]')
-        || Boolean(hijo.querySelector('svg, i'));
+      return $(hijo).is('svg, i, button, [aria-hidden="true"], [class*="icon"]')
+        || $(hijo).find('svg, i').length > 0;
     });
   }
 
@@ -230,8 +227,7 @@
   function limpiarEstado(campo) {
     const idMensaje = campo.dataset.cgValidationId;
     if (idMensaje) {
-      const mensaje = document.getElementById(idMensaje);
-      if (mensaje) mensaje.remove();
+      $('#' + $.escapeSelector(idMensaje)).remove();
       limpiarDescribedBy(campo, idMensaje);
     }
 
@@ -244,20 +240,19 @@
 
     const idMensaje = obtenerIdMensaje(campo);
     const ancla = obtenerAncla(campo);
-    let elemento = document.getElementById(idMensaje);
+    let $elemento = $('#' + $.escapeSelector(idMensaje));
 
-    if (!elemento) {
-      elemento = document.createElement('small');
-      elemento.id = idMensaje;
-      elemento.className = CLASE_ERROR;
-      elemento.setAttribute('role', 'alert');
-      elemento.setAttribute('aria-live', 'polite');
-      ancla.insertAdjacentElement('afterend', elemento);
+    if (!$elemento.length) {
+      $elemento = $('<small>', {
+        id: idMensaje,
+        class: CLASE_ERROR,
+        role: 'alert',
+        'aria-live': 'polite'
+      }).insertAfter(ancla);
     }
 
-    elemento.textContent = mensaje;
-    campo.classList.add(CLASE_INVALIDO);
-    campo.setAttribute('aria-invalid', 'true');
+    $elemento.text(mensaje);
+    $(campo).addClass(CLASE_INVALIDO).attr('aria-invalid', 'true');
 
     const ids = (campo.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
     if (!ids.includes(idMensaje)) ids.push(idMensaje);
@@ -387,8 +382,8 @@
       // En Pedidos, la cantidad de un producto no puede superar su stock disponible.
       if (campo.matches('[data-purchase-quantity], .item-cant')) {
         const fila = campo.closest('tr[data-item]');
-        const tipoItem = fila && fila.querySelector('.item-tipo');
-        const selectorItem = fila && fila.querySelector('.item-select');
+        const tipoItem = fila && $(fila).find('.item-tipo').get(0);
+        const selectorItem = fila && $(fila).find('.item-select').get(0);
         const opcionItem = selectorItem && selectorItem.options[selectorItem.selectedIndex];
         const stockTexto = opcionItem && opcionItem.getAttribute('data-stock');
 
@@ -471,10 +466,12 @@
 
   function validarTelefono(formulario) {
     let valido = true;
-    formulario.querySelectorAll('[data-telefono-field]').forEach(function (grupo) {
-      const prefijo = grupo.querySelector('[data-telefono-prefix]');
-      const numero = grupo.querySelector('[data-telefono-number]');
-      const valorCompleto = grupo.querySelector('[data-telefono-value]');
+    $(formulario).find('[data-telefono-field]').each(function () {
+      const grupo = this;
+      const campos = obtenerCamposTelefono(grupo);
+      const prefijo = campos.prefijo;
+      const numero = campos.numero;
+      const valorCompleto = campos.valor;
 
       if (!prefijo || !numero || !valorCompleto || numero.disabled) return;
 
@@ -533,11 +530,12 @@
   }
 
   function validarRangoReporte(formulario) {
-    const period = formulario.querySelector('#periodSelect');
+    const $formulario = $(formulario);
+    const period = $formulario.find('#periodSelect').get(0);
     if (!period || period.value !== 'custom') return true;
 
-    const desde = formulario.querySelector('[name="start_date"]');
-    const hasta = formulario.querySelector('[name="end_date"]');
+    const desde = $formulario.find('[name="start_date"]').get(0);
+    const hasta = $formulario.find('[name="end_date"]').get(0);
     let valido = true;
 
     if (!desde || !desde.value) {
@@ -571,15 +569,15 @@
 
     if (!validarTelefono(formulario)) {
       valido = false;
-      if (!primerCampoInvalido) primerCampoInvalido = formulario.querySelector('[data-telefono-number]');
+      if (!primerCampoInvalido) primerCampoInvalido = $(formulario).find('[data-telefono-number]').get(0);
     }
     if (!validarCredenciales(formulario)) {
       valido = false;
-      if (!primerCampoInvalido) primerCampoInvalido = formulario.querySelector('[name="password_actual"]');
+      if (!primerCampoInvalido) primerCampoInvalido = $(formulario).find('[name="password_actual"]').get(0);
     }
     if (!validarRangoReporte(formulario)) {
       valido = false;
-      if (!primerCampoInvalido) primerCampoInvalido = formulario.querySelector('[name="start_date"]');
+      if (!primerCampoInvalido) primerCampoInvalido = $(formulario).find('[name="start_date"]').get(0);
     }
 
     if (!valido && enfocarPrimerError && primerCampoInvalido) {
@@ -595,10 +593,10 @@
   }
 
   function validarEdicionCompra(enfocarPrimerError) {
-    const proveedor = document.getElementById('buscarProveedorEdicion');
-    const factura = document.getElementById('edit_factura');
-    const fecha = document.getElementById('edit_fecha');
-    const cantidades = Array.from(document.querySelectorAll('#tablaDetallesItems [data-purchase-quantity]'));
+    const proveedor = $('#buscarProveedorEdicion').get(0);
+    const factura = $('#edit_factura').get(0);
+    const fecha = $('#edit_fecha').get(0);
+    const cantidades = $('#tablaDetallesItems [data-purchase-quantity]').toArray();
     const campos = [proveedor, factura, fecha, ...cantidades].filter(Boolean);
     let valido = true;
     let primerCampoInvalido = null;
@@ -621,85 +619,49 @@
 
   function prepararFormulario(formulario) {
     if (!(formulario instanceof HTMLFormElement)) return;
-    // Permite que el submit llegue al validador central y que el aviso aparezca junto al campo.
-    formulario.noValidate = true;
+    const $formulario = $(formulario);
+    if ($formulario.data('cgValidationInitialized')) return;
+
+    $formulario.data('cgValidationInitialized', true).prop('noValidate', true);
+    $formulario.on('submit.cgValidation', function (evento) {
+      if (!validarFormulario(this, true)) {
+        evento.preventDefault();
+        evento.stopImmediatePropagation();
+      }
+    });
+  }
+
+  function prepararContenedor(contenedor) {
+    const $contenedor = $(contenedor);
+    $contenedor.filter('form').add($contenedor.find('form')).each(function () {
+      prepararFormulario(this);
+    });
+    inicializarCamposTelefono(contenedor);
   }
 
   function iniciar() {
     cargarEstilos();
-    inicializarCamposTelefono(document);
-    document.querySelectorAll('form').forEach(prepararFormulario);
+    prepararContenedor(document);
 
-    // Delegación: también cubre filas y controles agregados dinámicamente.
-    document.addEventListener('submit', function (evento) {
-      const formulario = evento.target;
-      if (!validarFormulario(formulario, true)) {
-        evento.preventDefault();
-        evento.stopImmediatePropagation();
-      }
-    }, true);
-
-    // La edición de una compra existente usa controles sueltos y un botón JS, no un <form>.
-    document.addEventListener('click', function (evento) {
-      const boton = evento.target.closest && evento.target.closest('#btnGuardarEdicionCompra');
-      if (!boton) return;
-      if (!validarEdicionCompra(true)) {
-        evento.preventDefault();
-        evento.stopImmediatePropagation();
-      }
-    }, true);
-
-    // Compra nueva usa un botón type="button" que ejecuta submitCompra() manualmente.
-    document.addEventListener('click', function (evento) {
-      const boton = evento.target.closest && evento.target.closest('[onclick*="submitCompra"]');
-      if (!boton) return;
-      const formulario = document.getElementById('formCompra');
-      if (formulario && !validarFormulario(formulario, true)) {
-        evento.preventDefault();
-        evento.stopImmediatePropagation();
-      }
-    }, true);
-
-    document.addEventListener('input', function (evento) {
-      const campo = evento.target;
-      if (!esControlValidable(campo) || !esCampoEditable(campo)) return;
-      validarCampo(campo, false);
-    });
-
-    document.addEventListener('change', function (evento) {
-      const campo = evento.target;
-      if (!esControlValidable(campo) || !esCampoEditable(campo)) return;
-      validarCampo(campo, true);
-    });
-
-    document.addEventListener('focusout', function (evento) {
-      const campo = evento.target;
-      if (!esControlValidable(campo) || !esCampoEditable(campo)) return;
-      validarCampo(campo, true);
-    });
-
-    // Formularios insertados después de la carga inicial.
-    const observador = new MutationObserver(function (mutaciones) {
-      mutaciones.forEach(function (mutacion) {
-        mutacion.addedNodes.forEach(function (nodo) {
-          if (!(nodo instanceof Element)) return;
-          if (nodo.matches('form')) prepararFormulario(nodo);
-          nodo.querySelectorAll && nodo.querySelectorAll('form').forEach(prepararFormulario);
-          inicializarCamposTelefono(nodo);
-        });
+    $(document)
+      .off('.cgValidation')
+      .on('input.cgValidation', 'input, select, textarea', function () {
+        if (esControlValidable(this) && esCampoEditable(this)) validarCampo(this, false);
+      })
+      .on('change.cgValidation focusout.cgValidation', 'input, select, textarea', function () {
+        if (esControlValidable(this) && esCampoEditable(this)) validarCampo(this, true);
+      })
+      .on('copigaby:contentReady.cgValidation copigaby:refreshed.cgValidation', function (evento) {
+        const detail = evento.originalEvent && evento.originalEvent.detail || {};
+        prepararContenedor(detail.content || detail.main || document);
       });
-    });
-    observador.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciar, { once: true });
-  } else {
-    iniciar();
-  }
+  $(iniciar);
 
   // API pequeña para pruebas y usos puntuales sin acoplar la lógica de los módulos.
   window.CopiGabiValidaciones = Object.freeze({
-    validarFormulario: function (formulario) { return validarFormulario(formulario, true); }
+    validarFormulario: function (formulario) { return validarFormulario(formulario, true); },
+    validarEdicionCompra: function () { return validarEdicionCompra(true); }
   });
-})(window, document);
+})(window.jQuery, window, document);

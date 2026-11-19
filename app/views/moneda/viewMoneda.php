@@ -22,7 +22,7 @@
       </div>
     </header>
 
-    <main class="p-8 flex-1 animate-fade-up">
+    <main id="moduloMoneda" class="p-8 flex-1 animate-fade-up" data-moneda-activa-id="<?= (int) ($monedaActiva['codigo_moneda'] ?? 0) ?>">
       <?php if (!empty($monedaFlash)): ?>
       <div class="mb-6 px-5 py-4 rounded-xl border font-bold text-sm <?= ($monedaFlash['status'] ?? '') === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700' ?>">
         <?= htmlspecialchars($monedaFlash['message'] ?? 'Operación completada.') ?>
@@ -90,7 +90,7 @@
                   <?php if ($esGlobal): ?>
                     <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase bg-orange text-navy-dark">Activa</span>
                   <?php elseif ((int) $m['estado'] === 1): ?>
-                    <button type="button" onclick="activarMoneda(<?= (int) $m['codigo_moneda'] ?>, '<?= htmlspecialchars($m['nombre_moneda'], ENT_QUOTES) ?>')"
+                    <button type="button" data-js-action="activarMoneda" data-js-args="<?= htmlspecialchars(json_encode([(int) $m['codigo_moneda'], $m['nombre_moneda']], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>"
                       class="text-xs font-black uppercase text-navy-dark bg-gray-100 hover:bg-orange/20 px-3 py-1 rounded-full transition-colors">
                       Usar global
                     </button>
@@ -104,7 +104,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <button type="button" onclick="viewDetails(<?= (int) $m['codigo_moneda'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                  <button type="button" data-js-action="viewDetails" data-js-args="<?= htmlspecialchars(json_encode([(int) $m['codigo_moneda']], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                     <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
@@ -122,11 +122,11 @@
   <!-- Modal Registro -->
   <div id="modalMoneda" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="toggleModal"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Nueva Moneda</h3>
-          <button type="button" onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="toggleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form action="?url=moneda&type=register" method="POST" class="p-6">
           <div class="mb-4">
@@ -142,7 +142,7 @@
               <input type="number" step="0.01" min="0.01" name="tasa_cambio" required class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold text-sm" placeholder="36.50">
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="toggleModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
           </div>
         </form>
@@ -153,11 +153,11 @@
   <!-- Modal Editar -->
   <div id="modalEditMoneda" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="closeEditModal"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Editar Moneda</h3>
-          <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeEditModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form action="?url=moneda&type=update" method="POST" class="p-6">
           <input type="hidden" name="idmoneda" id="edit_id">
@@ -178,7 +178,7 @@
             <label for="edit_estado" class="text-sm font-bold text-navy-dark uppercase">Habilitada</label>
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="closeEditModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
           </div>
         </form>
@@ -189,11 +189,11 @@
   <!-- Modal Ver Detalle -->
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" data-js-action="closeDetalleModal"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-black text-navy-dark">Detalle de Moneda</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeDetalleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6 space-y-4">
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Código</p><p id="det_codigo" class="font-black text-navy-dark">—</p></div>
@@ -205,118 +205,13 @@
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" data-js-action="closeDetalleModal" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const modal = document.getElementById('modalMoneda');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const toggleModal = () => modal.classList.toggle('hidden');
-    btnOpen.onclick = toggleModal;
-
-    const monedaActivaId = <?= !empty($monedaActiva) ? (int) $monedaActiva['codigo_moneda'] : 0 ?>;
-    let currentRecord = null;
-
-    function viewDetails(id) {
-      CopiGabyAjax.fetch(`?url=moneda&type=details&id=${id}`)
-        .then(r => r.json())
-        .then(data => {
-          if (!data || data.status === 'error') {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo cargar la moneda.' });
-            return;
-          }
-          currentRecord = data;
-          document.getElementById('det_codigo').textContent = '#' + String(data.codigo_moneda).padStart(3, '0');
-          document.getElementById('det_nombre').textContent = data.nombre_moneda;
-          document.getElementById('det_simbolo').textContent = data.simbolo;
-          document.getElementById('det_tasa').textContent = parseFloat(data.tasa_cambio).toFixed(2);
-          document.getElementById('det_estado').textContent = parseInt(data.estado, 10) === 1 ? 'Habilitada' : 'Inactiva';
-          document.getElementById('btnDetalleEditar').onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
-          document.getElementById('btnDetalleEliminar').onclick = () => eliminar(currentRecord.codigo_moneda);
-          const esGlobal = parseInt(data.codigo_moneda, 10) === monedaActivaId;
-          document.getElementById('btnDetalleEliminar').classList.toggle('hidden', esGlobal);
-          document.getElementById('modalDetalle').classList.remove('hidden');
-        })
-        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación.' }));
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function openEditModal(data) {
-      document.getElementById('edit_id').value = data.codigo_moneda;
-      document.getElementById('edit_nombre').value = data.nombre_moneda;
-      document.getElementById('edit_simbolo').value = data.simbolo;
-      document.getElementById('edit_tasa').value = data.tasa_cambio;
-      document.getElementById('edit_estado').checked = (parseInt(data.estado, 10) === 1);
-      document.getElementById('modalEditMoneda').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-      document.getElementById('modalEditMoneda').classList.add('hidden');
-    }
-
-    function activarMoneda(id, nombre) {
-      Swal.fire({
-        title: '¿Establecer moneda global?',
-        text: `"${nombre}" se aplicará en Pedidos, Compras y conversiones del sistema.`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#f97316',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, activar',
-        cancelButtonText: 'Cancelar',
-      }).then(result => {
-        if (!result.isConfirmed) return;
-        const f = new FormData();
-        f.append('idmoneda', String(id));
-        CopiGabyAjax.fetch('?url=moneda&type=setActive', { method: 'POST', body: f })
-          .then(r => r.json())
-          .then(d => {
-            if (d.status === 'success') {
-              Swal.fire({ icon: 'success', title: 'Moneda activa', text: d.message, timer: 1500, showConfirmButton: false })
-                .then(() => CopiGabyAjax.refresh());
-            } else {
-              Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo activar la moneda.' });
-            }
-          })
-          .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación.' }));
-      });
-    }
-
-    function eliminar(id) {
-      Swal.fire({
-        title: '¿Desactivar moneda?',
-        text: 'La moneda quedará inactiva en el catálogo.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, desactivar',
-        cancelButtonText: 'Cancelar',
-      }).then(result => {
-        if (!result.isConfirmed) return;
-        const f = new FormData();
-        f.append('deleteMoneda', 'true');
-        f.append('idmoneda', String(id));
-        CopiGabyAjax.fetch('?url=moneda&type=main', { method: 'POST', body: f })
-          .then(r => r.json())
-          .then(d => {
-            if (d.status === 'success') {
-              Swal.fire({ icon: 'success', title: 'Desactivada', timer: 1200, showConfirmButton: false })
-                .then(() => CopiGabyAjax.refresh());
-            } else {
-              Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo procesar.' });
-            }
-          })
-          .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Error de comunicación.' }));
-      });
-    }
-  </script>
+  <script src="assets/js/modules/moneda.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/moneda.js') ?>"></script>
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

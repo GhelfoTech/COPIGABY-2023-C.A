@@ -225,9 +225,10 @@
         }
 
         elseif ($_GET['type'] === 'details') {
-            if (isset($_GET['id'])) {
-                $header = $object->getPedidoById((int) $_GET['id']);
-                $items  = $object->getItemsByPedido((int) $_GET['id']);
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+            if ($id !== null) {
+                $header = $object->getPedidoById((int) $id);
+                $items  = $object->getItemsByPedido((int) $id);
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(['header' => $header, 'items' => $items]);
                 exit();

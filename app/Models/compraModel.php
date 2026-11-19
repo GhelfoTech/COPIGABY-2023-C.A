@@ -42,6 +42,111 @@ class compraModel extends ConectDB {
         }
     }
 
+    public function getComprasDataTable(array $request): array {
+        $draw = filter_var($request['draw'] ?? 0, FILTER_VALIDATE_INT);
+        $draw = $draw === false ? 0 : max(0, $draw);
+
+        $start = filter_var($request['start'] ?? 0, FILTER_VALIDATE_INT);
+        $start = $start === false ? 0 : max(0, $start);
+
+        $length = filter_var($request['length'] ?? 10, FILTER_VALIDATE_INT);
+        $length = in_array($length, [10, 25, 50], true) ? $length : 10;
+
+        $searchRequest = $request['search'] ?? [];
+        $searchValue = is_array($searchRequest) ? ($searchRequest['value'] ?? '') : '';
+        $search = is_scalar($searchValue) ? substr(trim((string) $searchValue), 0, 100) : '';
+
+        $fromSql = ' FROM compra c
+            INNER JOIN proveedor p ON p.codigo_proveedor = c.codigo_proveedor
+            INNER JOIN usuario u ON u.cedula_usuario = c.cedula_usuario';
+        $whereSql = '';
+        $parametros = [];
+        if ($search !== '') {
+            $whereSql = " WHERE (
+                CAST(c.codigo_compra AS CHAR) LIKE ?
+                OR c.numero_factura_proveedor LIKE ?
+                OR p.razon_social LIKE ?
+                OR DATE_FORMAT(c.fecha_compra, '%d/%m/%Y') LIKE ?
+                OR CAST(c.fecha_compra AS CHAR) LIKE ?
+                OR CAST(c.monto_total AS CHAR) LIKE ?
+                OR CASE WHEN c.estado = 1 THEN 'Activa' ELSE 'Inactiva' END LIKE ?
+            )";
+            $parametros = array_fill(0, 7, '%' . $search . '%');
+        }
+
+        $orderColumns = [
+            0 => 'c.codigo_compra',
+            1 => 'c.numero_factura_proveedor',
+            2 => 'p.razon_social',
+            3 => 'c.fecha_compra',
+            4 => 'c.monto_total',
+            5 => 'c.estado',
+        ];
+        $orderBy = [];
+        $orders = is_array($request['order'] ?? null) ? $request['order'] : [];
+        foreach ($orders as $order) {
+            if (!is_array($order)) {
+                continue;
+            }
+
+            $column = filter_var($order['column'] ?? null, FILTER_VALIDATE_INT);
+            if ($column === false || !isset($orderColumns[$column])) {
+                continue;
+            }
+
+            $direction = strtolower((string) ($order['dir'] ?? 'asc')) === 'desc' ? 'DESC' : 'ASC';
+            $orderBy[] = $orderColumns[$column] . ' ' . $direction;
+        }
+        if (!$orderBy) {
+            $orderBy[] = 'c.codigo_compra DESC';
+        }
+
+        try {
+            $recordsTotal = (int) $this->conex->query(
+                'SELECT COUNT(*)' . $fromSql
+            )->fetchColumn();
+            $recordsFiltered = $recordsTotal;
+            if ($search !== '') {
+                $stmtFiltered = $this->conex->prepare('SELECT COUNT(*)' . $fromSql . $whereSql);
+                $stmtFiltered->execute($parametros);
+                $recordsFiltered = (int) $stmtFiltered->fetchColumn();
+            }
+
+            $stmt = $this->conex->prepare(
+                'SELECT c.codigo_compra, c.numero_factura_proveedor, c.fecha_compra,
+                        c.monto_total, c.estado, p.razon_social AS nombre_proveedor,
+                        u.nombre_usuario'
+                . $fromSql
+                . $whereSql
+                . ' ORDER BY ' . implode(', ', $orderBy)
+                . ' LIMIT ? OFFSET ?'
+            );
+            $indice = 1;
+            foreach ($parametros as $parametro) {
+                $stmt->bindValue($indice++, $parametro, PDO::PARAM_STR);
+            }
+            $stmt->bindValue($indice++, $length, PDO::PARAM_INT);
+            $stmt->bindValue($indice, $start, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return [
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            ];
+        } catch (PDOException $e) {
+            error_log('[compraModel::getComprasDataTable] ' . $e->getMessage());
+            return [
+                'draw' => $draw,
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'No se pudieron cargar las compras.',
+            ];
+        }
+    }
+
     /**
      * Registra una compra completa con sus detalles y actualiza stock.
      */

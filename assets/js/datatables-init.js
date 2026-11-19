@@ -98,7 +98,11 @@
 
       window.jQuery(tables).each(function () {
         if (window.jQuery.fn.DataTable.isDataTable(this)) return;
-        const dataTable = window.jQuery(this).DataTable({
+        const tableConfig = this.dataset.datatableConfig;
+        const customOptions = tableConfig
+          && window.CopiGabyDataTablesConfig
+          && window.CopiGabyDataTablesConfig[tableConfig];
+        const dataTable = window.jQuery(this).DataTable(Object.assign({
           responsive: true,
           language: {
             decimal: '',
@@ -129,7 +133,7 @@
           lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'Todos']],
           order: [],
           autoWidth: true
-        });
+        }, customOptions || {}));
 
         window.requestAnimationFrame(() => {
           dataTable.columns.adjust();

@@ -15,7 +15,22 @@
 
     if (isset($_GET['type'])) {
 
-        if ($_GET['type'] === 'register') {
+        if ($_GET['type'] === 'list') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+                exit();
+            }
+
+            echo json_encode(
+                $object->getServiciosDataTable($_POST),
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
+            exit();
+        }
+
+        elseif ($_GET['type'] === 'register') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $materialesJson = $_POST['materiales'] ?? '[]';
                 $materiales = is_string($materialesJson) ? json_decode($materialesJson, true) : null;
@@ -60,7 +75,6 @@
         }
     }
 
-    $servicios = $object->getAllServicios();
     $productos = $prodModel->getAllProducts(); // Para el selector de materiales
     
     include 'app/views/servicio/viewServicio.php';

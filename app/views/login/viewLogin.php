@@ -69,25 +69,11 @@
     </div>
   </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const toggleBtn = document.getElementById('togglePassword');
-  const passwordInput = document.getElementById('password');
-  const eyeOpen = toggleBtn.querySelector('.eye-open');
-  const eyeClosed = toggleBtn.querySelector('.eye-closed');
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="assets/js/modules/login.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/login.js') ?>"></script>
 
-  toggleBtn.addEventListener('click', function () {
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
-    eyeOpen.style.display = isPassword ? 'none' : '';
-    eyeClosed.style.display = isPassword ? '' : 'none';
-    toggleBtn.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
-  });
-});
-</script>
-
-<script src="assets/js/validaciones/regex.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/regex.js') ?>" defer></script>
-<script src="assets/js/validaciones/validaciones.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/validaciones.js') ?>" defer></script>
+<script src="assets/js/validaciones/regex.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/regex.js') ?>"></script>
+<script src="assets/js/validaciones/validaciones.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/validaciones.js') ?>"></script>
 
 </body>
 </html>

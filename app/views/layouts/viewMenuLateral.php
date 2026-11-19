@@ -37,19 +37,10 @@ function navIconClass(bool $active): string {
     return 'w-5 h-5 shrink-0 transition-colors duration-200 ' . ($active ? 'text-orange-500' : 'text-slate-400 group-hover:text-slate-200');
 }
 ?>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="assets/js/alerts.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/alerts.js') ?>"></script>
-<?php if (is_array($systemFlash)): ?>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    showFlashAlert(
-      <?= json_encode($systemFlash['status'] ?? 'error', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>,
-      <?= json_encode($systemFlash['message'] ?? 'No se pudo completar la operación.', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
-    );
-  });
-</script>
-<?php endif; ?>
-<aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl">
+<aside class="sidebar-scroll fixed inset-y-0 left-0 z-[100] flex w-64 min-h-screen shrink-0 flex-col overflow-y-auto bg-slate-900 shadow-2xl"<?php if (is_array($systemFlash)): ?> data-system-flash-status="<?= htmlspecialchars((string) ($systemFlash['status'] ?? 'error'), ENT_QUOTES, 'UTF-8') ?>" data-system-flash-message="<?= htmlspecialchars((string) ($systemFlash['message'] ?? 'No se pudo completar la operación.'), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>>
   <header class="border-b border-white/10 px-5 py-6">
     <div class="flex items-center gap-3">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full">
@@ -184,61 +175,9 @@ function navIconClass(bool $active): string {
   </footer>
 </aside>
 
-<script>
-(function () {
-  var btnAyuda = document.getElementById('btnAyudaManual');
-  if (btnAyuda) {
-    btnAyuda.addEventListener('click', function () {
-      Swal.fire({
-        title: 'Ayuda del sistema',
-        html:
-          '<p style="font-size:1rem;line-height:1.7;color:#374151">Si necesita orientación sobre el funcionamiento de los procesos, módulos o la navegación general del sistema, ' +
-          'le invitamos a consultar nuestro <b>manual de usuario</b>.</p>' +
-          '<p style="font-size:1rem;line-height:1.7;color:#374151">Descargue la guía completa para conocer el detalle de cada interfaz, botones de acción y flujos de trabajo.</p>',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: '📥 Descargar Manual',
-        confirmButtonColor: '#3085d6',
-        cancelButtonText: 'Cancelar',
-        cancelButtonColor: '#aaa',
-        reverseButtons: true,
-        focusConfirm: false
-      }).then(function (result) {
-        if (result.isConfirmed) {
-          window.location.assign('?url=ayuda&descargar=pdf');
-        }
-      });
-    });
-  }
 
-  document.querySelectorAll('.dropdown-toggle').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var parent = btn.closest('.dropdown-parent');
-      var willOpen = !parent.classList.contains('open');
-      document.querySelectorAll('.dropdown-parent').forEach(function (el) {
-        el.classList.remove('open');
-      });
-      if (willOpen) parent.classList.add('open');
-    });
-  });
-
-  document.querySelectorAll('form[method="POST"]').forEach(function (form) {
-    form.addEventListener('submit', function (e) {
-      if (form.dataset.submitting === '1') {
-        e.preventDefault();
-        return;
-      }
-      form.dataset.submitting = '1';
-      var btn = form.querySelector('button[type="submit"]');
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('opacity-60', 'cursor-not-allowed');
-      }
-    });
-  });
-})();
-</script>
 <script src="assets/js/ajax.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/ajax.js') ?>"></script>
 <script src="assets/js/ajax-navigation.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/ajax-navigation.js') ?>"></script>
-<script src="assets/js/validaciones/regex.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/regex.js') ?>" defer></script>
-<script src="assets/js/validaciones/validaciones.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/validaciones.js') ?>" defer></script>
+<script src="assets/js/modules/layout.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/layout.js') ?>"></script>
+<script src="assets/js/validaciones/regex.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/regex.js') ?>"></script>
+<script src="assets/js/validaciones/validaciones.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/validaciones/validaciones.js') ?>"></script>

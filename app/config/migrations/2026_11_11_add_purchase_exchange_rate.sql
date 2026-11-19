@@ -1,2 +1,0 @@
-ALTER TABLE compra
-  ADD COLUMN tasa_cambio DECIMAL(10,2) NULL DEFAULT NULL AFTER monto_total;

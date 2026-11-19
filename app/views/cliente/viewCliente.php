@@ -59,7 +59,7 @@
                    </span>
                  </td>
                  <td class="px-6 py-4 text-center">
-                  <button type="button" onclick='viewDetails(<?= json_encode($c, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>)' class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                  <button type="button" data-js-action="viewDetails" data-js-args="<?= htmlspecialchars(json_encode([$c], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                     <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
@@ -78,11 +78,11 @@
 
   <div id="modalEditCliente" class="fixed inset-0 z-150 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="closeEditModal"></div>
       <div class="relative bg-white shadow-xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Editar Cliente</h3>
-          <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button data-js-action="closeEditModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form action="?url=cliente&type=update" method="POST" class="p-6">
           <input type="hidden" name="id_actual" id="edit_id_actual">
@@ -114,7 +114,7 @@
             <label class="text-sm font-bold text-navy-dark uppercase">Activo</label>
           </div>
           <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="closeEditModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
           </div>
         </form>
@@ -125,11 +125,11 @@
   <!-- Modal Ver Detalle -->
   <div id="modalDetalle" class="fixed inset-0 z-160 hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-md" data-js-action="closeDetalleModal"></div>
       <div class="relative bg-white shadow-2xl rounded-[14px] w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Detalle del Cliente</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeDetalleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6 space-y-4">
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cédula</p><p id="det_cedula" class="font-black text-navy-dark">—</p></div>
@@ -142,81 +142,13 @@
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" data-js-action="closeDetalleModal" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const modalClienteRegistro = document.getElementById('modalClienteRegistro');
-    const formClienteRegistro = document.getElementById('formClienteRegistro');
-    const btnOpen = document.getElementById('btnOpenModal');
-
-    function abrirModalClienteRegistro() {
-      modalClienteRegistro.classList.remove('hidden');
-      modalClienteRegistro.setAttribute('aria-hidden', 'false');
-      document.getElementById('clienteRegistroCedula').focus();
-    }
-
-    function cerrarModalClienteRegistro() {
-      modalClienteRegistro.classList.add('hidden');
-      modalClienteRegistro.setAttribute('aria-hidden', 'true');
-    }
-
-    btnOpen.addEventListener('click', abrirModalClienteRegistro);
-    modalClienteRegistro.addEventListener('click', (event) => {
-      if (event.target.closest('[data-close-cliente-modal]')) {
-        cerrarModalClienteRegistro();
-      }
-    });
-
-    let currentRecord = null;
-
-    function viewDetails(data) {
-      currentRecord = data;
-      document.getElementById('det_cedula').textContent = data.cedula_cliente;
-      document.getElementById('det_nombre').textContent = data.nombre;
-      document.getElementById('det_telefono').textContent = data.telefono || '—';
-      document.getElementById('det_correo').textContent = data.correo || '—';
-      document.getElementById('det_direccion').textContent = data.direccion || '—';
-      document.getElementById('det_estado').textContent = data.estado == 1 ? 'Activo' : 'Inactivo';
-      document.getElementById('btnDetalleEditar').onclick = () => { closeDetalleModal(); openEditModal(currentRecord); };
-      document.getElementById('btnDetalleEliminar').onclick = () => confirmDelete(currentRecord.cedula_cliente);
-      document.getElementById('modalDetalle').classList.remove('hidden');
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function openEditModal(data) {
-        document.getElementById('edit_id_actual').value = data.cedula_cliente;
-        document.getElementById('edit_cedula').value = data.cedula_cliente;
-        document.getElementById('edit_nombre').value = data.nombre;
-        window.setTelefonoFieldValue('edit_telefono', data.telefono);
-        document.getElementById('edit_correo').value = data.correo;
-        document.getElementById('edit_direccion').value = data.direccion;
-        document.getElementById('edit_estado').checked = data.estado == 1;
-        document.getElementById('modalEditCliente').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-        document.getElementById('modalEditCliente').classList.add('hidden');
-    }
-
-    async function confirmDelete(id) {
-      if(await showConfirm('¿Desea desactivar este cliente?', 'Desactivar cliente', 'Sí, desactivar')) {
-        const f = new FormData();
-        f.append('deleteCliente', 'true');
-        f.append('idcliente', id);
-        CopiGabyAjax.fetch('?url=cliente&type=main', { method:'POST', body:f })
-        .then(r => r.json())
-        .then(d => showMutationResultAndReload(d, 'Cliente desactivado correctamente.', 'No se pudo desactivar el cliente.'))
-        .catch(() => showAlert('No se pudo comunicar con el servidor para desactivar el cliente.', 'error', 'Error de conexión'));
-      }
-    }
-  </script>
+  <script src="assets/js/modules/cliente.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/cliente.js') ?>"></script>
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

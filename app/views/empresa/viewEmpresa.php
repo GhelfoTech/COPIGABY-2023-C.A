@@ -73,7 +73,7 @@
                   <?php endif; ?>
                 </td>
                 <td class="px-6 py-4 text-center">
-                   <button onclick="viewDetails(<?= $e['codigo_empresa'] ?>)" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
+                   <button data-js-action="viewDetails" data-js-args="<?= htmlspecialchars(json_encode([(int) $e['codigo_empresa']], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors">
                      <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Ver Detalle</span>
                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                    </button>
@@ -90,11 +90,11 @@
 
   <div id="modalEmpresa" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="toggleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="toggleModal"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Nueva Empresa</h3>
-          <button onclick="toggleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button data-js-action="toggleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
          <form action="?url=empresa&type=register" method="POST" class="p-6 grid grid-cols-2 gap-4">
            <div class="col-span-2">
@@ -129,7 +129,7 @@
              <input type="text" name="logo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold" placeholder="assets/img/logo.png">
            </div>
            <div class="col-span-2 flex justify-end gap-3 mt-4">
-             <button type="button" onclick="toggleModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+             <button type="button" data-js-action="toggleModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
              <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Guardar</button>
            </div>
          </form>
@@ -139,11 +139,11 @@
 
   <div id="modalEditEmpresa" class="fixed inset-0 z-[150] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/60 backdrop-blur-sm" data-js-action="closeEditModal"></div>
       <div class="relative bg-white shadow-xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Editar Empresa</h3>
-          <button onclick="closeEditModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button data-js-action="closeEditModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form action="?url=empresa&type=update" method="POST" class="p-6 grid grid-cols-2 gap-4">
           <input type="hidden" name="codigo_empresa" id="edit_codigo">
@@ -179,7 +179,7 @@
             <input type="text" name="logo" id="edit_logo" class="w-full px-4 py-2 bg-gray-50 border rounded-lg focus:border-orange outline-none font-bold">
           </div>
           <div class="col-span-2 flex justify-end gap-3 mt-4">
-            <button type="button" onclick="closeEditModal()" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+            <button type="button" data-js-action="closeEditModal" class="px-6 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
             <button type="submit" class="px-8 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy shadow-lg transition-all">Actualizar</button>
           </div>
         </form>
@@ -189,11 +189,11 @@
 
   <div id="modalDetalle" class="fixed inset-0 z-[160] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-sm" onclick="closeDetalleModal()"></div>
+      <div class="fixed inset-0 bg-navy-dark/80 backdrop-blur-sm" data-js-action="closeDetalleModal"></div>
       <div class="relative bg-white shadow-2xl rounded-custom w-full max-w-md animate-fade-up overflow-hidden">
         <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
           <h3 class="text-xl font-black text-navy-dark">Detalle de Empresa</h3>
-          <button type="button" onclick="closeDetalleModal()" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" data-js-action="closeDetalleModal" class="text-gray-400 hover:text-navy-dark"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="p-6 space-y-4">
           <div><p class="text-[0.65rem] font-black text-gray-400 uppercase mb-1">Nombre</p><p id="det_nombre" class="font-black text-navy-dark uppercase">—</p></div>
@@ -205,108 +205,13 @@
         <div class="modal-footer bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
           <button type="button" id="btnDetalleEliminar" class="px-5 py-2 text-sm font-black text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">Eliminar</button>
           <button type="button" id="btnDetalleEditar" class="px-5 py-2 text-sm font-black text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">Modificar</button>
-          <button type="button" onclick="closeDetalleModal()" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
+          <button type="button" data-js-action="closeDetalleModal" class="px-6 py-2 text-sm font-black bg-navy-dark text-white rounded-lg hover:bg-navy transition-all">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const modal = document.getElementById('modalEmpresa');
-    const btnOpen = document.getElementById('btnOpenModal');
-    const toggleModal = () => modal.classList.toggle('hidden');
-    btnOpen.onclick = toggleModal;
-
-    let currentEmpresa = null;
-
-    function closeDetalleModal() {
-        document.getElementById('modalDetalle').classList.add('hidden');
-    }
-
-    function openEditModal(data) {
-        currentEmpresa = data;
-        document.getElementById('edit_codigo').value = data.codigo_empresa;
-        document.getElementById('edit_nombre').value = data.nombre_empresa;
-        const rif = String(data.rif_empresa || '').trim();
-        const rifTipo = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(0, 2) : 'J-';
-        const rifNumero = (rif.startsWith('V-') || rif.startsWith('J-')) ? rif.slice(2).replace(/[^0-9]/g, '') : rif.replace(/[^0-9]/g, '');
-        const rifTipoSelect = document.getElementById('edit_rif_tipo');
-        if (rifTipoSelect) rifTipoSelect.value = rifTipo;
-        document.getElementById('edit_rif').value = rifNumero;
-        window.setTelefonoFieldValue('edit_telefono', data.telefono);
-        document.getElementById('edit_correo').value = data.correo;
-        document.getElementById('edit_direccion').value = data.direccion;
-        document.getElementById('edit_logo').value = data.logo;
-        document.getElementById('modalEditEmpresa').classList.remove('hidden');
-    }
-
-    function viewDetails(id) {
-      CopiGabyAjax.fetch(`?url=empresa&type=details&id=${id}`)
-      .then(r => r.json())
-      .then(data => {
-          currentEmpresa = data;
-          document.getElementById('det_nombre').innerText = data.nombre_empresa;
-          document.getElementById('det_rif').innerText = data.rif_empresa;
-          document.getElementById('det_telefono').innerText = data.telefono;
-          document.getElementById('det_correo').innerText = data.correo;
-          document.getElementById('det_direccion').innerText = data.direccion;
-          document.getElementById('modalDetalle').classList.remove('hidden');
-      });
-    }
-
-    document.getElementById('btnDetalleEditar').addEventListener('click', function() {
-        if (!currentEmpresa) return;
-        closeDetalleModal();
-        openEditModal(currentEmpresa);
-    });
-
-    document.getElementById('btnDetalleEliminar').addEventListener('click', function() {
-        if (!currentEmpresa) return;
-        confirmDelete(currentEmpresa.codigo_empresa);
-    });
-
-    function handleEditFromDetail() {
-        if(!currentEmpresa) return;
-        closeDetalleModal();
-        openEditModal(currentEmpresa);
-    }
-
-    function handleDeleteFromDetail() {
-        if(!currentEmpresa) return;
-        confirmDelete(currentEmpresa.codigo_empresa);
-    }
-
-    function closeEditModal() {
-        document.getElementById('modalEditEmpresa').classList.add('hidden');
-    }
-
-    async function confirmDelete(id) {
-      if(await showConfirm('¿Desea eliminar definitivamente esta empresa? Esta acción no se puede deshacer.', 'Eliminar empresa', 'Sí, eliminar')) {
-        const f = new FormData();
-        f.append('deleteEmpresa', 'true');
-        f.append('codigo_empresa', id);
-        CopiGabyAjax.fetch('?url=empresa&type=main', { method:'POST', body:f })
-        .then(r => r.json())
-        .then(d => showMutationResultAndReload(d, 'Empresa eliminada correctamente.', 'No se pudo eliminar la empresa.'))
-        .catch(() => showAlert('No se pudo comunicar con el servidor para eliminar la empresa.', 'error', 'Error de conexión'));
-      }
-    }
-
-    function setRifForEmpresa(form) {
-        const rifTipo = (form.querySelector('select[name="rif_tipo"]') || {}).value || 'J-';
-        const rifNumero = (form.querySelector('input[name="rif_numero"]') || {}).value || '';
-        const rifInput = form.querySelector('input[name="rif_empresa"]');
-        if (rifInput) rifInput.value = rifTipo + rifNumero;
-    }
-
-    document.getElementById('modalEmpresa').addEventListener('submit', function(e) {
-      setRifForEmpresa(this);
-    });
-
-    document.getElementById('modalEditEmpresa').addEventListener('submit', function(e) {
-      setRifForEmpresa(this);
-    });
-  </script>
+  <script src="assets/js/modules/empresa.js?v=<?= filemtime(__DIR__ . '/../../../assets/js/modules/empresa.js') ?>"></script>
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>

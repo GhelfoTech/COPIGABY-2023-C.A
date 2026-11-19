@@ -70,8 +70,9 @@
         }
 
         elseif ($_GET['type'] === 'details') {
-            if (isset($_GET['id'])) {
-                $moneda = $object->getMonedaById((int) $_GET['id']);
+            $id = $_POST['id'] ?? $_GET['id'] ?? null;
+            if ($id !== null) {
+                $moneda = $object->getMonedaById((int) $id);
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode($moneda ?: ['status' => 'error', 'message' => 'Moneda no encontrada']);
                 exit();
