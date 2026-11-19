@@ -254,6 +254,17 @@
     });
   }
 
+  function syncPhoneFields(form) {
+    form.querySelectorAll('[data-telefono-field]').forEach(function (group) {
+      var prefix = group.querySelector('[data-telefono-prefix]');
+      var number = group.querySelector('[data-telefono-number]');
+      var value = group.querySelector('[data-telefono-value]');
+      if (!prefix || !number || !value) return;
+
+      value.value = prefix.value + number.value.replace(/\D/g, '').slice(0, 7);
+    });
+  }
+
   function closeFormModal(form) {
     if (!form) return;
     var modal = form.closest('[id^="modal"], .fixed.inset-0');
@@ -288,6 +299,7 @@
 
     // Los controladores usan los campos del formulario y el tipo de acción
     // de la URL; no dependemos del botón submit (el layout lo deshabilita).
+    syncPhoneFields(form);
     var data = new FormData(form);
     data.set('_ajax_request', '1');
 
