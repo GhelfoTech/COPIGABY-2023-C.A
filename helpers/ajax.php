@@ -20,8 +20,6 @@ if (!function_exists('copigabyAjaxRespond')) {
      * Devuelve una respuesta JSON estandarizada solamente para peticiones AJAX.
      * Para formularios tradicionales no imprime nada y permite continuar con
      * el flujo de flash + redirección que ya tenía el sistema.
-     *
-     * @param mixed $result Resultado original del modelo.
      */
     function copigabyAjaxRespond($result, string $successMessage, string $errorMessage): void
     {

@@ -329,13 +329,13 @@
 
     if (campo.matches('[data-telefono-number]')) {
       if (!PATRONES.numeros.test(valor) || valor.length !== 7) {
-        return 'Escribe los 7 dígitos que siguen al prefijo telefónico. Ejemplo: 5551234.';
+        return 'Escribe los 7 dígitos que siguen al prefijo telefónico.';
       }
       return null;
     }
 
     if (nombre === 'rif_numero' && valor.length !== 9) {
-      return 'El RIF debe contener exactamente 9 dígitos después de la letra. Ejemplo: J-123456789.';
+      return 'El RIF debe contener exactamente 9 dígitos después de la letra.';
     }
 
     if (nombre === 'cedula_cliente' && !PATRONES.cedula.test(valor)) return MENSAJES.cedula;
@@ -374,7 +374,7 @@
         const base = campo.min !== '' ? Number(campo.min) : 0;
         if (step > 0 && Math.abs((numero - base) / step - Math.round((numero - base) / step)) > 0.000001) {
           return step === 1
-            ? 'Este campo requiere un número entero. Ejemplo: 3.'
+            ? 'Este campo requiere un número entero.'
             : 'El valor debe respetar el incremento de ' + step + '.';
         }
       }
@@ -395,12 +395,12 @@
         }
       }
 
-      if (nombre === 'precio' && numero <= 0) return 'El precio debe ser mayor que cero. Ejemplo: 5.00.';
+      if (nombre === 'precio' && numero <= 0) return 'El precio debe ser mayor que cero.';
       if (['stock_actual', 'stock_minimo'].includes(nombre) && numero < 0) {
-        return 'El stock no puede ser negativo. Ejemplo: 0 o 5.';
+        return 'El stock no puede ser negativo.';
       }
       if (nombre === 'porcentaje_iva' && (numero < 0 || numero > 100)) {
-        return 'El porcentaje de IVA debe estar entre 0 y 100. Ejemplo: 16.';
+        return 'El porcentaje de IVA debe estar entre 0 y 100.';
       }
       return null;
     }
@@ -415,9 +415,9 @@
       try {
         const patronHTML = new RegExp('^(?:' + campo.getAttribute('pattern') + ')$');
         if (!patronHTML.test(valor)) {
-          if (nombre === 'rif_numero') return 'El RIF debe contener 9 dígitos. Ejemplo: 123456789.';
+          if (nombre === 'rif_numero') return 'El RIF debe contener 9 dígitos.';
           if (campo.matches('[data-telefono-number]')) return 'Escribe los 7 dígitos después del prefijo telefónico.';
-          return 'El formato de este campo no es válido. Revisa el ejemplo indicado.';
+          return 'El formato de este campo no es válido.';
         }
       } catch (error) {
         // Un patrón HTML mal formado no debe romper los demás formularios.
@@ -486,14 +486,14 @@
 
       if (!prefijo.value || !numeroValor) {
         if (campoObligatorio) {
-          mostrarError(numero, 'Completa el prefijo y los 7 dígitos del teléfono. Ejemplo: 0412 + 5551234.');
+          mostrarError(numero, 'Completa el prefijo y los 7 dígitos del teléfono.');
           valido = false;
         }
         return;
       }
 
       if (!PATRONES.numeros.test(numeroValor) || numeroValor.length !== 7 || !PATRONES.telefono.test(completo)) {
-        mostrarError(numero, 'El teléfono debe tener un prefijo válido y 7 dígitos adicionales. Ejemplo: 04125551234.');
+        mostrarError(numero, 'El teléfono debe tener un prefijo válido y 7 dígitos adicionales.');
         valido = false;
       }
     });
