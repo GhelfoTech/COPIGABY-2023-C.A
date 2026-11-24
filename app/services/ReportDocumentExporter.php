@@ -75,7 +75,7 @@ class ReportDocumentExporter
             }
 
             $content .= self::pdfTextCommand('Reporte', $textX, $pageHeight - 39, 10, [0.68, 0.82, 1], true);
-            $content .= self::pdfTextCommand('Sistema COPIGABY 2024 C.A.', $textX, $pageHeight - 62, 18, [1, 1, 1], true);
+            $content .= self::pdfTextCommand('COPIGABY 2023 C.A', $textX, $pageHeight - 62, 18, [1, 1, 1], true);
             $content .= self::pdfTextCommand($title, $textX, $pageHeight - 85, 11, [0.85, 0.91, 1], false);
             $content .= self::pdfTextCommand(
                 'Generado: ' . date('d/m/Y H:i'),
@@ -269,7 +269,7 @@ class ReportDocumentExporter
                 . '<a:prstGeom prst="ellipse"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
                 . '</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
         }
-        $body .= '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="17365D"/><w:sz w:val="30"/></w:rPr><w:t>Reporte - Sistema COPIGABY 2024 C.A.</w:t></w:r></w:p>';
+        $body .= '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="17365D"/><w:sz w:val="30"/></w:rPr><w:t>COPIGABY 2023 C.A</w:t></w:r></w:p>';
         $body .= '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="2878C8"/><w:sz w:val="24"/></w:rPr><w:t>' . self::xml($title) . '</w:t></w:r></w:p>';
         $body .= '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:color w:val="64748B"/><w:sz w:val="18"/></w:rPr><w:t>Generado: ' . self::xml(date('d/m/Y H:i:s')) . '</w:t></w:r></w:p>';
         foreach ($metadata as $label => $value) {

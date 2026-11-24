@@ -46,8 +46,9 @@ trait PedidosTrait
             $cantidad   = (float) ($item['cantidad'] ?? 0);
             $precioVenta = (float) ($item['precio_venta'] ?? 0);
 
-            if (!$this->enteroPositivoFinito($cantidad)) {
-                return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
+            // Cantidades mayores a cero (se permiten decimales)
+            if (!is_finite($cantidad) || $cantidad <= 0) {
+                return ['status' => 'error', 'message' => "La cantidad debe ser un número mayor a cero en la línea {$linea}"];
             }
             if ($precioVenta <= 0) {
                 return ['status' => 'error', 'message' => "Precio inválido en la línea {$linea}"];

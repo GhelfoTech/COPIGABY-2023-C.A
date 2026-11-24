@@ -114,7 +114,7 @@
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Cantidad</label>
-                      <input type="number" id="cantProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange" value="1" min="1" step="1">
+                      <input type="number" id="cantProd" class="w-full px-3 py-2 bg-white border rounded-lg text-sm font-bold outline-none focus:border-orange" value="1" min="0.01" step="0.01">
                   </div>
                   <div>
                       <label class="block text-[0.65rem] font-black text-gray-400 uppercase mb-1">Costo Unit. ($)</label>

@@ -12,6 +12,7 @@ $reportTypes = [
     'inventario' => 'Stock',
     'faltantes' => 'Lista de faltantes',
     'compras' => 'Compra',
+    'costo_bajo' => 'Costo más bajo',
 ];
 $reportType = (string) ($_GET['report'] ?? 'pedidos');
 if (!isset($reportTypes[$reportType])) {
@@ -23,6 +24,7 @@ $reportModule = [
     'inventario' => 'producto',
     'faltantes' => 'producto',
     'compras' => 'compra',
+    'costo_bajo' => 'compra',
 ][$reportType];
 if (!puedeVerModulo($reportModule)) {
     http_response_code(403);
@@ -40,7 +42,7 @@ $periodLabels = [
     'custom' => 'Período personalizado',
 ];
 
-if (in_array($reportType, ['pedidos', 'compras'], true)) {
+if (in_array($reportType, ['pedidos', 'compras', 'costo_bajo'], true)) {
     if ($filters['period'] === 'week') {
         $filters['start'] = (new DateTimeImmutable('today'))->modify('-6 days')->format('Y-m-d');
         $filters['end'] = (new DateTimeImmutable('today'))->format('Y-m-d');
@@ -115,7 +117,7 @@ if (!$errorMessage && $exportType === 'export') {
                 $value = $row[$key] ?? '';
                 if ($key === 'tasa_cambio' && ($value === null || $value === '' || (float) $value <= 0)) {
                     $value = 'No disponible';
-                } elseif (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'valor_stock', 'tasa_cambio'], true)) {
+                } elseif (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'precio_mas_bajo', 'valor_stock', 'tasa_cambio'], true)) {
                     $value = number_format((float) $value, 2, ',', '.');
                 } elseif ($key === 'porcentaje_iva') {
                     $value = number_format((float) $value, 2, ',', '.') . '%';
@@ -134,7 +136,7 @@ if (!$errorMessage && $exportType === 'export') {
     $metadata = [];
     if (isset($filters['start'], $filters['end'])) {
         $metadata['Período'] = date('d/m/Y', strtotime($filters['start'])) . ' al ' . date('d/m/Y', strtotime($filters['end']));
-    } elseif (in_array($reportType, ['pedidos', 'compras'], true)) {
+    } elseif (in_array($reportType, ['pedidos', 'compras', 'costo_bajo'], true)) {
         $metadata['Período'] = $periodLabels[$filters['period']] ?? $periodLabels['all'];
     }
     if ($reportType === 'pedidos' && $filters['largest']) {

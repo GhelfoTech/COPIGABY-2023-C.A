@@ -61,6 +61,14 @@ class reporteModel extends ConectDB
                 'tasa_cambio' => 'Precio del dólar (Bs)',
                 'estado' => 'Estado',
             ],
+            'costo_bajo' => [
+                'codigo_producto' => 'Código',
+                'nombre_producto' => 'Producto',
+                'precio_mas_bajo' => 'Costo más bajo',
+                'proveedor_mas_bajo' => 'Proveedor más económico',
+                'proveedores_comparados' => 'Comparación por proveedor',
+                'cantidad_proveedores' => 'Proveedores',
+            ],
         ];
 
         if (!isset($columns[$reportType])) {
@@ -81,6 +89,8 @@ class reporteModel extends ConectDB
                 return $this->getFaltantes();
             case 'compras':
                 return $this->getCompras($filters);
+            case 'costo_bajo':
+                return $this->getCostoMasBajo($filters);
             default:
                 throw new \InvalidArgumentException('Tipo de reporte no válido.');
         }
@@ -171,6 +181,59 @@ class reporteModel extends ConectDB
                 ORDER BY c.fecha_compra DESC, c.codigo_compra DESC";
 
         return $this->fetchRows($sql, $params);
+    }
+
+    private function getCostoMasBajo(array $filters): array
+    {
+        $where = ['c.estado = 1'];
+        $params = [];
+        $this->addDateFilter($where, $params, 'c.fecha_compra', $filters);
+
+        $sql = "SELECT pi.codigo_producto, pi.nombre_producto,
+                       p.razon_social AS nombre_proveedor,
+                       MIN(dc.costo_unitario) AS precio_proveedor
+                FROM detalle_compra dc
+                INNER JOIN compra c ON c.codigo_compra = dc.codigo_compra
+                INNER JOIN proveedor p ON p.codigo_proveedor = c.codigo_proveedor
+                INNER JOIN producto_insumo pi ON pi.codigo_producto = dc.codigo_producto
+                WHERE " . implode(' AND ', $where) . "
+                GROUP BY pi.codigo_producto, pi.nombre_producto, p.codigo_proveedor, p.razon_social
+                ORDER BY pi.nombre_producto ASC, MIN(dc.costo_unitario) ASC";
+
+        $providerRows = $this->fetchRows($sql, $params);
+        $products = [];
+        foreach ($providerRows as $row) {
+            $code = (int) $row['codigo_producto'];
+            if (!isset($products[$code])) {
+                $products[$code] = [
+                    'codigo_producto' => $code,
+                    'nombre_producto' => $row['nombre_producto'],
+                    'precio_mas_bajo' => null,
+                    'proveedor_mas_bajo' => '',
+                    'proveedores_comparados' => '',
+                    'cantidad_proveedores' => 0,
+                    '_providers' => [],
+                ];
+            }
+
+            $provider = (string) $row['nombre_proveedor'];
+            $price = (float) $row['precio_proveedor'];
+            $products[$code]['_providers'][] = $provider . ': ' . number_format($price, 2, ',', '.');
+
+            if ($products[$code]['precio_mas_bajo'] === null || $price < (float) $products[$code]['precio_mas_bajo']) {
+                $products[$code]['precio_mas_bajo'] = $price;
+                $products[$code]['proveedor_mas_bajo'] = $provider;
+            }
+        }
+
+        $result = [];
+        foreach ($products as $product) {
+            $product['cantidad_proveedores'] = count($product['_providers']);
+            $product['proveedores_comparados'] = implode(' | ', $product['_providers']);
+            unset($product['_providers']);
+            $result[] = $product;
+        }
+        return $result;
     }
 
     private function addDateFilter(array &$where, array &$params, string $column, array $filters): void

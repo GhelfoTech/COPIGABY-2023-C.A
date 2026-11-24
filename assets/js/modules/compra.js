@@ -22,8 +22,8 @@
         errorMsg: 'El nombre del producto debe contener entre 3 y 100 caracteres alfanuméricos válidos.'
       },
       porcentaje: {
-        regex: /^\d+(\.\d{1,2})?$/,
-        errorMsg: 'El porcentaje de ganancia debe ser un número positivo (ej: 25 o 30.50).'
+        regex: /^[1-9]\d{0,2}$/,
+        errorMsg: 'El porcentaje de ganancia debe ser un número entero mayor a cero (ej: 25).'
       },
       stock: {
         regex: /^\d+$/,
@@ -85,7 +85,8 @@
     }
 
     $btnOpenModal.on('click', toggleModal);
-    $(document).on('click', '[data-js-action="toggleModal"]', toggleModal);
+    // Los botones con data-js-action="toggleModal" los maneja layout.js (window.toggleModal);
+    // un segundo listener aquí haría un doble toggle y el modal no se cerraría.
     $(document).on('click', '[data-js-action="openProveedorModal"]', openProveedorModal);
     $(document).on('click', '[data-js-action="closeProveedorModal"]', closeProveedorModal);
     $(document).on('click', '[data-js-action="openProductoModal"]', openProductoModal);
@@ -200,8 +201,8 @@
       const cant = Number($cantInput.val());
       const cost = Number($costInput.val());
 
-      if (!prodId || !Number.isInteger(cant) || cant <= 0 || !Number.isFinite(cost) || cost <= 0) {
-        showAlert('Seleccione un producto e indique una cantidad entera positiva y un costo válido.', 'warning', 'Datos Incompletos');
+      if (!prodId || !Number.isFinite(cant) || cant <= 0 || !Number.isFinite(cost) || cost <= 0) {
+        showAlert('Seleccione un producto e indique una cantidad positiva y un costo válido (se permiten decimales).', 'warning', 'Datos Incompletos');
         return;
       }
 
@@ -264,7 +265,7 @@
     $('#tablaTemp tbody').on('input', '[data-item-quantity]', function () {
       const index = Number($(this).data('item-quantity'));
       const quantity = Number($(this).val());
-      if (!Number.isInteger(quantity) || quantity <= 0 || !items[index]) return;
+      if (!Number.isFinite(quantity) || quantity <= 0 || !items[index]) return;
 
       items[index].cantidad = quantity;
       const subtotal = Math.round(quantity * items[index].costo * 100) / 100;
@@ -276,7 +277,7 @@
 
     $('#tablaTemp tbody').on('change', '[data-item-quantity]', function () {
       const index = Number($(this).data('item-quantity'));
-      if (!Number.isInteger(Number($(this).val())) || Number($(this).val()) <= 0) {
+      if (!Number.isFinite(Number($(this).val())) || Number($(this).val()) <= 0) {
         $(this).val(String(items[index].cantidad));
       }
     });
@@ -409,8 +410,8 @@
             const $quantityInput = $('<input>')
               .attr({
                 type: 'number',
-                min: '1',
-                step: '1',
+                min: '0.01',
+                step: '0.01',
                 'aria-label': `Cantidad de ${it.nombre_producto}`,
                 'data-purchase-quantity': String(it.codigo_detalle_compra),
                 'data-purchase-cost': String(it.costo_unitario)
@@ -479,10 +480,10 @@
         cantidad: Number($(input).val())
       }));
 
-      const invalidInput = inputs.find(input => !Number.isInteger(Number($(input).val())) || Number($(input).val()) < 1);
+      const invalidInput = inputs.find(input => !Number.isFinite(Number($(input).val())) || Number($(input).val()) < 1);
       if (invalidInput) {
         $(invalidInput).focus();
-        showAlert('Todas las cantidades deben ser números enteros mayores a cero.', 'warning', 'Cantidad No Válida');
+        showAlert('Todas las cantidades deben ser números mayores a cero (se permiten decimales).', 'warning', 'Cantidad No Válida');
         return;
       }
 

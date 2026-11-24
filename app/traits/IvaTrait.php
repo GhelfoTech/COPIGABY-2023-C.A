@@ -29,8 +29,8 @@ trait IvaTrait
         }
 
         $porcentaje = (float) $datos['porcentaje_iva'];
-        if ($porcentaje < 0.00 || $porcentaje > 100.00) {
-            return ['status' => 'error', 'message' => 'El porcentaje de IVA debe estar entre 0.00 y 100.00'];
+        if ($porcentaje <= 0.00 || $porcentaje > 100.00) {
+            return ['status' => 'error', 'message' => 'El porcentaje de IVA debe ser mayor que cero y hasta 100.00'];
         }
 
         return true;

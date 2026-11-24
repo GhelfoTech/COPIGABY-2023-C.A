@@ -56,12 +56,12 @@
 
     const ReglasProducto = {
       nombre: {
-        regex: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,#\/-]{3,50}$/u,
+        regex: /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\s.,#\/-]{3,25}$/u,
         errorMsg: 'El nombre del producto debe contener entre 3 y 50 caracteres alfanuméricos válidos.'
       },
       porcentaje: {
-        regex: /^\d+(\.\d{1,2})?$/,
-        errorMsg: 'El porcentaje de ganancia debe ser un número positivo (ej: 25 o 30.50).'
+        regex: /^[1-9]\d{0,2}$/,
+        errorMsg: 'El porcentaje de ganancia debe ser un número entero mayor a cero (ej: 25).'
       },
       stock: {
         regex: /^\d+$/,

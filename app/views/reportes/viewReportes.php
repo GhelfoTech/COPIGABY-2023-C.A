@@ -27,7 +27,7 @@
 
       <nav class="mb-6 flex flex-wrap gap-2" aria-label="Tipos de reporte">
         <?php foreach ($reportLabels as $key => $label): ?>
-          <?php if ($key === 'compras' && !puedeVerModulo('compra')) { continue; } ?>
+          <?php if (in_array($key, ['compras', 'costo_bajo'], true) && !puedeVerModulo('compra')) { continue; } ?>
           <a href="?url=reporte&amp;report=<?= urlencode($key) ?>"
              class="rounded-xl px-4 py-3 text-sm font-extrabold transition <?= $reportType === $key ? 'bg-navy-dark text-white shadow' : 'bg-white text-gray-600 hover:bg-gray-100' ?>">
             <?= htmlspecialchars(str_replace('Reporte de ', '', $label)) ?>
@@ -45,6 +45,8 @@
               Elige los datos que quieres incluir de las existencias de productos activos.
             <?php elseif ($reportType === 'faltantes'): ?>
               Elige los datos que quieres incluir de productos agotados o por debajo del stock mínimo.
+            <?php elseif ($reportType === 'costo_bajo'): ?>
+              Compara el costo unitario del mismo producto entre todos los proveedores y muestra el costo más bajo.
             <?php else: ?>
               Elige los datos que quieres incluir de las compras registradas.
             <?php endif; ?>
@@ -54,7 +56,7 @@
         <form method="get" action="index.php" class="space-y-5">
           <input type="hidden" name="url" value="reporte">
           <input type="hidden" name="report" value="<?= htmlspecialchars($reportType) ?>">
-          <?php if (in_array($reportType, ['pedidos', 'compras'], true)): ?>
+          <?php if (in_array($reportType, ['pedidos', 'compras', 'costo_bajo'], true)): ?>
           <div class="grid gap-4 md:grid-cols-3">
             <label class="text-sm font-bold text-gray-700">
               Período
@@ -163,7 +165,7 @@
                       $value = $row[$key] ?? '—';
                       if ($key === 'tasa_cambio' && ($value === null || $value === '' || (float) $value <= 0)) {
                           $value = 'No disponible';
-                      } elseif (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'valor_stock', 'tasa_cambio'], true)) {
+                      } elseif (in_array($key, ['subtotal', 'monto_iva', 'monto_total', 'precio', 'precio_mas_bajo', 'valor_stock', 'tasa_cambio'], true)) {
                           $value = number_format((float) $value, 2, ',', '.');
                       } elseif ($key === 'porcentaje_iva') {
                           $value = number_format((float) $value, 2, ',', '.') . '%';

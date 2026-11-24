@@ -68,7 +68,7 @@ class productoModel extends ConectDB {
         $searchValue = is_array($searchRequest) ? ($searchRequest['value'] ?? '') : '';
         $search = is_scalar($searchValue) ? trim((string) $searchValue) : '';
         $search = substr($search, 0, 100);
-
+    
         $precioSql = 'ROUND(COALESCE(ultima_compra.costo_unitario, p.costo, 0)
             * (1 + COALESCE(p.porcentaje_ganancia, 0) / 100), 2)';
         $fromSql = ' FROM producto_insumo p

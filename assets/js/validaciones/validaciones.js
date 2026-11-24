@@ -399,8 +399,8 @@
       if (['stock_actual', 'stock_minimo'].includes(nombre) && numero < 0) {
         return 'El stock no puede ser negativo.';
       }
-      if (nombre === 'porcentaje_iva' && (numero < 0 || numero > 100)) {
-        return 'El porcentaje de IVA debe estar entre 0 y 100.';
+      if (nombre === 'porcentaje_iva' && (numero <= 0 || numero > 100)) {
+        return 'El porcentaje de IVA debe ser mayor que cero y hasta 100.';
       }
       return null;
     }

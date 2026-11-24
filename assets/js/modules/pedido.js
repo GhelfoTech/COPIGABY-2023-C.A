@@ -352,8 +352,8 @@
     function updateRowSubtotal(row) {
       const inputCantidad = row.querySelector('.item-cant');
       const cantidadTotal = getCantidadTotal(row);
-      if (!Number.isInteger(cantidadTotal) || cantidadTotal <= 0) {
-        inputCantidad.setCustomValidity('La cantidad debe ser un número entero mayor a cero.');
+      if (!Number.isFinite(cantidadTotal) || cantidadTotal <= 0) {
+        inputCantidad.setCustomValidity('La cantidad debe ser un número mayor a cero (se permiten decimales).');
         return;
       }
       inputCantidad.setCustomValidity('');
@@ -496,7 +496,7 @@
           </select>
         </td>
         <td class="px-2 py-2">
-          <input type="number" step="1" min="1" value="1" class="item-cant w-full px-2 py-1.5 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none">
+          <input type="number" step="0.01" min="0.01" value="1" class="item-cant w-full px-2 py-1.5 bg-white border rounded-lg text-xs font-bold focus:border-orange outline-none">
         </td>
         <td class="px-2 py-2">
           <input type="number" step="0.01" min="0" readonly tabindex="-1" class="item-precio w-full px-2 py-1.5 bg-slate-800 text-slate-400 cursor-not-allowed border rounded-lg text-xs font-bold outline-none">
@@ -552,8 +552,8 @@
         const precio = parseFloat(row.querySelector('.item-precio').value);
 
         if (!id) return { ok: false, message: 'Seleccione producto o servicio en cada línea.', items: [] };
-        if (!Number.isInteger(cantidadTotal) || cantidadTotal <= 0) {
-          return { ok: false, message: 'Cada cantidad debe ser un número entero mayor a cero.', items: [] };
+        if (!Number.isFinite(cantidadTotal) || cantidadTotal <= 0) {
+          return { ok: false, message: 'Cada cantidad debe ser un número mayor a cero (se permiten decimales).', items: [] };
         }
         if (isNaN(precio) || precio < 0) return { ok: false, message: 'Precio no válido en una de las líneas.', items: [] };
 

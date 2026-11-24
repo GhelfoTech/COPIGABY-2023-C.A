@@ -598,8 +598,9 @@ class pedidoModel extends ConectDB {
             $cantidad = (float) ($item['cantidad'] ?? 0);
             $precioVenta = (float) ($item['precio_venta'] ?? 0);
 
-            if (!is_finite($cantidad) || $cantidad <= 0 || floor($cantidad) !== $cantidad) {
-                throw new PDOException("La cantidad debe ser un número entero mayor a cero en la línea {$linea}");
+            // Cantidades mayores a cero (se permiten decimales)
+            if (!is_finite($cantidad) || $cantidad <= 0) {
+                throw new PDOException("La cantidad debe ser un número mayor a cero en la línea {$linea}");
             }
 
             [$codigoProducto, $codigoServicio, $precioResuelto] = $this->resolverCodigosDetalle($item, $tipo, $linea);

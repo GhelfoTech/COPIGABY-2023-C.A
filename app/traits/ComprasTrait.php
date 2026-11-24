@@ -35,9 +35,9 @@ trait ComprasTrait
                 $costoValor = $item['costo'] ?? null;
                 $costo = $this->esNumeroValido($costoValor) ? round((float) $costoValor, 2) : 0;
 
-                // Costo unitario y cantidad estrictamente mayores a cero
-                if (!$this->enteroPositivoFinito($cantidad)) {
-                    return ['status' => 'error', 'message' => "La cantidad debe ser un número entero mayor a cero en la línea {$linea}"];
+                // Costo unitario y cantidad estrictamente mayores a cero (se permiten decimales)
+                if (!is_finite($cantidad) || $cantidad <= 0) {
+                    return ['status' => 'error', 'message' => "La cantidad debe ser un número mayor a cero en la línea {$linea}"];
                 }
                 if (!$this->numeroFinitoValido($costoValor) || $costo <= 0) {
                     return ['status' => 'error', 'message' => "El costo unitario debe ser mayor a cero en la línea {$linea}"];

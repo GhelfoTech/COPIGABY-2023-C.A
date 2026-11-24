@@ -341,11 +341,10 @@ class compraModel extends ConectDB {
                 || !is_finite((float) $cantidad)
                 || (float) $cantidad <= 0
                 || (float) $cantidad > PHP_INT_MAX
-                || floor((float) $cantidad) !== (float) $cantidad
             ) {
-                return ['status' => 'error', 'message' => 'Cada cantidad debe ser un número entero mayor a cero'];
+                return ['status' => 'error', 'message' => 'Cada cantidad debe ser un número mayor a cero'];
             }
-            $cantidades[$codigoDetalle] = (int) $cantidad;
+            $cantidades[$codigoDetalle] = round((float) $cantidad, 2);
         }
 
         if ($datosCompra !== null) {
@@ -453,9 +452,9 @@ class compraModel extends ConectDB {
                     return ['status' => 'error', 'message' => 'No se encontró un producto asociado a la compra'];
                 }
 
-                // El inventario es entero; conserva el efecto de redondeo de cantidades históricas decimales.
-                $deltaStock = $cantidadNueva - (int) round($cantidadAnterior, 0, PHP_ROUND_HALF_UP);
-                $stockNuevo = (int) $stockActual + $deltaStock;
+                // El inventario puede manejar cantidades decimales (ej. kilos, litros, metros).
+                $deltaStock = round($cantidadNueva, 2) - round((float) $cantidadAnterior, 2);
+                $stockNuevo = round((float) $stockActual + $deltaStock, 2);
                 if ($stockNuevo < 0) {
                     $this->conex->rollBack();
                     return [

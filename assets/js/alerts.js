@@ -2,7 +2,8 @@ function showAlert(message, icon = 'info', title = '') {
   return Swal.fire({
     icon,
     title,
-    text: String(message)
+    text: String(message),
+    customClass: { container: 'copigaby-swal-top' }
   });
 }
 
@@ -11,8 +12,30 @@ function showFlashAlert(status, message) {
   return Swal.fire({
     icon: isSuccess ? 'success' : 'error',
     title: isSuccess ? 'Operación completada' : 'No se pudo completar',
-    text: String(message)
+    text: String(message),
+    customClass: { container: 'copigaby-swal-top' }
   });
+}
+
+// Todas las alertas y confirmaciones se muestran POR ENCIMA de los modales
+// (los modales usan z-index 10000; SweetAlert por defecto usa ~1060).
+const COPIGABY_SWAL_ZINDEX = 100000;
+const SwalTopConfig = {
+  customClass: { container: 'copigaby-swal-top' }
+};
+
+function ensureSwalTopStyles() {
+  if (document.getElementById('copigaby-swal-top-style')) return;
+  const style = document.createElement('style');
+  style.id = 'copigaby-swal-top-style';
+  style.textContent = `.copigaby-swal-top, .swal2-container { z-index: ${COPIGABY_SWAL_ZINDEX} !important; }`;
+  document.head.appendChild(style);
+}
+ensureSwalTopStyles();
+
+// Si el CSS se inyectó antes de que <head> existiera, reintenta al cargar.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', ensureSwalTopStyles, { once: true });
 }
 
 window.CopiGabyShowModuleFlash = function () {
@@ -38,7 +61,8 @@ async function showConfirm(message, title = '¿Está seguro?', confirmButtonText
     showCancelButton: true,
     confirmButtonText,
     cancelButtonText: 'Cancelar',
-    reverseButtons: true
+    reverseButtons: true,
+    ...SwalTopConfig
   });
 
   return result.isConfirmed;
