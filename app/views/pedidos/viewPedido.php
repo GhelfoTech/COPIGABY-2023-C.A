@@ -58,7 +58,7 @@
       </div>
 
       <div class="bg-white rounded-custom shadow-sm overflow-hidden border border-gray-100">
-        <table data-datatable="true" class="w-full text-left">
+        <table id="tablaPedidos" data-datatable="true" data-datatable-config="pedidos" class="w-full text-left">
           <thead class="bg-navy-dark text-white text-[0.7rem] uppercase tracking-widest">
             <tr>
               <th class="px-6 py-4 text-center">ID</th>
@@ -71,37 +71,7 @@
               <th class="px-6 py-4 text-center">Consultar</th>
             </tr>
           </thead>
-          <tbody class="text-gray-700 font-semibold text-sm divide-y">
-            <?php if (!empty($pedidos)): ?>
-            <?php foreach ($pedidos as $ped): ?>
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <td class="px-6 py-4 text-center text-gray-400 font-bold">#<?= str_pad($ped['codigo_pedido'], 4, '0', STR_PAD_LEFT) ?></td>
-                <td class="px-6 py-4 uppercase text-[0.8rem] font-bold text-navy-light"><?= htmlspecialchars($ped['nombre_cliente'] ?? '—') ?></td>
-                <td class="px-6 py-4 text-gray-500"><?= htmlspecialchars($ped['nombre_usuario'] ?? '—') ?></td>
-                <td class="px-6 py-4 text-gray-500"><?= date('d/m/Y H:i', strtotime($ped['fecha_pedido'])) ?></td>
-                <td class="px-6 py-4 text-right">
-                  <?php $tasaPed = (float) ($ped['tasa_cambio'] ?? $tasaActual); ?>
-                  <div class="font-black text-navy-dark text-[1rem]"><?= htmlspecialchars($monedaActiva['simbolo'] ?? '$') ?><?= number_format((float) ($ped['monto_total'] ?? 0), 2) ?></div>
-                  <div class="text-[0.65rem] text-orange-dk font-bold"><?= number_format((float) ($ped['monto_total'] ?? 0) * $tasaPed, 2) ?> Bs</div>
-                </td>
-                <td class="px-6 py-4 text-xs font-bold text-gray-500 uppercase"><?= htmlspecialchars($ped['nombre_metodo'] ?? '—') ?></td>
-                <td class="px-6 py-4 text-center">
-                  <span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase <?= $ped['estado'] ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' ?>">
-                    <?= $ped['estado'] ? 'Activo' : 'Anulado' ?>
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <button type="button" data-js-action="viewDetails" data-js-args="<?= htmlspecialchars(json_encode([(int) $ped['codigo_pedido']], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>" class="group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver Detalle">
-                    <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  </button>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-            <?php else: ?>
-              <tr><td colspan="8" class="px-6 py-10 text-center text-gray-400 font-bold italic">No se encontraron pedidos registrados.</td></tr>
-            <?php endif; ?>
-          </tbody>
+          <tbody class="text-gray-700 font-semibold text-sm divide-y"></tbody>
         </table>
       </div>
     </main>
@@ -418,3 +388,4 @@
   <script src="assets/js/datatables-init.js?v=4"></script>
 </body>
 </html>
+                  

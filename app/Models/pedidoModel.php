@@ -70,6 +70,166 @@ class pedidoModel extends ConectDB {
     }
 
     /**
+     * Obtiene una página de pedidos para DataTables en modo Server-Side.
+     * La consulta devuelve una fila por pedido y delega al motor SQL el filtro,
+     * ordenamiento y recorte de resultados mediante LIMIT/OFFSET.
+     */
+    public function getPedidosDataTable(array $request): array {
+        $draw = filter_var($request['draw'] ?? 0, FILTER_VALIDATE_INT);
+        $draw = $draw === false ? 0 : max(0, $draw);
+
+        $start = filter_var($request['start'] ?? 0, FILTER_VALIDATE_INT);
+        $start = $start === false ? 0 : max(0, $start);
+
+        $length = filter_var($request['length'] ?? 10, FILTER_VALIDATE_INT);
+        $length = in_array($length, [10, 25, 50], true) ? $length : 10;
+
+        $searchRequest = $request['search'] ?? [];
+        $searchValue = is_array($searchRequest) ? ($searchRequest['value'] ?? '') : '';
+        $search = is_scalar($searchValue)
+            ? substr(trim((string) $searchValue), 0, 100)
+            : '';
+
+        // Se consulta un solo método de pago por pedido. Así se evita que los
+        // JOIN directos con pagos/detalle_pago multipliquen las filas del listado.
+        $metodoPagoSql = "(SELECT mp.nombre_metodo
+            FROM pagos pg
+            INNER JOIN detalle_pago dpg ON dpg.codigo_pago = pg.codigo_pago
+            INNER JOIN metodo_pago mp ON mp.codigo_metodo = dpg.codigo_metodo
+            WHERE pg.codigo_pedido = p.codigo_pedido
+              AND pg.estado = 1
+            ORDER BY pg.codigo_pago DESC, dpg.codigo_detalle_pago DESC
+            LIMIT 1)";
+
+        $casheaActivoSql = "EXISTS (
+            SELECT 1
+            FROM cashea_credito cc
+            WHERE cc.id_pedido = p.codigo_pedido
+              AND cc.estado = 1
+        )";
+
+        $nombreMetodoSql = "COALESCE(
+            {$metodoPagoSql},
+            CASE WHEN {$casheaActivoSql} THEN 'CASHEA' END
+        )";
+
+        $fromSql = ' FROM pedido p
+            LEFT JOIN cliente c ON c.cedula_cliente = p.cedula_cliente
+            LEFT JOIN usuario u ON u.cedula_usuario = p.cedula_usuario';
+
+        $whereSql = '';
+        $parametros = [];
+        if ($search !== '') {
+            $whereSql = " WHERE (
+                CAST(p.codigo_pedido AS CHAR) LIKE ?
+                OR c.nombre LIKE ?
+                OR u.nombre_usuario LIKE ?
+                OR DATE_FORMAT(p.fecha_pedido, '%d/%m/%Y %H:%i') LIKE ?
+                OR CAST(p.fecha_pedido AS CHAR) LIKE ?
+                OR CAST(p.monto_total AS CHAR) LIKE ?
+                OR {$nombreMetodoSql} LIKE ?
+                OR CASE WHEN p.estado = 1 THEN 'Activo' ELSE 'Anulado' END LIKE ?
+            )";
+            $parametros = array_fill(0, 8, '%' . $search . '%');
+        }
+
+        // Los índices corresponden a las columnas de la tabla en viewPedido.php.
+        // La columna Consultar no se incluye porque no es ordenable.
+        $orderColumns = [
+            0 => 'p.codigo_pedido',
+            1 => 'c.nombre',
+            2 => 'u.nombre_usuario',
+            3 => 'p.fecha_pedido',
+            4 => 'p.monto_total',
+            5 => 'nombre_metodo',
+            6 => 'p.estado',
+        ];
+
+        $orderBy = [];
+        $orders = is_array($request['order'] ?? null) ? $request['order'] : [];
+        foreach ($orders as $order) {
+            if (!is_array($order)) {
+                continue;
+            }
+
+            $column = filter_var($order['column'] ?? null, FILTER_VALIDATE_INT);
+            if ($column === false || !isset($orderColumns[$column])) {
+                continue;
+            }
+
+            $direction = strtolower((string) ($order['dir'] ?? 'asc')) === 'desc'
+                ? 'DESC'
+                : 'ASC';
+            $orderBy[] = $orderColumns[$column] . ' ' . $direction;
+        }
+
+        if (!$orderBy) {
+            $orderBy[] = 'p.codigo_pedido DESC';
+        }
+
+        try {
+            // Total de pedidos sin aplicar la búsqueda global.
+            $recordsTotal = (int) $this->conex->query(
+                'SELECT COUNT(*) FROM pedido'
+            )->fetchColumn();
+
+            // Total después de aplicar la búsqueda, pero antes de LIMIT/OFFSET.
+            $recordsFiltered = $recordsTotal;
+            if ($search !== '') {
+                $stmtFiltered = $this->conex->prepare(
+                    'SELECT COUNT(*)' . $fromSql . $whereSql
+                );
+                $stmtFiltered->execute($parametros);
+                $recordsFiltered = (int) $stmtFiltered->fetchColumn();
+            }
+
+            $query = 'SELECT
+                    p.codigo_pedido,
+                    p.cedula_cliente,
+                    p.cedula_usuario,
+                    p.fecha_pedido,
+                    p.estado,
+                    p.subtotal,
+                    p.monto_iva,
+                    p.porcentaje_iva,
+                    p.monto_total,
+                    p.tasa_cambio,
+                    c.nombre AS nombre_cliente,
+                    u.nombre_usuario,
+                    ' . $nombreMetodoSql . ' AS nombre_metodo'
+                . $fromSql
+                . $whereSql
+                . ' ORDER BY ' . implode(', ', $orderBy)
+                . ' LIMIT ? OFFSET ?';
+
+            $stmt = $this->conex->prepare($query);
+            $indice = 1;
+            foreach ($parametros as $parametro) {
+                $stmt->bindValue($indice++, $parametro, PDO::PARAM_STR);
+            }
+            $stmt->bindValue($indice++, $length, PDO::PARAM_INT);
+            $stmt->bindValue($indice, $start, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return [
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            ];
+        } catch (PDOException $e) {
+            $this->logPdoError('getPedidosDataTable', $e);
+            return [
+                'draw' => $draw,
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'No se pudieron cargar los pedidos.',
+            ];
+        }
+    }
+
+    /**
      * Registra un pedido completo: cabecera, detalle, pago e inventario.
      */
     public function addPedido(array $datos, array $items, array $pago) {

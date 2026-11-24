@@ -658,10 +658,12 @@
           resetFormPedido();
 
           await Swal.fire({ icon: 'success', title: 'Éxito', text: data.message || 'Operación completada.', timer: 1500, showConfirmButton: false });
-          try {
-            await CopiGabyAjax.refresh();
-          } catch (refreshError) {
-            console.error('El pedido se guardó, pero no se pudo actualizar el listado.', refreshError);
+          if (!reloadPedidosTable()) {
+            try {
+              await CopiGabyAjax.refresh();
+            } catch (refreshError) {
+              console.error('El pedido se guardó, pero no se pudo actualizar el listado.', refreshError);
+            }
           }
           return;
         }
@@ -672,6 +674,16 @@
         btnSubmitPedido.disabled = false;
         btnSubmitPedido.textContent = editMode ? 'Actualizar Pedido' : 'Registrar Pedido';
       }
+    }
+
+    const $tablaPedidos = $('#tablaPedidos');
+
+    function reloadPedidosTable() {
+      if ($.fn.DataTable && $.fn.DataTable.isDataTable($tablaPedidos)) {
+        $tablaPedidos.DataTable().ajax.reload(null, false);
+        return true;
+      }
+      return false;
     }
 
     let detailPedidoId = null;
@@ -865,7 +877,13 @@
           .then(d => {
             if (d.status === 'success') {
               Swal.fire({ icon: 'success', title: 'Anulado', text: d.message || 'Pedido anulado.', timer: 1500, showConfirmButton: false })
-                .then(() => CopiGabyAjax.refresh());
+                .then(() => {
+                  if (!reloadPedidosTable()) {
+                    CopiGabyAjax.refresh().catch(refreshError => {
+                      console.error('El pedido se anuló, pero no se pudo actualizar el listado.', refreshError);
+                    });
+                  }
+                });
             } else {
               Swal.fire({ icon: 'error', title: 'Error', text: d.message || 'No se pudo anular el pedido.' });
             }
@@ -914,6 +932,154 @@
 
     document.getElementById('btnAddItem').addEventListener('click', () => addItemRow());
     formPedido.addEventListener('submit', submitPedido);
+
+    function escapePedidoTableText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, function (character) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[character];
+      });
+    }
+
+    function formatPedidoDate(value) {
+      if (!value) return '—';
+      const parsed = new Date(String(value).replace(' ', 'T'));
+      if (Number.isNaN(parsed.getTime())) return String(value);
+
+      const fecha = parsed.toLocaleDateString('es-VE');
+      const hora = parsed.toLocaleTimeString('es-VE', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+      });
+      return fecha + ' ' + hora;
+    }
+
+    // Configuración DataTables Server-Side.
+    window.CopiGabyDataTablesConfig = window.CopiGabyDataTablesConfig || {};
+    window.CopiGabyDataTablesConfig.pedidos = {
+      serverSide: true,
+      processing: true,
+      searchDelay: 350,
+      ajax: {
+        url: '?url=pedido&type=list',
+        type: 'POST',
+        dataType: 'json'
+      },
+      pageLength: 10,
+      lengthMenu: [[10, 25, 50], [10, 25, 50]],
+      columns: [
+        {
+          data: 'codigo_pedido',
+          className: 'px-6 py-4 text-center text-gray-400 font-bold',
+          render: function (data, type) {
+            if (type !== 'display') return data;
+            return '<span class="font-bold text-gray-500">#'
+              + escapePedidoTableText(String(data).padStart(4, '0'))
+              + '</span>';
+          }
+        },
+        {
+          data: 'nombre_cliente',
+          className: 'px-6 py-4',
+          render: function (data, type) {
+            if (type !== 'display') return data;
+            return '<span class="uppercase text-[0.8rem] font-bold text-navy-light">'
+              + escapePedidoTableText(data || '—')
+              + '</span>';
+          }
+        },
+        {
+          data: 'nombre_usuario',
+          className: 'px-6 py-4 text-gray-500',
+          render: function (data, type) {
+            if (type !== 'display') return data;
+            return '<span class="text-gray-500">'
+              + escapePedidoTableText(data || '—')
+              + '</span>';
+          }
+        },
+        {
+          data: 'fecha_pedido',
+          className: 'px-6 py-4 text-gray-500',
+          render: function (data, type) {
+            return type === 'display'
+              ? escapePedidoTableText(formatPedidoDate(data))
+              : data;
+          }
+        },
+        {
+          data: 'monto_total',
+          className: 'px-6 py-4 text-right',
+          render: function (data, type, row) {
+            if (type !== 'display') return data;
+
+            const monto = Number(data) || 0;
+            const tasa = Number(row.tasa_cambio ?? tasaActual) || Number(tasaActual) || 0;
+            const totalMoneda = monto.toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            });
+            const totalBs = (monto * tasa).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            });
+
+            return '<div class="font-black text-navy-dark text-[1rem]">'
+              + escapePedidoTableText(simboloMoneda) + totalMoneda
+              + '</div><div class="text-[0.65rem] text-orange-dk font-bold">'
+              + totalBs + ' Bs</div>';
+          }
+        },
+        {
+          data: 'nombre_metodo',
+          className: 'px-6 py-4',
+          render: function (data, type) {
+            if (type !== 'display') return data;
+            return '<span class="text-xs font-bold text-gray-500 uppercase">'
+              + escapePedidoTableText(data || '—')
+              + '</span>';
+          }
+        },
+        {
+          data: 'estado',
+          className: 'px-6 py-4 text-center',
+          render: function (data, type) {
+            if (type !== 'display') return data;
+            const activo = Number(data) === 1;
+            return '<span class="px-3 py-1 rounded-full text-[0.65rem] font-black uppercase '
+              + (activo ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600')
+              + '">' + (activo ? 'Activo' : 'Anulado') + '</span>';
+          }
+        },
+        {
+          data: 'codigo_pedido',
+          className: 'px-6 py-4 text-center',
+          orderable: false,
+          searchable: false,
+          render: function () {
+            return '<button type="button" class="js-view-order-details group relative text-orange-dk p-2 hover:bg-orange/10 rounded-lg transition-colors" title="Ver detalle">'
+              + '<span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-navy-dark text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-10 shadow-lg">Consultar</span>'
+              + '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'
+              + '</button>';
+          }
+        }
+      ],
+      createdRow: function (row) {
+        row.classList.add('hover:bg-gray-50/80', 'transition-colors');
+      },
+      initComplete: function () {
+        const api = this.api();
+        $(api.table().body()).on('click', '.js-view-order-details', function () {
+          const pedido = api.row($(this).closest('tr')).data();
+          if (pedido) viewDetails(pedido.codigo_pedido);
+        });
+      }
+    };
 
     if (typeof abrirModalNuevoClientePedido === "function") window.abrirModalNuevoClientePedido = abrirModalNuevoClientePedido;
     if (typeof cerrarModalNuevoClientePedido === "function") window.cerrarModalNuevoClientePedido = cerrarModalNuevoClientePedido;

@@ -18,6 +18,22 @@
 
     if (isset($_GET['type'])) {
 
+        // Listado Server-Side para DataTables (paginación, búsqueda y ordenamiento).
+        if ($_GET['type'] === 'list') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Método no permitido']);
+                exit();
+            }
+
+            echo json_encode(
+                $object->getPedidosDataTable($_POST),
+                JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+            );
+            exit();
+        }
+
         // Registro rápido de cliente desde el formulario de pedidos (AJAX).
         if ($_GET['type'] === 'cliente') {
             header('Content-Type: application/json; charset=utf-8');
@@ -244,7 +260,6 @@
         }
     }
 
-    $pedidos      = $object->getAllPedidos();
     $clientes     = $object->getClientesActivos();
     $productos    = $object->getProductosActivos();
     $servicios    = $object->getServiciosActivos();
